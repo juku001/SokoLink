@@ -1,8 +1,11 @@
 <?php
 
-
 use App\Http\Controllers\CallbackController;
 
 
 
-Route::get('payments/airtel/callback', [CallbackController::class, 'airtel']);
+Route::prefix('v1')->group(function () {
+
+    Route::get('payments/airtel/callback', [CallbackController::class, 'airtel']);
+
+});
