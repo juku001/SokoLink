@@ -15,9 +15,12 @@ return new class extends Migration {
             $table->foreignId('parent_id')->nullable()->constrained('categories')->onDelete('cascade');
             $table->string('name');
             $table->string('slug');
+            $table->string('image')->nullable();
+            $table->string('icon')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
+        Artisan::call('db:seed', ['--class' => 'CategorySeeder']);
     }
 
     /**

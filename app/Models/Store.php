@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Str;
 
 class Store extends Model
 {
@@ -23,6 +24,49 @@ class Store extends Model
         'region_id',
         'address'
     ];
+
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($store) {
+            if (empty($store->slug)) {
+                $store->slug = static::generateSlug($store->name);
+            }
+        });
+
+        static::updating(function ($store) {
+            if ($store->isDirty('name')) {
+                $store->slug = static::generateSlug($store->name);
+            }
+        });
+    }
+    /**
+     * Generate a unique slug.
+     */
+    protected static function generateSlug($name)
+    {
+        $slug = Str::slug($name);
+        $count = static::where('slug', 'LIKE', "{$slug}%")->count();
+
+        return $count ? "{$slug}-" . ($count + 1) : $slug;
+    }
+
+
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'seller_id');
+    }
+
+
+    public function sales()
+    {
+        return $this->hasMany(Sale::class, '');
+    }
+
+
 
     public function category()
     {

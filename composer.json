@@ -7,8 +7,10 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
+        "darkaonline/l5-swagger": "^9.0",
         "laravel/framework": "^12.0",
         "laravel/sanctum": "^4.0",
+        "laravel/socialite": "^5.23",
         "laravel/tinker": "^2.10.1",
         "maatwebsite/excel": "^3.1"
     },
@@ -26,7 +28,14 @@
             "App\\": "app/",
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/"
-        }
+        },
+        "files":[
+            "App/Helpers/CustomFunctions.php",
+            "App/Helpers/ResponseHelper.php",
+            "App/Helpers/MobileNetworkHelper.php",
+            "App/Helpers/PaymentHelper.php",
+            "App/Helpers/SMSHelper.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {

@@ -10,10 +10,12 @@ class Category extends Model
         "name",
         "slug",
         "parent_id",
+        "icon",
         "is_active"
     ];
 
-    public function stores(){
+    public function stores()
+    {
         return $this->hasMany(Store::class);
     }
 }

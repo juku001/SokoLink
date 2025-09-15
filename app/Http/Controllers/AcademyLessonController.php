@@ -14,6 +14,59 @@ class AcademyLessonController extends Controller
     /**
      * Store a new lesson for an academy
      */
+    /**
+     * @OA\Post(
+     *     path="/academy/{id}/lessons",
+     *     tags={"Academy"},
+     *     summary="Add a lesson to an academy",
+     *     description="Create a new lesson under a specific academy",
+     *     operationId="addAcademyLesson",
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID of the academy",
+     *         required=true,
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             @OA\Property(property="title", type="string", example="Introduction to Laravel"),
+     *             @OA\Property(property="subtitle", type="string", example="Getting started with Laravel basics"),
+     *             @OA\Property(property="instructor", type="string", example="John Doe"),
+     *             @OA\Property(property="video_location", type="string", enum={"online","stored"}, example="online"),
+     *             @OA\Property(property="video", type="string", example="https://youtube.com/example")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Lesson added successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Lesson added successfully"),
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Academy not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Academy not found"),
+     *             
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation failed",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Validation failed"),
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     )
+     * )
+     */
     public function store(Request $request, string $id)
     {
         $academy = Academy::find($id);
@@ -27,6 +80,8 @@ class AcademyLessonController extends Controller
             'instructor' => 'nullable|string|max:255',
             'video_location' => 'required|in:online,stored',
             'video' => 'required', // can be file or link
+        ], [
+            'video_location.in' => 'Location can be online or stored'
         ]);
 
         if ($validator->fails()) {
@@ -36,11 +91,10 @@ class AcademyLessonController extends Controller
         $data = $validator->validated();
         $videoPath = null;
 
-        // Handle video based on location
         if ($data['video_location'] === 'stored' && $request->hasFile('video')) {
             $videoPath = $request->file('video')->store('academy/videos', 'public');
         } elseif ($data['video_location'] === 'online') {
-            $videoPath = $data['video']; // YouTube/Vimeo/etc. link
+            $videoPath = $data['video'];
         }
 
         $lesson = AcademyLesson::create([
@@ -57,6 +111,40 @@ class AcademyLessonController extends Controller
 
 
 
+    /**
+     * @OA\Get(
+     *     path="/academy/lessons/{id}",
+     *     tags={"Academy"},
+     *     summary="Get a single lesson by ID",
+     *     description="Retrieve details of a specific lesson in the academy",
+     *     operationId="getAcademyLesson",
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID of the lesson",
+     *         required=true,
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Lesson details retrieved successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Lesson details"),
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Lesson not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Lesson not found"),
+     *             
+     *         )
+     *     )
+     * )
+     */
     public function show(string $id)
     {
         $lesson = AcademyLesson::find($id);
@@ -71,8 +159,62 @@ class AcademyLessonController extends Controller
 
 
 
+
     /**
      * Update an existing lesson
+     */
+    /**
+     * @OA\Put(
+     *     path="/academy/lessons/{id}",
+     *     tags={"Academy"},
+     *     summary="Update a lesson by ID",
+     *     description="Update details of an existing lesson in the academy",
+     *     operationId="updateAcademyLesson",
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID of the lesson to update",
+     *         required=true,
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\RequestBody(
+     *         required=false,
+     *         @OA\JsonContent(
+     *             @OA\Property(property="title", type="string", example="Updated Lesson Title"),
+     *             @OA\Property(property="subtitle", type="string", example="Updated Subtitle"),
+     *             @OA\Property(property="instructor", type="string", example="Jane Doe"),
+     *             @OA\Property(property="video_location", type="string", enum={"online","stored"}, example="online"),
+     *             @OA\Property(property="video", type="string", example="https://youtube.com/...") 
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Lesson updated successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Lesson updated successfully"),
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Lesson not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Lesson not found"),
+     *             
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation failed",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Validation failed"),
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     )
+     * )
      */
     public function update(Request $request, string $id)
     {
@@ -87,6 +229,8 @@ class AcademyLessonController extends Controller
             'instructor' => 'nullable|string|max:255',
             'video_location' => 'sometimes|in:online,stored',
             'video' => 'sometimes',
+        ], [
+            'video_location.in' => 'Location can be online or stored'
         ]);
 
         if ($validator->fails()) {
@@ -101,7 +245,7 @@ class AcademyLessonController extends Controller
             } elseif ($data['video_location'] === 'online' && isset($data['video'])) {
                 $data['video_path'] = $data['video'];
             }
-            unset($data['video']); // remove temp field
+            unset($data['video']);
         }
 
         $lesson->update($data);
@@ -111,6 +255,41 @@ class AcademyLessonController extends Controller
 
 
 
+
+    /**
+     * @OA\Delete(
+     *     path="/academy/lessons/{id}",
+     *     tags={"Academy"},
+     *     summary="Delete a lesson by ID",
+     *     description="Deletes a lesson from the academy",
+     *     operationId="deleteAcademyLesson",
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="ID of the lesson to delete",
+     *         required=true,
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Lesson deleted successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Lesson successfully deleted"),
+     *             
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Lesson not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Lesson not found"),
+     *             
+     *         )
+     *     )
+     * )
+     */
     public function destroy(string $id)
     {
         $lesson = AcademyLesson::find($id);
@@ -120,6 +299,7 @@ class AcademyLessonController extends Controller
         }
 
         $lesson->delete();
-        return ResponseHelper::success([], "lesson successful deleted.");
+        return ResponseHelper::success([], "Lesson successfully deleted.");
     }
+
 }

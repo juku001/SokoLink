@@ -10,13 +10,25 @@ return new class extends Migration {
      */
     public function up(): void
     {
+
         Schema::create('payments', function (Blueprint $table) {
             $table->id();
             $table->foreignId('order_id')->constrained()->cascadeOnDelete();
-            $table->enum('method', ['mobile', 'bank', 'cod']);
-            $table->decimal('amount', 12, 2);
-            $table->enum('status', ['pending', 'confirmed', 'failed', 'refunded'])->default('pending');
-            $table->string('transaction_ref')->nullable(); // from gateway
+            $table->foreignId('payment_option_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('payment_method_id')->nullable()->constrained()->nullOnDelete();
+            $table->decimal('amount', 12, 2)->default(0);
+            $table->string('transaction_id')->nullable();
+            $table->string('reference')->nullable();
+            $table->enum('status', [
+                'pending',   
+                'processing',
+                'successful',
+                'failed',
+                'cancelled',
+                'refunded'
+            ])->default('pending');
+            $table->timestamp('paid_at')->nullable();
+
             $table->timestamps();
         });
 

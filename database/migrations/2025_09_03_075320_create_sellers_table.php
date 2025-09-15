@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->string('payout_account');
             $table->foreignId('payout_method')->constrained('payment_methods')->onDelete('cascade');
+            $table->enum('settlement',['auto', 'manual'])->default('manual');
             $table->timestamps();
         });
     }

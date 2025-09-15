@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\ResponseTimeMiddleware;
 use App\Http\Middleware\UserTypeMiddleware;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -14,7 +15,8 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'user.type' => UserTypeMiddleware::class
+            'user.type' => UserTypeMiddleware::class,
+            'response.time' => ResponseTimeMiddleware::class
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

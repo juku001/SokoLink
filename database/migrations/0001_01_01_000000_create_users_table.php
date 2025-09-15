@@ -19,9 +19,10 @@ return new class extends Migration {
             $table->timestamp('phone_verified_at')->nullable();
             $table->enum('role', ['seller', 'buyer', 'admin', 'super_admin'])->default('buyer');
             $table->string('password')->nullable();
-            $table->enum('status', ['active', 'suspended', 'pending','inactive', 'deleted'])->default('active');
+            $table->enum('status', ['active', 'suspended', 'pending', 'inactive', 'deleted'])->default('active');
             $table->rememberToken();
             $table->softDeletes();
+            $table->timestamp('last_login_at')->nullable();
             $table->timestamps();
         });
 

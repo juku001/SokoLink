@@ -33,5 +33,21 @@ class Product extends Model
         return $this->morphMany(Review::class, 'reviewable');
     }
 
+    public function categories()
+    {
+        return $this->hasMany(ProductCategory::class);
+    }
 
+
+    public function images()
+    {
+        return $this->hasMany(ProductImage::class);
+    }
+
+
+
+    public function sales()
+    {
+        return $this->hasMany(SaleProduct::class, 'product_id');
+    }
 }

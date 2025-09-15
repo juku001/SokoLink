@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\ResponseHelper;
+use App\Helpers\SMSHelper;
 use App\Models\User;
 use DB;
 use Illuminate\Http\Request;
@@ -12,6 +13,54 @@ use Str;
 
 class LogInController extends Controller
 {
+
+
+
+    /**
+     * Request OTP for login using phone number.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
+     *
+     * @OA\Post(
+     *     path="/auth/login",
+     *     tags={"Authentication"},
+     *     summary="Request OTP login",
+     *     description="Send an OTP code to the provided phone number for login.",
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"phone"},
+     *             @OA\Property(property="phone", type="string", example="+255712345678")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="OTP sent successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="status", type="boolean", example=true),
+     *             @OA\Property(property="code", type="integer", example=200),
+     *             @OA\Property(property="message", type="string", example="Login successful. OTP sent.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Mobile login not enabled",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="status", type="boolean", example=false),
+     *             @OA\Property(property="code", type="integer", example=403),
+     *             @OA\Property(property="message", type="string", example="Mobile login not enabled for this user.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error",
+     *         ref="#/components/responses/422"
+     *     )
+     * )
+     */
     public function index(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -47,7 +96,6 @@ class LogInController extends Controller
                 }
             }
 
-
             DB::table('otps')->updateOrInsert(
                 ['phone' => $phoneNumber],
                 [
@@ -59,24 +107,85 @@ class LogInController extends Controller
             );
 
             DB::commit();
-            // 🔑 Send OTP via SMS gateway here instead of returning it
-            // e.g. SmsService::send($phoneNumber, "Your OTP is $otp");
-
-            return ResponseHelper::success([], "Login successful. OTP Sent.");
+            // SMSHelper::send($phoneNumber, "Your OTP is $otp");
+            return ResponseHelper::success($otp, "Login successful. OTP sent.");
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return ResponseHelper::error([], $e->getMessage(), 0);
+            return ResponseHelper::error([], $e->getMessage(), 500);
         }
     }
 
 
 
+
+    /**
+     * Verify OTP and log in the user.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
+     *
+     * @OA\Post(
+     *     path="/auth/verify/otp",
+     *     tags={"Authentication"},
+     *     summary="Verify OTP for login",
+     *     description="Validates the OTP and issues an access token for the user.",
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"phone","otp"},
+     *             @OA\Property(property="phone", type="string", example="+255712345678"),
+     *             @OA\Property(property="otp", type="string", example="123456")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="OTP verified successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="status", type="boolean", example=true),
+     *             @OA\Property(property="code", type="integer", example=200),
+     *             @OA\Property(property="message", type="string", example="OTP verified. Login successful."),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="token", type="string", example="1|eyJhbGciOiJI..."),
+     *                 @OA\Property(
+     *                     property="user",
+     *                     type="object",
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="name", type="string", example="John Doe"),
+     *                     @OA\Property(property="phone", type="string", example="+255712345678"),
+     *                     @OA\Property(property="role", type="string", example="seller"),
+     *                     @OA\Property(property="phone_verified_at", type="string", example="2025-09-11T14:00:00Z")
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Invalid or expired OTP",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="status", type="boolean", example=false),
+     *             @OA\Property(property="code", type="integer", example=400),
+     *             @OA\Property(property="message", type="string", example="Invalid or expired OTP.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error",
+     *         ref="#/components/responses/422"
+     *     )
+     * )
+     */
     public function verify(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'phone' => 'required|string|regex:/^\+255\d{9}$/',
             'otp' => 'required|string'
+        ], [
+            'phone.regex' => 'Phone number format is +255XXXXXXXXX'
         ]);
 
         if ($validator->fails()) {
@@ -94,14 +203,17 @@ class LogInController extends Controller
         }
 
         $user = User::where('phone', $request->phone)->firstOrFail();
-        if ($user->phone_verified_at == null) {
-            $user->phone_verified_at = now();
-            $user->save();
+
+        if (is_null($user->phone_verified_at)) {
+            $user->update(['phone_verified_at' => now()]);
         }
 
         DB::table('otps')->where('phone', $request->phone)->delete();
 
         $token = $user->createToken('mobile-login')->plainTextToken;
+
+        $user->update(['last_login_at' => now()]);
+
 
         return ResponseHelper::success([
             'token' => $token,
@@ -110,9 +222,73 @@ class LogInController extends Controller
     }
 
 
+    /**
+     * Login with email and password.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
+     *
+     * @OA\Post(
+     *     path="/auth/login/email",
+     *     tags={"Authentication"},
+     *     summary="Login with email",
+     *     description="Authenticates a user using email and password, returning an access token on success.",
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"email","password"},
+     *             @OA\Property(property="email", type="string", example="user@example.com"),
+     *             @OA\Property(property="password", type="string", example="password123")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Login successful",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="status", type="boolean", example=true),
+     *             @OA\Property(property="code", type="integer", example=200),
+     *             @OA\Property(property="message", type="string", example="User login successful."),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="token", type="string", example="1|eyJhbGciOiJI..."),
+     *                 @OA\Property(
+     *                     property="user",
+     *                     type="object",
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="name", type="string", example="John Doe"),
+     *                     @OA\Property(property="email", type="string", example="user@example.com"),
+     *                     @OA\Property(property="phone", type="string", example="+255712345678"),
+     *                     @OA\Property(property="role", type="string", example="seller")
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Invalid credentials",
+     *         ref="#/components/responses/401"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Account not found",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="status", type="boolean", example=false),
+     *             @OA\Property(property="code", type="integer", example=404),
+     *             @OA\Property(property="message", type="string", example="Account does not exist.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error",
+     *         ref="#/components/responses/422"
+     *     )
+     * )
+     */
     public function email(Request $request)
     {
-
         $validator = Validator::make($request->all(), [
             'email' => 'required|email',
             'password' => 'required',
@@ -125,37 +301,32 @@ class LogInController extends Controller
                 422
             );
         }
+
         $user = User::where('email', $request->email)->first();
 
         if (!$user) {
-            return
-                ResponseHelper::error([], 'Account does not exist.', 404);
+            return ResponseHelper::error([], 'Account does not exist.', 404);
         }
+
         if (!Hash::check($request->password, $user->password)) {
-            return ResponseHelper::error(
-                [],
-                'Invalid account credentials.',
-                401
-            );
+            return ResponseHelper::error([], 'Invalid account credentials.', 401);
         }
-        $success['token'] = $user->createToken('TayariToken')->plainTextToken;
-        $success['user'] = $user;
-        return ResponseHelper::success($success, 'User login successful.');
+
+        $token = $user->createToken('email-login')->plainTextToken;
+        $user->update(['last_login_at' => now()]);
+        return ResponseHelper::success([
+            'token' => $token,
+            'user' => $user
+        ], 'User login successful.');
     }
 
 
 
-    public function destroy(Request $request)
-    {
-        $authId = $request->user()->id;
 
-        $request->user()->currentAccessToken()->delete();
 
-        return ResponseHelper::success(
-            [],
-            "Logged out successful."
-        );
-    }
+
+
+
 
 
 }

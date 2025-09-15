@@ -16,6 +16,8 @@ return new class extends Migration {
             $table->decimal('total_amount', 12, 2);
             $table->decimal('shipping_cost', 12, 2)->default(0);
             $table->enum('status', ['pending', 'paid', 'shipped', 'delivered', 'cancelled'])->default('pending');
+            $table->foreignId('payment_option_id')->constrained('payment_options')->cascadeOnDelete();
+            $table->foreignId('payment_method_id')->constrained('payment_methods')->cascadeOnDelete();
             $table->timestamps();
         });
 

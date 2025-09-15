@@ -14,10 +14,11 @@ return new class extends Migration {
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->string('type')->default('shipping'); // shipping or billing
+            $table->string('fullname');
             $table->string('street');
-            $table->string('city');
-            $table->string('region');
-            $table->string('country');
+            $table->string('city')->nullable();
+            $table->foreignId('region_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('country_id')->nullable()->constrained()->nullOnDelete();
             $table->string('postal_code')->nullable();
             $table->string('phone')->nullable();
             $table->timestamps();

@@ -10,7 +10,70 @@ use Validator;
 
 class LogInProviderController extends Controller
 {
-    //adding a new authprovider
+
+    /**
+     * Add or enable a new authentication provider for the authenticated user.
+     *
+     * @OA\Post(
+     *     path="/auth/provider/add",
+     *     tags={"Authentication"},
+     *     summary="Add or enable auth provider",
+     *     description="Allows a user to enable an authentication provider such as email, Google, or mobile for login.",
+     *     security={{"sanctum":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(
+     *                 property="provider",
+     *                 type="string",
+     *                 description="The authentication provider to enable",
+     *                 enum={"email","google","mobile"},
+     *                 example="mobile"
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Authentication provider set successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="status", type="boolean", example=true),
+     *             @OA\Property(property="code", type="integer", example=200),
+     *             @OA\Property(property="message", type="string", example="Auth Provider set"),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="provider", type="string", example="mobile"),
+     *                 @OA\Property(property="is_active", type="boolean", example=true),
+     *                 @OA\Property(property="user_id", type="integer", example=5)
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Validation or precondition failed",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="status", type="boolean", example=false),
+     *             @OA\Property(property="code", type="integer", example=400),
+     *             @OA\Property(property="message", type="string", example="Please set a phone number before enabling mobile login.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation errors",
+     *         ref="#/components/responses/422"
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Server error",
+     *         ref="#/components/responses/500"
+     *     )
+     * )
+     */
+
     public function store(Request $request)
     {
         $user = auth()->user();
@@ -66,6 +129,57 @@ class LogInProviderController extends Controller
 
 
 
+    /**
+     * Remove or disable an authentication provider for the authenticated user.
+     *
+     * @OA\Post(
+     *     path="/auth/provider/remove",
+     *     tags={"Authentication"},
+     *     summary="Remove auth provider",
+     *     description="Allows a user to remove an authentication provider such as email, Google, or mobile. Ensures at least one provider remains active.",
+     *     security={{"sanctum":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(
+     *                 property="provider",
+     *                 type="string",
+     *                 description="The authentication provider to remove",
+     *                 enum={"email","google","mobile"},
+     *                 example="mobile"
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Authentication provider removed successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="status", type="boolean", example=true),
+     *             @OA\Property(property="code", type="integer", example=200),
+     *             @OA\Property(property="message", type="string", example="Auth provider removed"),
+     *             
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Validation or business rule failed",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="status", type="boolean", example=false),
+     *             @OA\Property(property="code", type="integer", example=400),
+     *             @OA\Property(property="message", type="string", example="You must have at least one authentication method enabled.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation errors",
+     *         ref="#/components/responses/422"
+     *     )
+     * )
+     */
+
     public function destroy(Request $request)
     {
         $user = auth()->user();
@@ -104,6 +218,63 @@ class LogInProviderController extends Controller
 
 
 
+
+    /**
+     * Change the status of an authentication provider for the authenticated user.
+     *
+     * @OA\Post(
+     *     path="/auth/provider/change",
+     *     tags={"Authentication"},
+     *     summary="Change auth provider status",
+     *     description="Activate or deactivate an authentication provider such as email, Google, or mobile. Ensures at least one provider remains active.",
+     *     security={{"sanctum":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(
+     *                 property="provider",
+     *                 type="string",
+     *                 description="The authentication provider to update",
+     *                 enum={"email","google","mobile"},
+     *                 example="mobile"
+     *             ),
+     *             @OA\Property(
+     *                 property="is_active",
+     *                 type="boolean",
+     *                 description="Set to true to activate, false to deactivate",
+     *                 example=true
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Authentication provider updated successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="status", type="boolean", example=true),
+     *             @OA\Property(property="code", type="integer", example=200),
+     *             @OA\Property(property="message", type="string", example="Auth provider updated"),
+     *             @OA\Property(property="data", type="string", example="mobile")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Business rule violated",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="status", type="boolean", example=false),
+     *             @OA\Property(property="code", type="integer", example=400),
+     *             @OA\Property(property="message", type="string", example="You must keep at least one authentication method active.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation errors",
+     *         ref="#/components/responses/422"
+     *     )
+     * )
+     */
 
     public function update(Request $request)
     {
