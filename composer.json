@@ -30,11 +30,11 @@
             "Database\\Seeders\\": "database/seeders/"
         },
         "files":[
-            "App/Helpers/CustomFunctions.php",
-            "App/Helpers/ResponseHelper.php",
-            "App/Helpers/MobileNetworkHelper.php",
-            "App/Helpers/PaymentHelper.php",
-            "App/Helpers/SMSHelper.php"
+            "app/Helpers/CustomFunctions.php",
+            "app/Helpers/ResponseHelper.php",
+            "app/Helpers/MobileNetworkHelper.php",
+            "app/Helpers/PaymentHelper.php",
+            "app/Helpers/SMSHelper.php"
         ]
     },
     "autoload-dev": {
