@@ -38,16 +38,16 @@ Route::middleware(['auth:sanctum'])->group(function () {
     });
 
     // Route::put('/orders/shipping/', [DeliveryController::class, 'shipping'])->middleware('user.type:seller');
-    Route::put('/orders/delivered',[DeliveryController::class, 'delivered']);
+    Route::put('/orders/delivered', [DeliveryController::class, 'delivered']);
 });
 
 
-Route::resource('/payment/options', PaymentOptionController::class);
 
-Route::resource('/payment/methods', PaymentMethodController::class);
 Route::middleware(['auth:sanctum', 'user.type:super_admin'])->group(function () {
 
     Route::get('/payment/methods/all', [PaymentMethodController::class, 'all']);
     Route::post('/payment/methods/{id}/status', [PaymentMethodController::class, 'status']);
 
 });
+Route::resource('/payment/methods', PaymentMethodController::class);
+Route::resource('/payment/options', PaymentOptionController::class);

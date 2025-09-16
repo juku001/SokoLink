@@ -16,12 +16,12 @@ Route::get('/dashboard/products', [DashboardController::class, 'products']);
 
 Route::get('/search'); //get list of stores or products or categories searched by name
 
+Route::get('/stores/all', [StoreController::class, 'all'])->middleware('user.type:super_admin'); //all the online stores.
 Route::resource('/stores', StoreController::class);
 Route::get('/stores/{id}/list', [StoreController::class, 'list']); //only the online stores for one specific user.
-Route::get('/stores/all', [StoreController::class, 'all'])->middleware('user.type:super_admin'); //all the online stores.
 
-Route::resource('/products', ProductController::class);
 Route::get('/products/all', [ProductController::class, 'all'])->middleware('user.type:super_admin'); //this is getting all the products regardless of the stores
+Route::resource('/products', ProductController::class);
 
 
 Route::patch('/products/{id}/online', [ProductController::class, 'status']);//this is for changint the online toggle for the product 
