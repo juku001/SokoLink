@@ -10,6 +10,46 @@ use Illuminate\Http\Request;
 class AdminReportController extends Controller
 {
 
+
+    /**
+     * @OA\Get(
+     *     path="/admin/reports/sales",
+     *     summary="Get sales volume stats",
+     *     description="Returns total sales for the current month and breakdown per category",
+     *     tags={"Reports"},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Sales data retrieved successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Sales volume stats"),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="total",
+     *                     type="object",
+     *                     @OA\Property(property="value", type="number", format="float", example=125000.50),
+     *                     @OA\Property(property="percent", type="number", format="float", example=12.5),
+     *                     @OA\Property(property="duration", type="string", example="month")
+     *                 ),
+     *                 @OA\Property(
+     *                     property="categories",
+     *                     type="array",
+     *                     @OA\Items(
+     *                         type="object",
+     *                         @OA\Property(property="id", type="integer", example=1),
+     *                         @OA\Property(property="name", type="string", example="Electronics"),
+     *                         @OA\Property(property="total_sales", type="number", format="float", example=50000)
+     *                     )
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     security={{"sanctum": {}}},
+     * )
+     */
+
     public function sales()
     {
         $currentMonth = Sale::where('status', 'completed')
@@ -50,6 +90,32 @@ class AdminReportController extends Controller
     }
 
 
+
+    /**
+ * @OA\Get(
+ *     path="/admin/reports/user/growth",
+ *     summary="Get user growth statistics",
+ *     description="Returns total users, new users this month, active users this month, and retention rate",
+ *     tags={"Reports"},
+ *     @OA\Response(
+ *         response=200,
+ *         description="User growth data retrieved successfully",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="success", type="boolean", example=true),
+ *             @OA\Property(property="message", type="string", example="User growth"),
+ *             @OA\Property(
+ *                 property="data",
+ *                 type="object",
+ *                 @OA\Property(property="total", type="integer", example=1200),
+ *                 @OA\Property(property="active", type="integer", example=850),
+ *                 @OA\Property(property="new", type="integer", example=100),
+ *                 @OA\Property(property="retention_rate", type="number", format="float", example=78.5)
+ *             )
+ *         )
+ *     ),
+ *     security={{"sanctum": {}}}
+ * )
+ */
 
     public function users()
     {

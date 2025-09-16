@@ -172,6 +172,63 @@ class UserController extends Controller
 
 
 
+    /**
+     * @OA\Put(
+     *     path="/profile/update",
+     *     summary="Update authenticated user's profile",
+     *     description="Updates the name, email, phone, and/or profile picture of the logged-in user.",
+     *     operationId="profileUpdate",
+     *     tags={"Users"},
+     *     security={{"sanctum":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\MediaType(
+     *             mediaType="multipart/form-data",
+     *             @OA\Schema(
+     *                 type="object",
+     *                 @OA\Property(property="name", type="string", maxLength=255, example="Jane Doe"),
+     *                 @OA\Property(property="email", type="string", format="email", example="jane@example.com"),
+     *                 @OA\Property(property="phone", type="string", maxLength=20, example="+255700000000"),
+     *                 @OA\Property(
+     *                     property="profile_pic",
+     *                     type="string",
+     *                     format="binary",
+     *                     description="JPEG/PNG/GIF/WEBP image, max 2 MB"
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Profile updated successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="status", type="boolean", example=true),
+     *             @OA\Property(property="code", type="integer", example=200),
+     *             @OA\Property(property="message", type="string", example="Profile updated successfully"),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="id", type="integer", example=12),
+     *                 @OA\Property(property="name", type="string", example="Jane Doe"),
+     *                 @OA\Property(property="email", type="string", example="jane@example.com"),
+     *                 @OA\Property(property="phone", type="string", example="+255700000000"),
+     *                 @OA\Property(property="profile_pic", type="string", example="storage/profile_pics/1694783948_avatar.jpg")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error",
+     *         ref="#/components/responses/422"
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated",
+     *         ref="#/components/responses/401"
+     *     )
+     * )
+     */
     public function profileUpdate(Request $request)
     {
         $user = auth()->user();
@@ -201,6 +258,87 @@ class UserController extends Controller
         return ResponseHelper::success($user, 'Profile updated successfully');
     }
 
+
+
+    /**
+     * @OA\Put(
+     *     path="/admin/users/{id}/profile",
+     *     summary="Update a user's profile (Admin)",
+     *     description="Allows an administrator to update any user's name, email, phone, or profile picture.",
+     *     operationId="profileUpdateByAdmin",
+     *     tags={"Admin"},
+     *     security={{"sanctum":{}}},   
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="ID of the user to update",
+     *         @OA\Schema(type="integer", example=42)
+     *     ),
+     *
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\MediaType(
+     *             mediaType="multipart/form-data",
+     *             @OA\Schema(
+     *                 type="object",
+     *                 @OA\Property(property="name", type="string", maxLength=255, example="John Doe"),
+     *                 @OA\Property(property="email", type="string", format="email", example="john@example.com"),
+     *                 @OA\Property(property="phone", type="string", maxLength=20, example="+255700000000"),
+     *                 @OA\Property(
+     *                     property="profile_pic",
+     *                     type="string",
+     *                     format="binary",
+     *                     description="Optional image file (jpeg, png, jpg, gif, webp), max 2 MB"
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Profile updated successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="status", type="boolean", example=true),
+     *             @OA\Property(property="code", type="integer", example=200),
+     *             @OA\Property(property="message", type="string", example="Profile updated successfully"),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="id", type="integer", example=42),
+     *                 @OA\Property(property="name", type="string", example="John Doe"),
+     *                 @OA\Property(property="email", type="string", example="john@example.com"),
+     *                 @OA\Property(property="phone", type="string", example="+255700000000"),
+     *                 @OA\Property(property="profile_pic", type="string", example="storage/profile_pics/1694783948_avatar.jpg")
+     *             )
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=404,
+     *         description="User not found",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="status", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="User not found."),
+     *             @OA\Property(property="code", type="integer", example=404),
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error",
+     *         ref="#/components/responses/422"
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated",
+     *         ref="#/components/responses/401"
+     *     )
+     * )
+     */
 
     public function profileUpdateByAdmin(Request $request, $id)
     {

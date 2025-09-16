@@ -44,7 +44,7 @@ Route::middleware(['auth:sanctum', 'user.type:super_admin'])->group(function () 
     Route::get('admin/customers/{id}', [CustomerManagementController::class, 'show']);
 
     Route::resource('manage/users', AdminUserManagementController::class);
-    Route::put('/manage/users/{id}/status', [AdminUserManagementController::class, 'status'])->name('');
+    Route::put('/manage/users/{id}/status', [AdminUserManagementController::class, 'status']);
 
     Route::get('/system_settings', [SystemSettingController::class, 'index']);
     Route::post('/system_settings', [SystemSettingController::class, 'update']);

@@ -212,6 +212,10 @@ namespace App\Http\Controllers;
  *     description="Endpoints for managing administrative actions such as approving/rejecting instructor applications, overseeing users, and handling system-level operations."
  * ),
  * @OA\Tag(
+ *     name="Admin Manage Users",
+ *     description="Endpoints for managing users, changing user status , editing and deleting."
+ * ),
+ * @OA\Tag(
  *     name="Payment Options",
  *     description="APIs to manage available payment options for customers, such as pay-now, save-pay-later, etc."
  * ),
@@ -242,10 +246,6 @@ namespace App\Http\Controllers;
  * @OA\Tag(
  *     name="Products",
  *     description="APIs to manage products, including creation, updates, and retrieval of product details."
- * ),
- * @OA\Tag(
- *     name="Cards",
- *     description="APIs for managing card-related data, such as loyalty cards or payment cards."
  * ),
  * @OA\Tag(
  *     name="Orders",

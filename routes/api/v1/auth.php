@@ -55,5 +55,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/users', [UserController::class, 'index']); //get all the users filter by roless
     Route::patch('/users/{id}', [UserController::class, 'update']); //update the user status
     Route::put('/profile/update', [UserController::class, 'profileUpdate']);
-    Route::put('/profile/update/{id}', [UserController::class, 'profileUpdateByAdmin']);
+    Route::put('/admin/users/{id}/profile', [UserController::class, 'profileUpdateByAdmin'])->middleware('user.type:super_admin');
 });

@@ -21,7 +21,8 @@ class Shipment extends Model
         'tracking_number',
         'status',
         'shipped_at',
-        'delivered_at'
+        'delivered_at',
+        'delivered_late'
     ];
 
     protected static function boot()

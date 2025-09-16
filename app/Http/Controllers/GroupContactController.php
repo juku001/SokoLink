@@ -198,17 +198,14 @@ class GroupContactController extends Controller
      *
      *     @OA\Response(
      *         response=401,
-     *         description="Unauthenticated"
+     *         description="Unauthenticated",
+     *         ref="#/components/responses/401"
      *     ),
      *
      *     @OA\Response(
      *         response=500,
      *         description="Server error",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string", example="Error: Something went wrong"),
-     *             @OA\Property(property="data", type="array", @OA\Items())
-     *         )
+     *         ref="#/components/responses/500"
      *     )
      * )
      */

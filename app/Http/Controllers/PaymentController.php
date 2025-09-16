@@ -25,6 +25,80 @@ class PaymentController extends Controller
 {
 
 
+    /**
+     * @OA\Get(
+     *     path="/payments",
+     *     summary="Get list of payments for authenticated user",
+     *     description="Retrieve a paginated list of payments with optional filters for payment method, status, and search by order reference or payment reference.",
+     *     operationId="listPayments",
+     *     tags={"Payments"},
+     *     security={{"sanctum":{}}},
+     *
+     *     @OA\Parameter(
+     *         name="payment_method_id",
+     *         in="query",
+     *         description="Filter payments by payment method ID",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Parameter(
+     *         name="status",
+     *         in="query",
+     *         description="Filter payments by status (e.g., pending, successful, failed)",
+     *         required=false,
+     *         @OA\Schema(type="string", example="pending")
+     *     ),
+     *     @OA\Parameter(
+     *         name="search",
+     *         in="query",
+     *         description="Search payments by order reference or payment reference",
+     *         required=false,
+     *         @OA\Schema(type="string", example="ORD-20250916-ABC123")
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Paginated list of payments",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="status", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="List of payments"),
+     *             @OA\Property(property="code", type="integer", example=200),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="current_page",
+     *                     type="integer",
+     *                     example=1
+     *                 ),
+     *                 @OA\Property(
+     *                     property="data",
+     *                     type="array",
+     *                     @OA\Items(
+     *                         type="object",
+     *                         @OA\Property(property="id", type="integer", example=101),
+     *                         @OA\Property(property="reference", type="string", example="PAY-20250916-XYZ123"),
+     *                         @OA\Property(property="amount", type="number", format="float", example=50000),
+     *                         @OA\Property(property="status", type="string", example="pending"),
+     *                         @OA\Property(property="order", type="object"),
+     *                         @OA\Property(property="paymentMethod", type="object")
+     *                     )
+     *                 ),
+     *                 @OA\Property(property="last_page", type="integer", example=5),
+     *                 @OA\Property(property="per_page", type="integer", example=50),
+     *                 @OA\Property(property="total", type="integer", example=250)
+     *             )
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthorized access",
+     *         ref="#/components/responses/401"
+     *     )
+     * )
+     */
     public function index(Request $request)
     {
         $authId = auth()->user()->id;
@@ -32,17 +106,14 @@ class PaymentController extends Controller
         $query = Payment::with(['order', 'paymentMethod'])
             ->where("user_id", $authId);
 
-        // 🔹 Filter by payment method
         if ($request->has('payment_method_id') && !empty($request->payment_method_id)) {
             $query->where('payment_method_id', $request->payment_method_id);
         }
 
-        // 🔹 Filter by status
         if ($request->has('status') && !empty($request->status)) {
             $query->where('status', $request->status);
         }
 
-        // 🔹 Search by order_ref (from orders) or payment reference
         if ($request->has('search') && !empty($request->search)) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
@@ -53,11 +124,103 @@ class PaymentController extends Controller
             });
         }
 
-        $payments = $query->latest()->paginate(50); // paginated
+        $payments = $query->latest()->paginate(50);
 
         return ResponseHelper::success($payments, 'List of payments');
     }
 
+
+
+
+    /**
+     * @OA\Post(
+     *     path="/checkout",
+     *     summary="Checkout the cart and create an order",
+     *     description="Transfers the buyer's cart items into an order with shipping address and payment details.",
+     *     operationId="checkout",
+     *     tags={"Orders"},
+     *     security={{"sanctum":{}}},
+     *
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\MediaType(
+     *             mediaType="application/json",
+     *             @OA\Schema(
+     *                 type="object",
+     *                 required={"fullname","phone","address","region_id","payment_method_id","payment_option_id"},
+     *                 @OA\Property(property="fullname", type="string", example="John Doe"),
+     *                 @OA\Property(property="phone", type="string", example="+255712345678"),
+     *                 @OA\Property(property="address", type="string", example="123 Main Street"),
+     *                 @OA\Property(property="region_id", type="integer", example=1),
+     *                 @OA\Property(property="payment_method_id", type="integer", example=2),
+     *                 @OA\Property(property="payment_option_id", type="integer", example=1)
+     *             )
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=201,
+     *         description="Order placed successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="status", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Order placed successfully"),
+     *             @OA\Property(property="code", type="integer", example=200),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="order_id", type="integer", example=101),
+     *                 @OA\Property(property="total", type="number", format="float", example=50000),
+     *                 @OA\Property(property="subtotal", type="number", format="float", example=45000),
+     *                 @OA\Property(property="shipping", type="number", format="float", example=5000),
+     *                 @OA\Property(
+     *                     property="items",
+     *                     type="array",
+     *                     @OA\Items(
+     *                         type="object",
+     *                         @OA\Property(property="product_id", type="integer", example=10),
+     *                         @OA\Property(property="quantity", type="integer", example=2),
+     *                         @OA\Property(property="price", type="number", format="float", example=15000),
+     *                         @OA\Property(
+     *                             property="product",
+     *                             type="object",
+     *                             @OA\Property(property="name", type="string", example="Smartphone Case"),
+     *                             @OA\Property(
+     *                                 property="store",
+     *                                 type="object",
+     *                                 @OA\Property(property="name", type="string", example="Tech Store")
+     *                             )
+     *                         )
+     *                     )
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=400,
+     *         description="Cart empty or query error",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="status", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Please add items to cart first."),
+     *             @OA\Property(property="code", type="integer", example=400),
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation errors",
+     *         ref="#/components/responses/422"
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=500,
+     *         description="Server error",
+     *         ref="#/components/responses/500"
+     *     )
+     * )
+     */
 
     public function checkout(Request $request)
     {
@@ -154,15 +317,79 @@ class PaymentController extends Controller
 
 
 
+    /**
+     * @OA\Post(
+     *     path="/payment/process",
+     *     summary="Initiate payment for an order",
+     *     description="Initiates a payment process for a specific order using a selected payment option.",
+     *     operationId="initiatePayment",
+     *     tags={"Payments"},
+     *     security={{"sanctum":{}}},
+     *
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="order_id", type="integer", example=101, description="ID of the order to pay for"),
+     *             @OA\Property(property="payment_option_id", type="integer", example=1, description="ID of the selected payment option")
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Payment process initiated successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="status", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Payment initiated successfully"),
+     *             @OA\Property(property="code", type="integer", example=200),
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=400,
+     *         description="Invalid payment option or cannot pay order",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="status", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Invalid payment option selected."),
+     *             @OA\Property(property="code", type="integer", example=400),
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=404,
+     *         description="Order not found",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="status", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Order not found"),
+     *             @OA\Property(property="code", type="integer", example=404),
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation errors",
+     *         ref="#/components/responses/422"
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=500,
+     *         description="Server error",
+     *         ref="#/components/responses/500"
+     *     )
+     * )
+     */
     public function initiate(Request $request)
     {
-
         $validator = Validator::make($request->all(), [
             'order_id' => 'required|numeric|exists:orders,id',
             'payment_option_id' => 'required|numeric|exists:payment_options,id'
         ], [
             'order_id.exists' => 'Order does not exist.'
         ]);
+
         if ($validator->fails()) {
             return ResponseHelper::error(
                 $validator->errors(),
@@ -170,18 +397,22 @@ class PaymentController extends Controller
                 422
             );
         }
+
         $order = Order::find($request->order_id);
         if (!$order) {
             return ResponseHelper::error([], "Order not found.", 404);
         }
+
         $check = $this->canBePaid($order);
         if ($check !== true) {
             return $check;
         }
+
         $checkOptionAndMethods = $this->optionsAndMethods($request);
         if ($checkOptionAndMethods !== true) {
             return $checkOptionAndMethods;
         }
+
         try {
             $payOption = PaymentOptions::find($request->payment_option_id);
             switch ($payOption->key) {
@@ -197,9 +428,8 @@ class PaymentController extends Controller
         } catch (Exception $e) {
             return ResponseHelper::error([], "Error : " . $e->getMessage());
         }
-
-
     }
+
 
 
 

@@ -21,6 +21,37 @@ class SystemSettingController extends Controller
      * Get all system settings
      * GET /settings
      */
+
+    /**
+     * @OA\Get(
+     *     path="/system_settings",
+     *     summary="Get all system settings",
+     *     description="Retrieve all system-wide settings, including maintenance mode, auto product approval, SMS and email configurations",
+     *     tags={"Admin"},
+     *     @OA\Response(
+     *         response=200,
+     *         description="System settings retrieved successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="System settings retrieved successfully."),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="maintenance_mode", type="boolean", example=false),
+     *                 @OA\Property(property="auto_product_approval", type="boolean", example=true),
+     *                 @OA\Property(property="sms_alerts_enabled", type="boolean", example=true),
+     *                 @OA\Property(property="sms_provider_api_key", type="string", example="encrypted_string"),
+     *                 @OA\Property(property="sms_provider_sender_id", type="string", example="encrypted_string"),
+     *                 @OA\Property(property="email_smtp_host", type="string", example="smtp.mailtrap.io"),
+     *                 @OA\Property(property="email_smtp_port", type="integer", example=587),
+     *                 @OA\Property(property="email_smtp_username", type="string", example="encrypted_string"),
+     *                 @OA\Property(property="email_smtp_password", type="string", example="encrypted_string")
+     *             )
+     *         )
+     *     ),
+     *     security={{"sanctum": {}}}
+     * )
+     */
+
+
     public function index()
     {
         $settings = $this->settings->all(); // cached automatically
@@ -31,6 +62,49 @@ class SystemSettingController extends Controller
      * Update system settings
      * POST /settings
      */
+
+    /**
+     * @OA\Post(
+     *     path="/system_settings",
+     *     summary="Update system settings",
+     *     description="Update system settings such as maintenance mode, auto product approval, SMS and email configurations. Sensitive values are encrypted automatically",
+     *     tags={"Admin"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             @OA\Property(property="maintenance_mode", type="boolean", example=false),
+     *             @OA\Property(property="auto_product_approval", type="boolean", example=true),
+     *             @OA\Property(property="sms_alerts_enabled", type="boolean", example=true),
+     *             @OA\Property(property="sms_provider_api_key", type="string", example="my_api_key"),
+     *             @OA\Property(property="sms_provider_sender_id", type="string", example="SENDER_ID"),
+     *             @OA\Property(property="email_smtp_host", type="string", example="smtp.mailtrap.io"),
+     *             @OA\Property(property="email_smtp_port", type="integer", example=587),
+     *             @OA\Property(property="email_smtp_username", type="string", example="username"),
+     *             @OA\Property(property="email_smtp_password", type="string", example="password")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="System settings updated successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="System settings updated successfully."),
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation failed",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Failed to validate fields."),
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     ),
+     *     security={{"sanctum": {}}}
+     * )
+     */
+
     public function update(Request $request)
     {
         $validator = Validator::make($request->all(), [

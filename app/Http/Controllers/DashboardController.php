@@ -113,6 +113,7 @@ class DashboardController extends Controller
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="Expenses dashboard stats"),
+     *             @OA\Property(property="code", type="integer", example=200),
      *             @OA\Property(
      *                 property="data",
      *                 type="object",
@@ -139,20 +140,12 @@ class DashboardController extends Controller
      *     @OA\Response(
      *         response=401,
      *         description="Unauthorized",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string", example="Unauthenticated"),
-     *             @OA\Property(property="data", type="object", example={})
-     *         )
+     *         ref="#/components/responses/401"
      *     ),
      *     @OA\Response(
      *         response=500,
      *         description="Internal server error",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string", example="Error: Database error or exception message"),
-     *             @OA\Property(property="data", type="object", example={})
-     *         )
+     *         ref="#/components/responses/500"
      *     )
      * )
      */
@@ -212,6 +205,89 @@ class DashboardController extends Controller
 
 
 
+
+    /**
+     * @OA\Get(
+     *     path="/dashboard/admin/customers",
+     *     summary="Admin customer management dashboard",
+     *     description="Returns key buyer statistics for the admin dashboard, including totals, active buyers, and growth trends.",
+     *     operationId="adminCustomerManagement",
+     *     tags={"Dashboard"},
+     *     security={{"sanctum":{}}},  
+     *     @OA\Response(
+     *         response=200,
+     *         description="Customer dashboard information",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="status", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Customer dashboard information"),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="total",
+     *                     type="object",
+     *                     @OA\Property(property="value", type="integer", example=1200, description="Total number of buyers"),
+     *                     @OA\Property(
+     *                         property="percent",
+     *                         type="object",
+     *                         @OA\Property(property="value", type="number", format="float", example=15.5, description="Percentage change vs last month"),
+     *                         @OA\Property(property="nature", type="string", example="positive", description="positive|negative"),
+     *                         @OA\Property(property="duration", type="string", example="month")
+     *                     )
+     *                 ),
+     *                 @OA\Property(
+     *                     property="active",
+     *                     type="object",
+     *                     @OA\Property(property="value", type="integer", example=950, description="Active buyers count"),
+     *                     @OA\Property(
+     *                         property="percent",
+     *                         type="object",
+     *                         @OA\Property(property="value", type="number", format="float", example=0),
+     *                         @OA\Property(property="nature", type="string", example="neutral"),
+     *                         @OA\Property(property="duration", type="string", example="month")
+     *                     )
+     *                 ),
+     *                 @OA\Property(
+     *                     property="growth",
+     *                     type="object",
+     *                     @OA\Property(property="value", type="number", format="float", example=20.0, description="Growth rate compared to last month"),
+     *                     @OA\Property(
+     *                         property="percent",
+     *                         type="object",
+     *                         @OA\Property(property="value", type="number", format="float", example=20.0),
+     *                         @OA\Property(property="nature", type="string", example="positive"),
+     *                         @OA\Property(property="duration", type="string", example="month")
+     *                     )
+     *                 ),
+     *                 @OA\Property(
+     *                     property="tickets",
+     *                     type="object",
+     *                     @OA\Property(property="value", type="integer", example=0, description="Support tickets placeholder"),
+     *                     @OA\Property(
+     *                         property="percent",
+     *                         type="object",
+     *                         @OA\Property(property="value", type="number", format="float", example=0),
+     *                         @OA\Property(property="nature", type="string", example="neutral"),
+     *                         @OA\Property(property="duration", type="string", example="month")
+     *                     )
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated",
+     *         ref="#/components/responses/401"
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Server error",
+     *         ref="#/components/responses/500"
+     *     )
+     * )
+     */
     public function adminCustomerManagement()
     {
         // Total buyers
@@ -286,6 +362,93 @@ class DashboardController extends Controller
 
 
 
+
+    /**
+     * @OA\Get(
+     *     path="/dashboard/admin/platform/health",
+     *     summary="Platform health dashboard",
+     *     description="Provides real-time metrics on system uptime, average response time, database connections, and API request load for platform monitoring.",
+     *     operationId="platformHealth",
+     *     tags={"Dashboard"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Platform health statistics",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="status", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Platform Health Dashboard"),
+     *             @OA\Property(property="code", type="integer", example=200),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="system_uptime",
+     *                     type="object",
+     *                     @OA\Property(property="value", type="number", format="float", example=124.5, description="System uptime in hours"),
+     *                     @OA\Property(property="unit", type="string", example="hours"),
+     *                     @OA\Property(
+     *                         property="percent",
+     *                         type="object",
+     *                         @OA\Property(property="value", type="number", format="float", example=99.98),
+     *                         @OA\Property(property="nature", type="string", example="positive"),
+     *                         @OA\Property(property="duration", type="string", example="day")
+     *                     )
+     *                 ),
+     *                 @OA\Property(
+     *                     property="response_time",
+     *                     type="object",
+     *                     @OA\Property(property="value", type="number", format="float", example=120.4, description="Average API response time in ms"),
+     *                     @OA\Property(property="unit", type="string", example="ms"),
+     *                     @OA\Property(
+     *                         property="percent",
+     *                         type="object",
+     *                         @OA\Property(property="value", type="number", format="float", example=0.02),
+     *                         @OA\Property(property="nature", type="string", example="positive"),
+     *                         @OA\Property(property="duration", type="string", example="hour")
+     *                     )
+     *                 ),
+     *                 @OA\Property(
+     *                     property="database_load",
+     *                     type="object",
+     *                     @OA\Property(property="value", type="integer", example=45, description="Active DB connections"),
+     *                     @OA\Property(property="unit", type="string", example="connections"),
+     *                     @OA\Property(
+     *                         property="percent",
+     *                         type="object",
+     *                         @OA\Property(property="value", type="number", format="float", example=2),
+     *                         @OA\Property(property="nature", type="string", example="positive"),
+     *                         @OA\Property(property="duration", type="string", example="hour")
+     *                     )
+     *                 ),
+     *                 @OA\Property(
+     *                     property="api_load",
+     *                     type="object",
+     *                     @OA\Property(property="value", type="integer", example=75, description="Requests per minute"),
+     *                     @OA\Property(property="unit", type="string", example="req/min"),
+     *                     @OA\Property(
+     *                         property="percent",
+     *                         type="object",
+     *                         @OA\Property(property="value", type="number", format="float", example=5),
+     *                         @OA\Property(property="nature", type="string", example="positive"),
+     *                         @OA\Property(property="duration", type="string", example="minute")
+     *                     )
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated",
+     *         ref="#/components/responses/401"
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Server error",
+     *         ref="#/components/responses/500"
+     *     )
+     * )
+     */
     public function platformHealth()
     {
         // Uptime
@@ -333,6 +496,89 @@ class DashboardController extends Controller
 
 
 
+    /**
+     * @OA\Get(
+     *     path="/dashboard/admin/payments",
+     *     summary="Admin payments dashboard statistics",
+     *     description="Provides monthly payment analytics such as total revenue, success rate, failed payments, and revenue growth compared to the previous month.",
+     *     operationId="adminPayments",
+     *     tags={"Dashboard"},
+     *     security={{"sanctum":{}}},  
+     *     @OA\Response(
+     *         response=200,
+     *         description="Admin payment stats",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="status", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Admin Payment Stats"),
+     *             @OA\Property(property="code", type="integer", example=200),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="total",
+     *                     type="object",
+     *                     @OA\Property(property="value", type="number", format="float", example=45200.75, description="Total revenue for the current month"),
+     *                     @OA\Property(
+     *                         property="percent",
+     *                         type="object",
+     *                         @OA\Property(property="value", type="number", format="float", example=12.5, description="Growth vs. last month in percentage"),
+     *                         @OA\Property(property="nature", type="string", example="positive", description="positive|negative"),
+     *                         @OA\Property(property="duration", type="string", example="month")
+     *                     )
+     *                 ),
+     *                 @OA\Property(
+     *                     property="success_rate",
+     *                     type="object",
+     *                     @OA\Property(property="value", type="number", format="float", example=87.3, description="Percentage of successful payment attempts this month"),
+     *                     @OA\Property(
+     *                         property="percent",
+     *                         type="object",
+     *                         @OA\Property(property="value", type="number", format="float", example=87.3),
+     *                         @OA\Property(property="nature", type="string", example="positive"),
+     *                         @OA\Property(property="duration", type="string", example="month")
+     *                     )
+     *                 ),
+     *                 @OA\Property(
+     *                     property="failed_payments",
+     *                     type="object",
+     *                     @OA\Property(property="value", type="integer", example=15, description="Number of failed payment attempts this month"),
+     *                     @OA\Property(
+     *                         property="percent",
+     *                         type="object",
+     *                         @OA\Property(property="value", type="integer", example=15),
+     *                         @OA\Property(property="nature", type="string", example="negative"),
+     *                         @OA\Property(property="duration", type="string", example="month")
+     *                     )
+     *                 ),
+     *                 @OA\Property(
+     *                     property="revenue_growth",
+     *                     type="object",
+     *                     @OA\Property(property="value", type="number", format="float", example=8.4, description="Revenue growth rate compared to previous month (%)"),
+     *                     @OA\Property(
+     *                         property="percent",
+     *                         type="object",
+     *                         @OA\Property(property="value", type="number", format="float", example=8.4),
+     *                         @OA\Property(property="nature", type="string", example="positive"),
+     *                         @OA\Property(property="duration", type="string", example="month")
+     *                     )
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated",
+     *         ref="#/components/responses/401"
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Server error",
+     *         ref="#/components/responses/500"
+     *     )
+     * )
+     */
     public function adminPayments()
     {
         // Total payments this month
@@ -412,6 +658,90 @@ class DashboardController extends Controller
     }
 
 
+
+
+    /**
+     * @OA\Get(
+     *     path="/dashboard/admin/merchants",
+     *     summary="Admin merchants dashboard statistics",
+     *     description="Returns monthly merchant (store) metrics including total, active, pending, and suspended stores with growth percentages compared to the previous month.",
+     *     operationId="adminMerchants",
+     *     tags={"Dashboard"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Merchant dashboard stats",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="status", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Merchant Dashboard Stats"),
+     *             @OA\Property(property="code", type="integer", example=200),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="total",
+     *                     type="object",
+     *                     @OA\Property(property="value", type="integer", example=320, description="Total number of stores"),
+     *                     @OA\Property(
+     *                         property="percent",
+     *                         type="object",
+     *                         @OA\Property(property="value", type="number", format="float", example=12.5, description="Growth vs last month (%)"),
+     *                         @OA\Property(property="nature", type="string", example="positive", description="positive|negative"),
+     *                         @OA\Property(property="duration", type="string", example="month")
+     *                     )
+     *                 ),
+     *                 @OA\Property(
+     *                     property="active",
+     *                     type="object",
+     *                     @OA\Property(property="value", type="integer", example=250, description="Number of active stores"),
+     *                     @OA\Property(
+     *                         property="percent",
+     *                         type="object",
+     *                         @OA\Property(property="value", type="number", format="float", example=8.4),
+     *                         @OA\Property(property="nature", type="string", example="positive"),
+     *                         @OA\Property(property="duration", type="string", example="month")
+     *                     )
+     *                 ),
+     *                 @OA\Property(
+     *                     property="pending",
+     *                     type="object",
+     *                     @OA\Property(property="value", type="integer", example=40, description="Number of stores pending approval"),
+     *                     @OA\Property(
+     *                         property="percent",
+     *                         type="object",
+     *                         @OA\Property(property="value", type="number", format="float", example=-5.2),
+     *                         @OA\Property(property="nature", type="string", example="negative"),
+     *                         @OA\Property(property="duration", type="string", example="month")
+     *                     )
+     *                 ),
+     *                 @OA\Property(
+     *                     property="suspended",
+     *                     type="object",
+     *                     @OA\Property(property="value", type="integer", example=30, description="Number of suspended stores"),
+     *                     @OA\Property(
+     *                         property="percent",
+     *                         type="object",
+     *                         @OA\Property(property="value", type="number", format="float", example=3.0),
+     *                         @OA\Property(property="nature", type="string", example="positive"),
+     *                         @OA\Property(property="duration", type="string", example="month")
+     *                     )
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated",
+     *         ref="#/components/responses/401"
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Server error",
+     *         ref="#/components/responses/500"
+     *     )
+     * )
+     */
 
     public function merchants()
     {

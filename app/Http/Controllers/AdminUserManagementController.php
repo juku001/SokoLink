@@ -11,6 +11,50 @@ use Illuminate\Support\Facades\Validator;
 
 class AdminUserManagementController extends Controller
 {
+
+    /**
+     * @OA\Get(
+     *     path="/manage/users",
+     *     summary="Get list of stores and associated users",
+     *     description="Retrieve all stores with related user info. Supports search by store/user name or phone, and filter by user status",
+     *     tags={"Admin Manage Users"},
+     *     @OA\Parameter(
+     *         name="search",
+     *         in="query",
+     *         description="Search term for store name, user name, or phone",
+     *         required=false,
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Parameter(
+     *         name="status",
+     *         in="query",
+     *         description="Filter by user status (active, suspended, inactive)",
+     *         required=false,
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Stores retrieved successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Stores retrieved successfully"),
+     *             @OA\Property(property="data", type="array",
+     *                 @OA\Items(
+     *                     @OA\Property(property="store_id", type="integer", example=1),
+     *                     @OA\Property(property="store_name", type="string", example="My Store"),
+     *                     @OA\Property(property="store_slug", type="string", example="my-store"),
+     *                     @OA\Property(property="joined_at", type="string", format="date-time", example="2025-09-16T12:00:00"),
+     *                     @OA\Property(property="user_id", type="integer", example=10),
+     *                     @OA\Property(property="user_name", type="string", example="John Doe"),
+     *                     @OA\Property(property="user_mobile", type="string", example="+255123456789"),
+     *                     @OA\Property(property="user_status", type="string", example="active")
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     security={{"sanctum": {}}}
+     * )
+     */
     public function index(Request $request)
     {
         $query = Store::with('user');
@@ -51,6 +95,44 @@ class AdminUserManagementController extends Controller
     }
 
 
+
+
+    /**
+     * @OA\Post(
+     *     path="/manage/users",
+     *     summary="Create a new store and user",
+     *     description="Creates a new user (seller) and associated store",
+     *     tags={"Admin Manage Users"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             @OA\Property(property="phone", type="string", example="+255712345678"),
+     *             @OA\Property(property="name", type="string", example="John Doe"),
+     *             @OA\Property(property="email", type="string", example="john@example.com"),
+     *             @OA\Property(property="store_name", type="string", example="John's Store"),
+     *             @OA\Property(property="store_email", type="string", example="store@example.com"),
+     *             @OA\Property(property="store_phone", type="string", example="+255712345678"),
+     *             @OA\Property(property="description", type="string", example="Store description"),
+     *             @OA\Property(property="address", type="string", example="123 Main Street"),
+     *             @OA\Property(property="region_id", type="integer", example=1),
+     *             @OA\Property(property="category_id", type="integer", example=2)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Store added successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Store added successful"),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="store", type="object"),
+     *                 @OA\Property(property="user", type="object")
+     *             )
+     *         )
+     *     ),
+     *     security={{"sanctum": {}}}
+     * )
+     */
 
     public function store(Request $request)
     {
@@ -115,6 +197,43 @@ class AdminUserManagementController extends Controller
     }
 
 
+
+
+
+    /**
+     * @OA\Get(
+     *     path="/manage/users/{id}",
+     *     summary="Get store details",
+     *     description="Retrieve a specific store and associated user info by store ID",
+     *     tags={"Admin Manage Users"},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="integer"),
+     *         description="Store ID"
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Store details retrieved successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Store details"),
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Store not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Store not found"),
+     *             
+     *         )
+     *     ),
+     *     security={{"sanctum": {}}}
+     * )
+     */
     public function show($id)
     {
 
@@ -141,6 +260,49 @@ class AdminUserManagementController extends Controller
 
 
 
+    /**
+     * @OA\Put(
+     *     path="/manage/users/{id}",
+     *     summary="Update store and user",
+     *     description="Update an existing store and its user",
+     *     tags={"Admin Manage Users"},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="integer"),
+     *         description="Store ID"
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             @OA\Property(property="phone", type="string", example="+255712345678"),
+     *             @OA\Property(property="name", type="string", example="John Doe"),
+     *             @OA\Property(property="email", type="string", example="john@example.com"),
+     *             @OA\Property(property="store_name", type="string", example="John's Store"),
+     *             @OA\Property(property="store_email", type="string", example="store@example.com"),
+     *             @OA\Property(property="store_phone", type="string", example="+255712345678"),
+     *             @OA\Property(property="description", type="string", example="Store description"),
+     *             @OA\Property(property="address", type="string", example="123 Main Street"),
+     *             @OA\Property(property="region_id", type="integer", example=1),
+     *             @OA\Property(property="category_id", type="integer", example=2)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Store updated successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Store updated successfully"),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="store", type="object"),
+     *                 @OA\Property(property="user", type="object")
+     *             )
+     *         )
+     *     ),
+     *     security={{"sanctum": {}}}
+     * )
+     */
     public function update(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
@@ -200,7 +362,40 @@ class AdminUserManagementController extends Controller
     }
 
 
-
+    /**
+     * @OA\Delete(
+     *     path="/manage/users/{id}",
+     *     summary="Delete store",
+     *     description="Delete a store by its ID",
+     *     tags={"Admin Manage Users"},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="integer"),
+     *         description="Store ID"
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Store deleted successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Store deleted successful."),
+     *             
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Store not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Store not found"),
+     *             
+     *         )
+     *     ),
+     *     security={{"sanctum": {}}}
+     * )
+     */
     public function destroy($id)
     {
         $store = Store::find($id);
@@ -212,6 +407,53 @@ class AdminUserManagementController extends Controller
 
         return ResponseHelper::success([], 'Store deleted successful.');
     }
+
+
+
+
+
+
+
+    /**
+     * @OA\Put(
+     *     path="/manage/users/{id}/status",
+     *     summary="Update user status",
+     *     description="Change status of a user (active, suspended, inactive)",
+     *     tags={"Admin Manage Users"},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="integer"),
+     *         description="User ID"
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="string", example="active", description="Status to set: active, suspended, inactive")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="User status updated successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="User status changed to Active"),
+     *             
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="User not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="User not found"),
+     *             
+     *         )
+     *     ),
+     *     security={{"sanctum": {}}}
+     * )
+     */
 
 
     public function status(Request $request, $id)
