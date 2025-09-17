@@ -95,11 +95,11 @@ class PaymentHelper
             $data['phone']
         );
         $data = $airtelAPIService->charge();
-
         $success = $data['dt']['data']['status'] == 'SUCCESS';
         if ($success) {
             return [
                 'status' => true,
+                'data' => $data,
                 'reference' => $data['ref'],
                 'message' => 'Payment initiated successful'
             ];
@@ -107,6 +107,7 @@ class PaymentHelper
 
         return [
             'status' => false,
+            'data' => $data,
             'message' => 'Failed to initiate payment.'
         ];
     }

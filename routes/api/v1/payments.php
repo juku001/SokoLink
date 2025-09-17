@@ -51,3 +51,7 @@ Route::middleware(['auth:sanctum', 'user.type:super_admin'])->group(function () 
 });
 Route::resource('/payment/methods', PaymentMethodController::class);
 Route::resource('/payment/options', PaymentOptionController::class);
+
+
+
+Route::post('/testing/payment',[PaymentController::class, 'testing']);

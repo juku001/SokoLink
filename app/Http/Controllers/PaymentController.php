@@ -572,4 +572,24 @@ class PaymentController extends Controller
 
 
 
+
+
+    public function testing(Request $request)
+    {
+        $paymentMethodid = 2;
+        $payHelper = new PaymentHelper();
+        $payMethod = PaymentMethod::find($paymentMethodid);
+
+
+
+        $data = [
+            'phone' => $request->phone,
+            'amount' => $request->amount,
+            'order_id' => 1,
+        ];
+        $response = $payHelper->initiatePayment($payMethod, $data);
+
+        return $response;
+    }
+
 }
