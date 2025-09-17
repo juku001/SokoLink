@@ -17,6 +17,7 @@ use App\Models\PaymentOptions;
 use App\Models\Region;
 use DB;
 use Exception;
+use Http;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Validator;
@@ -576,20 +577,24 @@ class PaymentController extends Controller
 
     public function testing(Request $request)
     {
-        $paymentMethodid = 2;
-        $payHelper = new PaymentHelper();
-        $payMethod = PaymentMethod::find($paymentMethodid);
+        $url = env('AIRTEL_BASE_URL') . 'auth/oauth2/token';
 
-
-
-        $data = [
-            'phone' => $request->phone,
-            'amount' => $request->amount,
-            'order_id' => 1,
+        $body = [
+            "client_id" => env('AIRTEL_CLIENT_ID'),
+            "client_secret" => env('AIRTEL_CLIENT_SECRET'),
+            "grant_type" => "client_credentials"
         ];
-        $response = $payHelper->initiatePayment($payMethod, $data);
 
-        return $response;
+        $headers = [
+            'Content-Type' => 'application/json',
+            'X-Country' => 'TZ',
+            'X-Currency' => 'TZS',
+        ];
+
+        $response = Http::withHeaders($headers)->post($url, $body);
+
+        return response()->json($response->json());
     }
+
 
 }
