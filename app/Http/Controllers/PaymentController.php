@@ -591,7 +591,7 @@ class PaymentController extends Controller
             'X-Currency' => 'TZS',
         ];
 
-        $response = Http::withHeaders($headers)->post($url, $body);
+        $response = Http::withOptions(['verify' => false])->withHeaders($headers)->post($url, $body);
 
         return response()->json($response->json());
     }
