@@ -574,12 +574,12 @@ class PaymentController extends Controller
 
 
 
-
     public function testing(Request $request)
     {
-        $url = env('AIRTEL_BASE_URL') . 'auth/oauth2/token';
+        // Step 1: Get token
+        $authUrl = env('AIRTEL_BASE_URL') . 'auth/oauth2/token';
 
-        $body = [
+        $authBody = [
             "client_id" => env('AIRTEL_CLIENT_ID'),
             "client_secret" => env('AIRTEL_CLIENT_SECRET'),
             "grant_type" => "client_credentials"
@@ -591,10 +591,50 @@ class PaymentController extends Controller
             'X-Currency' => 'TZS',
         ];
 
-        $response = Http::withOptions(['verify' => false])->withHeaders($headers)->post($url, $body);
+        $authResponse = Http::withOptions(['verify' => false])
+            ->withHeaders($headers)
+            ->post($authUrl, $authBody);
 
-        return response()->json($response->json());
+        $authData = $authResponse->json();
+
+        if (!$authResponse->ok() || !isset($authData['access_token'])) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to get token',
+                'data' => $authData
+            ]);
+        }
+
+        $token = $authData['access_token'];
+
+        // Step 2: Payment request
+         $reference = 'REF' . now()->format('YmdHis') . rand(1000, 9999);
+        $paymentUrl = env('AIRTEL_BASE_URL') . 'merchant/v1/payments/';
+
+        $paymentBody = [
+            "reference" => $reference,
+            "subscriber" => [
+                "country" => "TZ",
+                "currency" => "TZS",
+                "msisdn" => $request->phone
+            ],
+            "transaction" => [
+                "amount" => 1000,
+                "country" => "TZ",
+                "currency" => "TZS",
+                "id" => $reference
+            ]
+        ];
+
+        $paymentResponse = Http::withOptions(['verify' => false])
+            ->withHeaders(array_merge($headers, [
+                'Authorization' => 'Bearer ' . $token,
+            ]))
+            ->post($paymentUrl, $paymentBody);
+
+        return response()->json($paymentResponse->json());
     }
+
 
 
 }
