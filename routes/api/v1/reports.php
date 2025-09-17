@@ -3,9 +3,6 @@
 use App\Http\Controllers\OnlinePerformanceReportController;
 use App\Http\Controllers\ReportController;
 
-
-
-
 Route::prefix('reports')->group(function () {
 
     Route::get('/sales/performance', [ReportController::class, 'salesPerformance']);

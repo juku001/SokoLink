@@ -53,7 +53,10 @@ class AirtelAPI
         $response = Http::withHeaders($this->getHeaders($token))
             ->post($url, $data);
 
-        return $response->json();
+        return [
+            'dt' => $response->json(),
+            'ref' => $ref
+        ];
     }
 
     private function authenticateToken(): ?string
