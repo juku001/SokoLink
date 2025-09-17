@@ -25,6 +25,7 @@ class AirtelAPI
     public function charge()
     {
         $token = $this->authenticateToken();
+        return $token;
         if (!$token) {
             return [
                 'status' => false,
@@ -72,6 +73,7 @@ class AirtelAPI
         $response = Http::withHeaders($this->getHeaders())
             ->post($url, $data);
 
+            return $response->json();
         if ($response->successful()) {
             return $response->json()['access_token'] ?? null;
         }
