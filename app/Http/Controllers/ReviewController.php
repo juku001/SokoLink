@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\ResponseHelper;
+use App\Models\Order;
 use App\Models\Product;
 use App\Models\Store;
 use Illuminate\Http\Request;
@@ -43,10 +44,17 @@ class ReviewController extends Controller
      *             )
      *         )
      *     ),
-     *
-     *     @OA\Response(response=404, description="Product not found"),
-     *     @OA\Response(response=401, description="Unauthenticated"),
-     *     @OA\Response(response=500, description="Internal server error")
+     *     @OA\Response(
+     *         response=404,
+     *         description="Invalid user state or database error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Store not found"),
+     *             @OA\Property(property="code", type="integer", example=404)
+     *         )
+     *     ),
+     *     @OA\Response(response=401, description="Unauthenticated",ref="#/components/responses/401"),
+     *     @OA\Response(response=500, description="Internal server error",ref="#/components/responses/500")
      * )
      */
     public function products(string $id)
@@ -104,11 +112,27 @@ class ReviewController extends Controller
      *         )
      *     ),
      *
-     *     @OA\Response(response=409, description="User has already reviewed this product"),
-     *     @OA\Response(response=404, description="Product not found"),
-     *     @OA\Response(response=422, description="Validation error"),
-     *     @OA\Response(response=401, description="Unauthenticated"),
-     *     @OA\Response(response=500, description="Internal server error")
+     *      @OA\Response(
+     *       response=409, 
+     *       description="User has already reviewed this product",
+     *       @OA\JsonContent(
+     *             @OA\Property(property="status", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="product not found"),
+     *             @OA\Property(property="code", type="integer", example=409)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Invalid product state or database error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="product not found"),
+     *             @OA\Property(property="code", type="integer", example=404)
+     *         )
+     *     ),
+     *     @OA\Response(response=422, description="Validation error",ref="#/components/responses/422"),
+     *     @OA\Response(response=401, description="Unauthenticated",ref="#/components/responses/401"),
+     *     @OA\Response(response=500, description="Internal server error",ref="#/components/responses/500")
      * )
      */
     public function storeProductReview(Request $request, string $id)
@@ -186,10 +210,17 @@ class ReviewController extends Controller
      *             )
      *         )
      *     ),
-     *
-     *     @OA\Response(response=404, description="Store not found"),
-     *     @OA\Response(response=401, description="Unauthenticated"),
-     *     @OA\Response(response=500, description="Internal server error")
+     *     @OA\Response(
+     *         response=404,
+     *         description="Invalid user state or database error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Store not found"),
+     *             @OA\Property(property="code", type="integer", example=404)
+     *         )
+     *     ),
+     *     @OA\Response(response=401, description="Unauthenticated",ref="#/components/responses/401"),
+     *     @OA\Response(response=500, description="Internal server error",ref="#/components/responses/500")
      * )
      */
     public function stores(string $id)
@@ -246,12 +277,27 @@ class ReviewController extends Controller
      *             @OA\Property(property="data", ref="#/components/schemas/Review")
      *         )
      *     ),
-     *
-     *     @OA\Response(response=409, description="User has already reviewed this store"),
-     *     @OA\Response(response=404, description="Store not found"),
-     *     @OA\Response(response=422, description="Validation error"),
-     *     @OA\Response(response=401, description="Unauthenticated"),
-     *     @OA\Response(response=500, description="Internal server error")
+     *     @OA\Response(
+     *       response=409, 
+     *       description="User has already reviewed this store",
+     *       @OA\JsonContent(
+     *             @OA\Property(property="status", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Store not found"),
+     *             @OA\Property(property="code", type="integer", example=409)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Invalid user state or database error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Store not found"),
+     *             @OA\Property(property="code", type="integer", example=404)
+     *         )
+     *     ),
+     *     @OA\Response(response=422, description="Validation error",ref="#/components/responses/422"),
+     *     @OA\Response(response=401, description="Unauthenticated",ref="#/components/responses/401"),
+     *     @OA\Response(response=500, description="Internal server error",ref="#/components/responses/500")
      * )
      */
     public function storeStoreReview(Request $request, string $id)
@@ -281,11 +327,19 @@ class ReviewController extends Controller
         }
 
         $data = $validator->validated();
+
+        $purchaseVerified = Order::where('buyer_id', auth()->id())
+            ->where('status', 'paid')
+            ->whereHas('items.product', function ($q) use ($store) {
+                $q->where('store_id', $store->id);
+            })
+            ->exists();
+
         $review = $store->reviews()->create([
             'user_id' => auth()->id(),
             'rating' => $data['rating'],
             'review' => $data['review'],
-            'is_verified_purchase' => true
+            'is_verified_purchase' => $purchaseVerified,
         ]);
 
         return ResponseHelper::success(

@@ -9,6 +9,7 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Response;
@@ -19,7 +20,10 @@ class CategoryController extends Controller implements HasMiddleware
     public static function middleware(): array
     {
         return [
-            new Middleware(['auth:sanctum', 'user.type:super_admin'], only: ['store', 'update', 'destroy']),
+            new Middleware([
+                'auth:sanctum',
+                'user.type:super_admin'
+            ], only: ['store', 'update', 'destroy']),
         ];
     }
 
@@ -34,14 +38,12 @@ class CategoryController extends Controller implements HasMiddleware
      *     summary="Get all categories with store counts",
      *     description="Fetches all categories and includes the number of stores associated with each category.",
      *     operationId="getCategories",
-     *     security={{"sanctum":{}}},
-     *
      *     @OA\Response(
      *         response=200,
      *         description="List of categories with store counts",
      *         @OA\JsonContent(
      *             type="object",
-     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="status", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="Categories with store counts"),
      *             @OA\Property(
      *                 property="data",
@@ -52,18 +54,14 @@ class CategoryController extends Controller implements HasMiddleware
      *                     @OA\Property(property="name", type="string", example="Electronics"),
      *                     @OA\Property(property="slug", type="string", example="electronics"),
      *                     @OA\Property(property="parent_id", type="integer", nullable=true, example=null),
-     *                     @OA\Property(property="icon", type="string", nullable=true, example="icon.png"),
+     *                     @OA\Property(property="image", type="string", example="images/link_to/cat.png"),
+     *                     @OA\Property(property="icon", type="string", nullable=true, example="🍽️"),
      *                     @OA\Property(property="is_active", type="boolean", example=true),
      *                     @OA\Property(property="stores_count", type="integer", example=25)
      *                 )
      *             )
      *         )
      *     ),
-     *
-     *     @OA\Response(
-     *         response=401,
-     *         description="Unauthenticated"
-     *     )
      * )
      */
     public function index()
@@ -75,24 +73,25 @@ class CategoryController extends Controller implements HasMiddleware
 
 
     /**
-     * Store a newly created resource in storage.
-     */
-    /**
      * @OA\Post(
      *     path="/categories",
      *     tags={"Categories"},
      *     summary="Create a new category",
-     *     description="Creates a new category with optional parent and icon.",
+     *     description="Creates a new category with optional parent, icon, and image upload.",
      *     operationId="storeCategory",
-     *     security={{"sanctum":{}}},
+     *     security={{"BearerAuth":{}}},
      *
      *     @OA\RequestBody(
      *         required=true,
-     *         @OA\JsonContent(
-     *             required={"name"},
-     *             @OA\Property(property="name", type="string", example="Electronics"),
-     *             @OA\Property(property="icon", type="string", nullable=true, example="icon.png"),
-     *             @OA\Property(property="parent_id", type="integer", nullable=true, example=1)
+     *         @OA\MediaType(
+     *             mediaType="multipart/form-data",
+     *             @OA\Schema(
+     *                 required={"name"},
+     *                 @OA\Property(property="name", type="string", example="Electronics"),
+     *                 @OA\Property(property="icon", type="string", nullable=true, example="🍽️"),
+     *                 @OA\Property(property="parent_id", type="integer", nullable=true, example=1),
+     *                 @OA\Property(property="image", type="string", format="binary", nullable=true)
+     *             )
      *         )
      *     ),
      *
@@ -101,47 +100,56 @@ class CategoryController extends Controller implements HasMiddleware
      *         description="Category added successfully",
      *         @OA\JsonContent(
      *             type="object",
-     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="status", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="Category added successfully"),
+     *             @OA\Property(property="code", type="integer", example=201),
      *             @OA\Property(
      *                 property="data",
      *                 type="object",
      *                 @OA\Property(property="id", type="integer", example=10),
      *                 @OA\Property(property="name", type="string", example="Electronics"),
      *                 @OA\Property(property="slug", type="string", example="electronics"),
+     *                 @OA\Property(property="image", type="string", example="https://images/categories/some.png"),
      *                 @OA\Property(property="parent_id", type="integer", nullable=true, example=null),
-     *                 @OA\Property(property="icon", type="string", nullable=true, example="icon.png"),
+     *                 @OA\Property(property="icon", type="string", nullable=true, example="🍽️"),
      *                 @OA\Property(property="is_active", type="boolean", example=true)
      *             )
      *         )
+     *     ),
+     *      @OA\Response(
+     *         response=401,
+     *         description="Validation failed",
+     *         ref="#/components/responses/401"
+     *     ),
+     *     
+     *     @OA\Response(
+     *         response=403,
+     *         description="Validation failed",
+     *         ref="#/components/responses/403"
      *     ),
      *
      *     @OA\Response(
      *         response=422,
      *         description="Validation failed",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string", example="Failed to validate fields"),
-     *             @OA\Property(property="data", type="object")
-     *         )
+     *         ref="#/components/responses/422"
      *     ),
      *
      *     @OA\Response(
      *         response=500,
      *         description="Server error",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string", example="Error: SQLSTATE[...something went wrong...]"),
-     *             @OA\Property(property="data", type="array", @OA\Items())
-     *         )
+     *         ref="#/components/responses/500"
      *     )
      * )
      */
+
+
+
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255|unique:categories,name',
-            'icon' => 'nullable|string',
+            'icon' => 'required|string',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048', 
             'parent_id' => 'nullable|integer|exists:categories,id'
         ]);
 
@@ -162,6 +170,12 @@ class CategoryController extends Controller implements HasMiddleware
                 'is_active' => true
             ];
 
+            if ($request->hasFile('image')) {
+                $path = $request->file('image')->store('categories', 'public');
+
+                $data['image'] = Storage::url($path);
+            }
+
             $category = Category::create($data);
 
             return ResponseHelper::success($category, 'Category added successfully', 201);
@@ -176,7 +190,6 @@ class CategoryController extends Controller implements HasMiddleware
     }
 
 
-
     /**
      * Display the specified resource.
      */
@@ -187,8 +200,6 @@ class CategoryController extends Controller implements HasMiddleware
      *     summary="Get category details",
      *     description="Fetches the details of a specific category by ID.",
      *     operationId="getCategoryById",
-     *     security={{"sanctum":{}}},
-     *
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -202,7 +213,7 @@ class CategoryController extends Controller implements HasMiddleware
      *         description="Category details retrieved successfully",
      *         @OA\JsonContent(
      *             type="object",
-     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="status", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="category details"),
      *             @OA\Property(
      *                 property="data",
@@ -210,8 +221,9 @@ class CategoryController extends Controller implements HasMiddleware
      *                 @OA\Property(property="id", type="integer", example=5),
      *                 @OA\Property(property="name", type="string", example="Electronics"),
      *                 @OA\Property(property="slug", type="string", example="electronics"),
+     *                 @OA\Property(property="image", type="string", example="https://images/categories/some.png"),
      *                 @OA\Property(property="parent_id", type="integer", nullable=true, example=null),
-     *                 @OA\Property(property="icon", type="string", example="icon.png"),
+     *                 @OA\Property(property="icon", type="string", example="🍽️"),
      *                 @OA\Property(property="is_active", type="boolean", example=true)
      *             )
      *         )
@@ -221,15 +233,10 @@ class CategoryController extends Controller implements HasMiddleware
      *         response=404,
      *         description="Category not found",
      *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="status", type="boolean", example=false),
      *             @OA\Property(property="message", type="string", example="Category not found"),
-     *             @OA\Property(property="data", type="array", @OA\Items())
+     *             @OA\Property(property="code", type="integer", example=404),
      *         )
-     *     ),
-     *
-     *     @OA\Response(
-     *         response=401,
-     *         description="Unauthenticated"
      *     )
      * )
      */
@@ -266,13 +273,17 @@ class CategoryController extends Controller implements HasMiddleware
      *
      *     @OA\RequestBody(
      *         required=true,
-     *         @OA\JsonContent(
+     *         @OA\MediaType(
+     *           mediaType="multipart/form-data",
+     *           @OA\Schema(
      *             type="object",
      *             required={"name"},
      *             @OA\Property(property="name", type="string", example="Updated Electronics"),
-     *             @OA\Property(property="icon", type="string", nullable=true, example="new-icon.png"),
-     *             @OA\Property(property="parent_id", type="integer", nullable=true, example=2),
-     *             @OA\Property(property="is_active", type="boolean", example=true)
+     *             @OA\Property(property="icon", type="string", nullable=true, example="🍽️"),
+     *             @OA\Property(property="parent_id", type="integer", nullable=true, example=null),
+     *             @OA\Property(property="is_active", type="boolean", example=true),
+     *             @OA\Property(property="image", type="string", format="binary", nullable=true)
+     *         )
      *         )
      *     ),
      *
@@ -281,15 +292,17 @@ class CategoryController extends Controller implements HasMiddleware
      *         description="Category updated successfully",
      *         @OA\JsonContent(
      *             type="object",
-     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="status", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="Category updated successfully"),
+     *             @OA\Property(property="code", type="integer", example=200),
      *             @OA\Property(
      *                 property="data",
      *                 type="object",
      *                 @OA\Property(property="id", type="integer", example=10),
      *                 @OA\Property(property="name", type="string", example="Updated Electronics"),
      *                 @OA\Property(property="slug", type="string", example="updated-electronics"),
-     *                 @OA\Property(property="icon", type="string", example="new-icon.png"),
+     *                 @OA\Property(property="icon", type="string", example="🍽️"),
+     *                 @OA\Property(property="image", type="string", example="https://images/categories/some.png"),
      *                 @OA\Property(property="parent_id", type="integer", nullable=true, example=2),
      *                 @OA\Property(property="is_active", type="boolean", example=true)
      *             )
@@ -300,28 +313,37 @@ class CategoryController extends Controller implements HasMiddleware
      *         response=404,
      *         description="Category not found",
      *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="status", type="boolean", example=false),
      *             @OA\Property(property="message", type="string", example="Category not found"),
-     *             @OA\Property(property="data", type="array", @OA\Items())
+     *             @OA\Property(property="code", type="integer", example=404),
      *         )
      *     ),
-     *
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated",
+     *         ref="#/components/responses/401"
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Unauthenticated",
+     *         ref="#/components/responses/403"
+     *     ),
      *     @OA\Response(
      *         response=422,
-     *         description="Validation failed"
+     *         description="Validation failed",
+     *         ref="#/components/responses/422"
      *     ),
      *
      *     @OA\Response(
      *         response=500,
-     *         description="Internal server error"
+     *         description="Internal server error",
+     *         ref="#/components/responses/500"
      *     ),
      *
-     *     @OA\Response(
-     *         response=401,
-     *         description="Unauthenticated"
-     *     )
      * )
      */
+
+
     public function update(Request $request, $id)
     {
         $category = Category::find($id);
@@ -334,7 +356,8 @@ class CategoryController extends Controller implements HasMiddleware
             'name' => 'required|string|max:255|unique:categories,name,' . $category->id,
             'parent_id' => 'nullable|integer|exists:categories,id|not_in:' . $category->id,
             'icon' => 'nullable|string',
-            'is_active' => 'nullable|boolean'
+            'is_active' => 'nullable|boolean',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048', // add image validation
         ]);
 
         if ($validator->fails()) {
@@ -354,6 +377,17 @@ class CategoryController extends Controller implements HasMiddleware
                 'is_active' => $request->has('is_active') ? $request->is_active : $category->is_active,
             ];
 
+            // Handle image replacement if a new file is uploaded
+            if ($request->hasFile('image')) {
+                // Optionally delete old image if it exists
+                if ($category->image && Storage::disk('public')->exists($category->image)) {
+                    Storage::disk('public')->delete($category->image);
+                }
+
+                $path = $request->file('image')->store('categories', 'public');
+                $data['image'] = $path; // or Storage::url($path) if you prefer full URL
+            }
+
             $category->update($data);
 
             return ResponseHelper::success($category, 'Category updated successfully');
@@ -366,6 +400,7 @@ class CategoryController extends Controller implements HasMiddleware
             );
         }
     }
+
 
 
 
@@ -394,18 +429,9 @@ class CategoryController extends Controller implements HasMiddleware
      *         description="Category successfully deleted",
      *         @OA\JsonContent(
      *             type="object",
-     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="status", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="category successfully delted"),
-     *             @OA\Property(
-     *                 property="data",
-     *                 type="object",
-     *                 @OA\Property(property="id", type="integer", example=5),
-     *                 @OA\Property(property="name", type="string", example="Electronics"),
-     *                 @OA\Property(property="slug", type="string", example="electronics"),
-     *                 @OA\Property(property="icon", type="string", example="icon.png"),
-     *                 @OA\Property(property="parent_id", type="integer", nullable=true, example=null),
-     *                 @OA\Property(property="is_active", type="boolean", example=true)
-     *             )
+     *            @OA\Property(property="code", type="integer", example=200),
      *         )
      *     ),
      *
@@ -414,20 +440,27 @@ class CategoryController extends Controller implements HasMiddleware
      *         description="Category not found",
      *         @OA\JsonContent(
      *             type="object",
-     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="status", type="boolean", example=false),
      *             @OA\Property(property="message", type="string", example="Category not found"),
-     *             @OA\Property(property="data", type="array", @OA\Items())
+     *             @OA\Property(property="code", type="integer", example=404),
      *         )
      *     ),
      *
      *     @OA\Response(
      *         response=401,
-     *         description="Unauthenticated"
+     *         description="Unauthenticated",
+     *         ref="#/components/responses/401"
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Unauthenticated",
+     *         ref="#/components/responses/403"
      *     ),
      *
      *     @OA\Response(
      *         response=500,
-     *         description="Internal server error"
+     *         description="Internal server error",
+     *         ref="#/components/responses/500"
      *     )
      * )
      */
@@ -451,8 +484,6 @@ class CategoryController extends Controller implements HasMiddleware
      *     summary="Get stores under a category",
      *     description="Retrieve all stores belonging to a specific category by its ID.",
      *     operationId="getCategoryStores",
-     *     security={{"sanctum":{}}},
-     *
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -466,7 +497,7 @@ class CategoryController extends Controller implements HasMiddleware
      *         description="Stores retrieved successfully",
      *         @OA\JsonContent(
      *             type="object",
-     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="status", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example=""),
      *             @OA\Property(
      *                 property="data",
@@ -477,12 +508,7 @@ class CategoryController extends Controller implements HasMiddleware
      *                     property="stores",
      *                     type="array",
      *                     @OA\Items(
-     *                         type="object",
-     *                         @OA\Property(property="id", type="integer", example=12),
-     *                         @OA\Property(property="name", type="string", example="Tech World"),
-     *                         @OA\Property(property="category_id", type="integer", example=3),
-     *                         @OA\Property(property="address", type="string", example="123 Main Street"),
-     *                         @OA\Property(property="is_active", type="boolean", example=true)
+     *                         ref="#/components/schemas/Store"
      *                     )
      *                 )
      *             )
@@ -494,20 +520,10 @@ class CategoryController extends Controller implements HasMiddleware
      *         description="Category not found",
      *         @OA\JsonContent(
      *             type="object",
-     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="status", type="boolean", example=false),
      *             @OA\Property(property="message", type="string", example="Category not found"),
-     *             @OA\Property(property="data", type="array", @OA\Items())
+     *             @OA\Property(property="code", type="integer", example=404),
      *         )
-     *     ),
-     *
-     *     @OA\Response(
-     *         response=401,
-     *         description="Unauthenticated"
-     *     ),
-     *
-     *     @OA\Response(
-     *         response=500,
-     *         description="Internal server error"
      *     )
      * )
      */
@@ -534,7 +550,7 @@ class CategoryController extends Controller implements HasMiddleware
      *     summary="Get child categories",
      *     description="Retrieve all categories that have the given category as their parent.",
      *     operationId="getCategoryChildren",
-     *     security={{"sanctum":{}}},
+     *    
      *
      *     @OA\Parameter(
      *         name="id",
@@ -549,7 +565,7 @@ class CategoryController extends Controller implements HasMiddleware
      *         description="Child categories retrieved successfully",
      *         @OA\JsonContent(
      *             type="object",
-     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="status", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="Categories by parent ID"),
      *             @OA\Property(
      *                 property="data",
@@ -560,7 +576,7 @@ class CategoryController extends Controller implements HasMiddleware
      *                     @OA\Property(property="name", type="string", example="Smartphones"),
      *                     @OA\Property(property="slug", type="string", example="smartphones"),
      *                     @OA\Property(property="parent_id", type="integer", example=1),
-     *                     @OA\Property(property="icon", type="string", example="phone-icon.png"),
+     *                     @OA\Property(property="icon", type="string", example="🍽️"),
      *                     @OA\Property(property="is_active", type="boolean", example=true)
      *                 )
      *             )
@@ -572,20 +588,22 @@ class CategoryController extends Controller implements HasMiddleware
      *         description="Parent category not found",
      *         @OA\JsonContent(
      *             type="object",
-     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="status", type="boolean", example=false),
      *             @OA\Property(property="message", type="string", example="Category not found"),
-     *             @OA\Property(property="data", type="array", @OA\Items())
+     *             @OA\Property(property="code", type="integer", example=404),
      *         )
      *     ),
      *
      *     @OA\Response(
      *         response=401,
-     *         description="Unauthenticated"
+     *         description="Unauthenticated",
+     *         ref="#/components/responses/401"
      *     ),
      *
      *     @OA\Response(
      *         response=500,
-     *         description="Internal server error"
+     *         description="Internal server error",
+     *         ref="#/components/responses/500"
      *     )
      * )
      */

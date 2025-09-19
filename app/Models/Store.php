@@ -15,6 +15,8 @@ class Store extends Model
         'category_id',
         'description',
         'is_online',
+        'thumbnail',
+        'subtitle',
         'contact_mobile',
         'contact_email',
         'whatsapp',
@@ -88,4 +90,9 @@ class Store extends Model
         return $this->hasMany(StoreFollow::class, 'store_id');
     }
 
+
+    public function region()
+    {
+        return $this->belongsTo(Region::class);
+    }
 }

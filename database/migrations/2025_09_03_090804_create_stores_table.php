@@ -17,7 +17,9 @@ return new class extends Migration
             $table->string('name');
             $table->string('slug')->unique();
             $table->foreignId('category_id')->nullable()->constrained();
-            $table->string('description')->nullable();
+            $table->text('description')->nullable();
+            $table->string('subtitle')->nullable();
+            $table->string('thumbnail')->nullable();
             $table->boolean('is_online')->default(false);
             $table->string('contact_mobile')->nullable();
             $table->string('contact_email')->nullable();

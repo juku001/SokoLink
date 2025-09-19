@@ -10,14 +10,11 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('inventory_ledgers', function (Blueprint $table) {
+        Schema::create('store_links', function (Blueprint $table) {
             $table->id();
             $table->foreignId('store_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('product_id')->constrained()->cascadeOnDelete();
-            $table->integer('change');
-            $table->integer('balance');
-            $table->enum('reason', ['sale', 'restock', 'adjustment', 'return'])->default('sale');
-
+            $table->string('code')->unique();
+            $table->string('url');
             $table->timestamps();
         });
     }
@@ -27,6 +24,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('inventory_ledgers');
+        Schema::dropIfExists('store_links');
     }
 };

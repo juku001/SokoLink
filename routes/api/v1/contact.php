@@ -11,7 +11,7 @@ use App\Http\Controllers\GroupController;
 Route::middleware(['auth:sanctum'])->group(function () {
 
     Route::middleware(['user.type:seller'])->group(function () {
-        Route::get('/dashboard/contacts', [DashboardController::class, 'contacts']);
+        Route::get('/dashboard/seller/contacts', [DashboardController::class, 'contacts']);
 
         Route::resource('/contacts', ContactController::class);
 
@@ -22,7 +22,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     });
 
 
-    Route::post('/feedbacks', [FeedbackController::class, 'store']);
+    Route::post('/feedbacks', [FeedbackController::class, 'store'])->middleware('user.type:seller');
     Route::get('/feedbacks', [FeedbackController::class, 'index'])->middleware('user.type:super_admin');
 });
 

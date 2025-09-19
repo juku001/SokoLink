@@ -11,7 +11,7 @@ class GoogleSignInController extends Controller
 {
 
     /**
-     * @OA\Get(
+     * @OA\Post(
      *     path="/auth/login/google",
      *     summary="Redirect to Google OAuth",
      *     description="Starts the Google OAuth flow by redirecting the user to Google's login/consent screen.",

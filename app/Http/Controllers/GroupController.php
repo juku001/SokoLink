@@ -27,8 +27,9 @@ class GroupController extends Controller
      *         response=200,
      *         description="List of groups retrieved successfully",
      *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="status", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="List of all groups"),
+     *             @OA\Property(property="code", type="integer", example=200),
      *             @OA\Property(
      *                 property="data",
      *                 type="array",
@@ -41,10 +42,15 @@ class GroupController extends Controller
      *             )
      *         )
      *     ),
-     *
+     *      @OA\Response(
+     *       response=401,
+     *       description="Unauthroized",
+     *       ref="#/components/responses/401"
+     *     ),
      *     @OA\Response(
-     *         response=401,
-     *         description="Unauthenticated"
+     *       response=403,
+     *       description="Unauthroized",
+     *       ref="#/components/responses/403"
      *     )
      * )
      */
@@ -73,7 +79,8 @@ class GroupController extends Controller
      *         @OA\JsonContent(
      *             required={"name"},
      *             @OA\Property(property="name", type="string", example="VIP Customers"),
-     *             @OA\Property(property="description", type="string", example="High priority clients")
+     *             @OA\Property(property="description", type="string", example="High priority clients"),
+     *             
      *         )
      *     ),
      *
@@ -81,8 +88,9 @@ class GroupController extends Controller
      *         response=201,
      *         description="Group created successfully",
      *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="status", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="Group added successful"),
+     *             @OA\Property(property="code", type="integer", example=201),
      *             @OA\Property(
      *                 property="data",
      *                 type="object",
@@ -100,16 +108,17 @@ class GroupController extends Controller
      *     @OA\Response(
      *         response=422,
      *         description="Validation failed",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string", example="Failed to validate fields."),
-     *             @OA\Property(property="data", type="object")
-     *         )
+     *         ref="#/components/responses/422"
      *     ),
-     *
+     *      @OA\Response(
+     *       response=401,
+     *       description="Unauthroized",
+     *       ref="#/components/responses/401"
+     *     ),
      *     @OA\Response(
-     *         response=401,
-     *         description="Unauthenticated"
+     *       response=403,
+     *       description="Unauthroized",
+     *       ref="#/components/responses/403"
      *     )
      * )
      */
@@ -165,8 +174,9 @@ class GroupController extends Controller
      *         response=200,
      *         description="Group retrieved successfully",
      *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="status", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="Group details"),
+     *             @OA\Property(property="code", type="integer", example=200),
      *             @OA\Property(
      *                 property="data",
      *                 type="object",
@@ -185,15 +195,20 @@ class GroupController extends Controller
      *         response=404,
      *         description="Group not found",
      *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="status", type="boolean", example=false),
      *             @OA\Property(property="message", type="string", example="Group is not found."),
-     *             @OA\Property(property="data", type="array", @OA\Items())
+     *             @OA\Property(property="code", type="integer", example=404),
      *         )
      *     ),
-     *
+     *      @OA\Response(
+     *       response=401,
+     *       description="Unauthroized",
+     *       ref="#/components/responses/401"
+     *     ),
      *     @OA\Response(
-     *         response=401,
-     *         description="Unauthenticated"
+     *       response=403,
+     *       description="Unauthroized",
+     *       ref="#/components/responses/403"
      *     )
      * )
      */
@@ -244,8 +259,9 @@ class GroupController extends Controller
      *         response=200,
      *         description="Group updated successfully",
      *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="status", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="Group updated successfully"),
+     *             @OA\Property(property="code", type="integer", example=200),
      *             @OA\Property(
      *                 property="data",
      *                 type="object",
@@ -264,25 +280,26 @@ class GroupController extends Controller
      *         response=404,
      *         description="Group not found",
      *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="status", type="boolean", example=false),
      *             @OA\Property(property="message", type="string", example="Group not found."),
-     *             @OA\Property(property="data", type="array", @OA\Items())
+     *             @OA\Property(property="code", type="integer", example=404),
      *         )
      *     ),
      *
      *     @OA\Response(
      *         response=422,
      *         description="Validation failed",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string", example="Failed to validate fields."),
-     *             @OA\Property(property="data", type="object")
-     *         )
+     *         ref="#/components/responses/422"
      *     ),
-     *
+     *      @OA\Response(
+     *       response=401,
+     *       description="Unauthroized",
+     *       ref="#/components/responses/401"
+     *     ),
      *     @OA\Response(
-     *         response=401,
-     *         description="Unauthenticated"
+     *       response=403,
+     *       description="Unauthroized",
+     *       ref="#/components/responses/403"
      *     )
      * )
      */
@@ -343,9 +360,9 @@ class GroupController extends Controller
      *         response=204,
      *         description="Group deleted successfully",
      *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="status", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="Deleted successful"),
-     *             @OA\Property(property="data", type="object", example={})
+     *             @OA\Property(property="code", type="integer", example=204),
      *         )
      *     ),
      *
@@ -353,15 +370,20 @@ class GroupController extends Controller
      *         response=404,
      *         description="Group not found",
      *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="status", type="boolean", example=false),
      *             @OA\Property(property="message", type="string", example="Group is not found."),
-     *             @OA\Property(property="data", type="array", @OA\Items())
+     *             @OA\Property(property="code", type="integer", example=404),
      *         )
      *     ),
-     *
+     *      @OA\Response(
+     *       response=401,
+     *       description="Unauthroized",
+     *       ref="#/components/responses/401"
+     *     ),
      *     @OA\Response(
-     *         response=401,
-     *         description="Unauthenticated"
+     *       response=403,
+     *       description="Unauthroized",
+     *       ref="#/components/responses/403"
      *     )
      * )
      */

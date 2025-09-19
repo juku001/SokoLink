@@ -86,7 +86,7 @@ class CartController extends Controller implements HasMiddleware
             return $item->price * $item->quantity;
         });
 
-        $shipping = 5000; // flat rate for now
+        $shipping = 0; // flat rate for now
 
         $data = [
             'subtotal' => $subTotal,

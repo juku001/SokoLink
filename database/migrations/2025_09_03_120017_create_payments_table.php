@@ -19,6 +19,7 @@ return new class extends Migration {
             $table->decimal('amount', 12, 2)->default(0);
             $table->string('transaction_id')->nullable();
             $table->string('reference')->nullable();
+            $table->string('currency')->default('TZS');
             $table->enum('status', [
                 'pending',   
                 'processing',

@@ -26,7 +26,7 @@ class ProductController extends Controller implements HasMiddleware
     public static function middleware()
     {
         return [
-            new Middleware(['auth:sanctum'], only: ['store']),
+            new Middleware(['auth:sanctum', 'user.type:seller'], only: ['store', 'update', 'destroy']),
         ];
 
     }
@@ -42,7 +42,6 @@ class ProductController extends Controller implements HasMiddleware
      *     summary="List products for authenticated seller",
      *     description="Retrieve a paginated list of products belonging to the authenticated seller. Supports filtering by search, category, store, price range, and online status.",
      *     operationId="listProducts",
-     *     security={{"sanctum":{}}},
      *
      *     @OA\Parameter(
      *         name="search",
@@ -99,7 +98,7 @@ class ProductController extends Controller implements HasMiddleware
      *         description="Paginated list of products",
      *         @OA\JsonContent(
      *             type="object",
-     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="status", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="Products retrieved successfully"),
      *             @OA\Property(
      *                 property="data",
@@ -116,18 +115,14 @@ class ProductController extends Controller implements HasMiddleware
      *             )
      *         )
      *     ),
-     *     @OA\Response(response=401, description="Unauthenticated"),
-     *     @OA\Response(response=500, description="Internal server error")
+     *     @OA\Response(response=401, description="Unauthenticated",ref="#/components/responses/401"),
+     *     @OA\Response(response=500, description="Internal server error",ref="#/components/responses/500"),
      * )
      */
     public function index(Request $request)
     {
-        $authId = auth()->id();
 
-        $query = Product::with(['categories', 'images', 'store'])
-            ->whereHas('store', function ($q) use ($authId) {
-                $q->where('seller_id', $authId);
-            });
+        $query = Product::with(['categories', 'images', 'store']);
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -216,10 +211,10 @@ class ProductController extends Controller implements HasMiddleware
      *         @OA\JsonContent(ref="#/components/schemas/Product")
      *     ),
      *
-     *     @OA\Response(response=403, description="Unauthorized: store not owned by seller"),
-     *     @OA\Response(response=422, description="Validation failed"),
-     *     @OA\Response(response=401, description="Unauthenticated"),
-     *     @OA\Response(response=500, description="Internal server error")
+     *     @OA\Response(response=403, description="Unauthorized: store not owned by seller",ref="#/components/responses/403"),
+     *     @OA\Response(response=422, description="Validation failed",ref="#/components/responses/422"),
+     *     @OA\Response(response=401, description="Unauthenticated",ref="#/components/responses/401"),
+     *     @OA\Response(response=500, description="Internal server error",ref="#/components/responses/500"),
      * )
      */
 
@@ -309,8 +304,7 @@ class ProductController extends Controller implements HasMiddleware
      *     summary="Get a single product",
      *     description="Retrieve details of a product by its ID. Only the authenticated seller who owns the store can view it.",
      *     operationId="showProduct",
-     *     security={{"sanctum":{}}},
-     *
+
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -330,8 +324,9 @@ class ProductController extends Controller implements HasMiddleware
      *         description="Unauthorized: Seller does not own this product",
      *         @OA\JsonContent(
      *             type="object",
-     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="status", type="boolean", example=false),
      *             @OA\Property(property="message", type="string", example="Unauthorized: You cannot view this product."),
+     *             @OA\Property(property="code", type="integer", example=403),
      *             
      *         )
      *     ),
@@ -341,14 +336,17 @@ class ProductController extends Controller implements HasMiddleware
      *         description="Product not found",
      *         @OA\JsonContent(
      *             type="object",
-     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="status", type="boolean", example=false),
      *             @OA\Property(property="message", type="string", example="Product not found"),
+     *             @OA\Property(property="code", type="integer", example=404),
+     * 
+     * 
      *             
      *         )
      *     ),
      *
-     *     @OA\Response(response=401, description="Unauthenticated"),
-     *     @OA\Response(response=500, description="Internal server error")
+     *     @OA\Response(response=401, description="Unauthenticated",ref="#/components/responses/401"),
+     *     @OA\Response(response=500, description="Internal server error",ref="#/components/responses/500"),
      * )
      */
     public function show($id)
@@ -359,10 +357,10 @@ class ProductController extends Controller implements HasMiddleware
             return ResponseHelper::error([], 'Product not found', 404);
         }
 
-        // Ensure the authenticated seller owns this product
-        if ($product->store->seller_id !== auth()->id()) {
-            return ResponseHelper::error([], 'Unauthorized: You cannot view this product.', 403);
-        }
+        // // Ensure the authenticated seller owns this product
+        // if ($product->store->seller_id !== auth()->id()) {
+        //     return ResponseHelper::error([], 'Unauthorized: You cannot view this product.', 403);
+        // }
 
         return ResponseHelper::success($product, 'Product details retrieved successfully');
     }
@@ -421,10 +419,20 @@ class ProductController extends Controller implements HasMiddleware
      *     ),
      *
      *     @OA\Response(response=403, description="Unauthorized: Seller does not own this product"),
-     *     @OA\Response(response=404, description="Product not found"),
-     *     @OA\Response(response=422, description="Validation failed"),
-     *     @OA\Response(response=401, description="Unauthenticated"),
-     *     @OA\Response(response=500, description="Internal server error")
+     *     @OA\Response(
+     *         response=404,
+     *         description="Product not found",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="status", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Product not found"),
+     *             @OA\Property(property="code", type="integer", example=404), 
+     *             
+     *         )
+     *     ),
+     *     @OA\Response(response=422, description="Validation failed",ref="#/components/responses/422"),
+     *     @OA\Response(response=401, description="Unauthenticated",ref="#/components/responses/401"),
+     *     @OA\Response(response=500, description="Internal server error",ref="#/components/responses/500"),
      * )
      */
 
@@ -534,16 +542,28 @@ class ProductController extends Controller implements HasMiddleware
      *         description="Product deleted successfully",
      *         @OA\JsonContent(
      *             type="object",
-     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="status", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="Product deleted successfully"),
      *             @OA\Property(property="data", type="array", @OA\Items())
      *         )
      *     ),
      *
-     *     @OA\Response(response=403, description="Unauthorized: Seller does not own this product"),
-     *     @OA\Response(response=404, description="Product not found"),
-     *     @OA\Response(response=401, description="Unauthenticated"),
-     *     @OA\Response(response=500, description="Internal server error")
+     *     @OA\Response(response=403, description="Unauthorized: Seller does not own this product", ref="#/components/responses/403"),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Product not found",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="status", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Product not found"),
+     *             @OA\Property(property="code", type="integer", example=404),
+
+     * 
+     *             
+     *         )
+     *     ),
+     *     @OA\Response(response=401, description="Unauthenticated",ref="#/components/responses/401"),
+     *     @OA\Response(response=500, description="Internal server error",ref="#/components/responses/500"),
      * )
      */
     public function destroy($id)
@@ -577,7 +597,6 @@ class ProductController extends Controller implements HasMiddleware
      *     summary="List all products",
      *     description="Retrieve all products. Optionally filter by name using the `name` query parameter.",
      *     operationId="listAllProducts",
-     *     security={{"sanctum":{}}},
      *
      *     @OA\Parameter(
      *         name="name",
@@ -592,7 +611,7 @@ class ProductController extends Controller implements HasMiddleware
      *         description="Products retrieved successfully",
      *         @OA\JsonContent(
      *             type="object",
-     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="status", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="List of products"),
      *             @OA\Property(
      *                 property="data",
@@ -602,8 +621,8 @@ class ProductController extends Controller implements HasMiddleware
      *         )
      *     ),
      *
-     *     @OA\Response(response=401, description="Unauthenticated"),
-     *     @OA\Response(response=500, description="Internal server error")
+     *     @OA\Response(response=401, description="Unauthenticated",ref="#/components/responses/401"),
+     *     @OA\Response(response=500, description="Internal server error",ref="#/components/responses/500"),
      * )
      */
     public function all(Request $request)
@@ -645,16 +664,26 @@ class ProductController extends Controller implements HasMiddleware
      *         description="Product status changed successfully",
      *         @OA\JsonContent(
      *             type="object",
-     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="status", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="Product status changed successfully."),
      *             @OA\Property(property="data", type="array", @OA\Items())
      *         )
      *     ),
      *
-     *     @OA\Response(response=403, description="Unauthorized: Seller does not own this product"),
-     *     @OA\Response(response=404, description="Product not found"),
-     *     @OA\Response(response=401, description="Unauthenticated"),
-     *     @OA\Response(response=500, description="Internal server error")
+     *     @OA\Response(response=403, description="Unauthorized: Seller does not own this product",ref="#/components/responses/403"),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Product not found",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Product not found"),
+     *             @OA\Property(property="code", type="integer", example=404),
+     *             
+     *         )
+     *     ),
+     *     @OA\Response(response=401, description="Unauthenticated", ref="#/components/responses/401"),
+     *     @OA\Response(response=500, description="Internal server error", ref="#/components/responses/500"),
      * )
      */
     public function status(Request $request, string $id)
@@ -710,15 +739,15 @@ class ProductController extends Controller implements HasMiddleware
      *         description="Products uploaded successfully",
      *         @OA\JsonContent(
      *             type="object",
-     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="status", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="Products uploaded successfully."),
      *             @OA\Property(property="data", type="array", @OA\Items())
      *         )
      *     ),
      *
-     *     @OA\Response(response=422, description="Invalid file or validation failed"),
-     *     @OA\Response(response=401, description="Unauthenticated"),
-     *     @OA\Response(response=500, description="Internal server error")
+     *     @OA\Response(response=422, description="Invalid file or validation failed", ref="#/components/responses/422"),
+     *     @OA\Response(response=401, description="Unauthenticated", ref="#/components/responses/401"),
+     *     @OA\Response(response=500, description="Internal server error", ref="#/components/responses/500"),
      * )
      */
     public function bulk(Request $request)
@@ -780,7 +809,7 @@ class ProductController extends Controller implements HasMiddleware
      *         description="Products retrieved successfully",
      *         @OA\JsonContent(
      *             type="object",
-     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="status", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="Products for store"),
      *             @OA\Property(
      *                 property="data",
@@ -789,10 +818,18 @@ class ProductController extends Controller implements HasMiddleware
      *             )
      *         )
      *     ),
-     *
-     *     @OA\Response(response=404, description="Store not found"),
-     *     @OA\Response(response=401, description="Unauthenticated"),
-     *     @OA\Response(response=500, description="Internal server error")
+     *      @OA\Response(
+     *         response=404,
+     *         description="Product not found",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Product not found"),
+     *             
+     *         )
+     *     ),
+     *     @OA\Response(response=401, description="Unauthenticated",ref="#/components/responses/401"),
+     *     @OA\Response(response=500, description="Internal server error",ref="#/components/responses/500"),
      * )
      */
     public function stores(Request $request, string $id)
@@ -804,7 +841,7 @@ class ProductController extends Controller implements HasMiddleware
         }
 
         // Start query for products of this store
-        $query = Product::where('store_id', $store->id);
+        $query = Product::with(['store', 'reviews', 'categories', 'images'])->where('store_id', $store->id)->where('is_online', true);
 
         // Filter by product name
         if ($request->has('name')) {
@@ -826,6 +863,132 @@ class ProductController extends Controller implements HasMiddleware
 
 
 
+
+    /**
+     * @OA\Get(
+     *     path="/products/{id}/detailed",
+     *     summary="Get detailed product information",
+     *     description="Returns a product along with its related store, reviews, categories, and images.",
+     *     tags={"Products"},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="ID of the product to retrieve",
+     *         @OA\Schema(type="integer", example=101)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Detailed product information retrieved successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="status", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Detailed product information"),
+     *             @OA\Property(property="code", type="integer", example=200),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="id", type="integer", example=101),
+     *                 @OA\Property(property="name", type="string", example="4K TV"),
+     *                 @OA\Property(property="description", type="string", example="High-definition television."),
+     *                 @OA\Property(property="price", type="number", format="float", example=499.99),
+     *                 @OA\Property(property="store", type="object"),
+     *                 @OA\Property(property="reviews", type="array", @OA\Items(type="object")),
+     *                 @OA\Property(property="categories", type="array", @OA\Items(type="object")),
+     *                 @OA\Property(property="images", type="array", @OA\Items(type="object"))
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Product not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Product not found"),
+     *             @OA\Property(property="code", type="integer", example=404),
+     *             
+     *         )
+     *     )
+     * )
+     */
+
+    public function detailed($id)
+    {
+        $product = Product::
+            with(['store', 'reviews', 'categories', 'images'])->
+            find($id);
+        if (!$product) {
+            return ResponseHelper::error([], 'Product not found', 404);
+        }
+
+
+        return ResponseHelper::success($product, 'Detailed product information');
+    }
+
+
+    /**
+     * @OA\Patch(
+     *     path="/products/{id}/online-status",
+     *     summary="Toggle product online status",
+     *     description="Allows the authenticated **seller** who owns the product to toggle its online/offline status.",
+     *     tags={"Products"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="ID of the product to toggle",
+     *         @OA\Schema(type="integer", example=101)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Product online status changed successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="status", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Product online status changed."),
+     *             @OA\Property(property="code", type="integer", example=200)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="User does not own the product",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="You do not own this product"),
+     *             @OA\Property(property="code", type="integer", example=403)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Product not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Product not found"),
+     *             @OA\Property(property="code", type="integer", example=404)
+     *         )
+     *     )
+     * )
+     */
+
+    public function online(string $id)
+    {
+        $product = Product::with('store')->find($id);
+        if (!$product) {
+            return ResponseHelper::error([], 'Product not found', 404);
+        }
+
+        $authId = auth()->user()->id;
+
+        if ($product->store->seller_id !== $authId) {
+            return ResponseHelper::error([], "You do not own this product");
+        }
+
+        $product->is_online = !$product->is_online;
+        $product->save();
+
+
+        return ResponseHelper::success([], "Product online status changed.");
+
+    }
 
 
 }

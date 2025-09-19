@@ -11,4 +11,7 @@ class Region extends Model
         'postal_code',
         'country_id'  
     ];
+    public function country(){
+        return $this->belongsTo(Country::class);
+    }
 }

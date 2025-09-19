@@ -10,12 +10,11 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('short_links', function (Blueprint $table) {
+        Schema::create('escrow_balances', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->foreignId('store_id')->constrained()->cascadeOnDelete();
-            $table->string('code')->unique();
-            $table->string('url');
-            $table->integer('clicks')->default(0);
+            $table->decimal('balance', 10, 2)->default(0);
             $table->timestamps();
         });
     }
@@ -25,6 +24,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('short_links');
+        Schema::dropIfExists('escrow_balances');
     }
 };

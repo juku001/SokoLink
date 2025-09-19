@@ -49,8 +49,9 @@ class ContactController extends Controller
      *         response=200,
      *         description="Contacts retrieved successfully",
      *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="status", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="Contacts retrieved successfully"),
+     *             @OA\Property(property="code", type="integer", example=200),
      *             @OA\Property(
      *                 property="data",
      *                 type="object",
@@ -74,7 +75,8 @@ class ContactController extends Controller
      *     ),
      *     @OA\Response(
      *         response=401,
-     *         description="Unauthenticated"
+     *         description="Unauthenticated",
+     *         ref="#/components/responses/401"
      *     )
      * )
      */
@@ -123,8 +125,9 @@ class ContactController extends Controller
      *         response=200,
      *         description="Contact retrieved successfully",
      *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="status", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="Contact retrieved"),
+     *             @OA\Property(property="code", type="integer", example=200),
      *             @OA\Property(
      *                 property="data",
      *                 type="object",
@@ -142,15 +145,21 @@ class ContactController extends Controller
      *         response=404,
      *         description="Contact not found",
      *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="status", type="boolean", example=false),
      *             @OA\Property(property="message", type="string", example="Contact not found"),
+     *             @OA\Property(property="code", type="integer", example=404),
      *             
      *         )
      *     ),
-     *
+     *      @OA\Response(
+     *       response=401,
+     *       description="Unauthroized",
+     *       ref="#/components/responses/401"
+     *     ),
      *     @OA\Response(
-     *         response=401,
-     *         description="Unauthenticated"
+     *       response=403,
+     *       description="Forbidden",
+     *       ref="#/components/responses/403"
      *     )
      * )
      */
@@ -202,8 +211,9 @@ class ContactController extends Controller
      *         response=201,
      *         description="Contact created successfully",
      *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="status", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="Contact created successfully"),
+     *             @OA\Property(property="code", type="integer", example=201),
      *             @OA\Property(
      *                 property="data",
      *                 type="object",
@@ -223,16 +233,13 @@ class ContactController extends Controller
      *     @OA\Response(
      *         response=422,
      *         description="Validation failed",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string", example="Failed to validate fields."),
-     *             @OA\Property(property="data", type="object")
-     *         )
+     *         ref="#/components/responses/422"
      *     ),
      *
      *     @OA\Response(
      *         response=401,
-     *         description="Unauthenticated"
+     *         description="Unauthenticated",
+     *         ref="#/components/responses/401"
      *     )
      * )
      */
@@ -323,7 +330,7 @@ class ContactController extends Controller
      *         response=200,
      *         description="Contact updated successfully",
      *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="status", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="Contact updated successfully"),
      *             @OA\Property(
      *                 property="data",
@@ -345,25 +352,26 @@ class ContactController extends Controller
      *         response=404,
      *         description="Contact not found",
      *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="status", type="boolean", example=false),
      *             @OA\Property(property="message", type="string", example="Contact not found"),
-     *             @OA\Property(property="data", type="array", @OA\Items())
+     *             @OA\Property(property="code", type="integer", example=404),
      *         )
      *     ),
      *
      *     @OA\Response(
      *         response=422,
      *         description="Validation failed",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string", example="Failed to validate fields."),
-     *             @OA\Property(property="data", type="object")
-     *         )
+     *         ref="#/components/responses/422"
      *     ),
-     *
+     *      @OA\Response(
+     *       response=401,
+     *       description="Unauthroized",
+     *       ref="#/components/responses/401"
+     *     ),
      *     @OA\Response(
-     *         response=401,
-     *         description="Unauthenticated"
+     *       response=403,
+     *       description="Forbidden",
+     *       ref="#/components/responses/403"
      *     )
      * )
      */
@@ -426,9 +434,9 @@ class ContactController extends Controller
  *         response=200,
  *         description="Contact deleted successfully",
  *         @OA\JsonContent(
- *             @OA\Property(property="success", type="boolean", example=true),
+ *             @OA\Property(property="status", type="boolean", example=true),
  *             @OA\Property(property="message", type="string", example="Contact deleted successfully"),
- *             @OA\Property(property="data", type="object", example={})
+ *             @OA\Property(property="code", type="integer", example=200),
  *         )
  *     ),
  *
@@ -436,16 +444,21 @@ class ContactController extends Controller
  *         response=404,
  *         description="Contact not found",
  *         @OA\JsonContent(
- *             @OA\Property(property="success", type="boolean", example=false),
+ *             @OA\Property(property="status", type="boolean", example=false),
  *             @OA\Property(property="message", type="string", example="Contact not found"),
- *             @OA\Property(property="data", type="array", @OA\Items())
+ *             @OA\Property(property="code", type="integer", example=404),
  *         )
  *     ),
- *
- *     @OA\Response(
- *         response=401,
- *         description="Unauthenticated"
- *     )
+     *      @OA\Response(
+     *       response=401,
+     *       description="Unauthroized",
+     *       ref="#/components/responses/401"
+     *     ),
+     *     @OA\Response(
+     *       response=403,
+     *       description="Forbidden",
+     *       ref="#/components/responses/403"
+     *     )
  * )
  */
 public function destroy($id)

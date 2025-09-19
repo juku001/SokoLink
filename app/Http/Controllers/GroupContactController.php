@@ -45,11 +45,7 @@ class GroupContactController extends Controller
      *     @OA\Response(
      *         response=403,
      *         description="Forbidden",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string", example="This group does not belong to you"),
-     *             @OA\Property(property="data", type="array", @OA\Items())
-     *         )
+     *         ref="#/components/responses/403"
      *     ),
      *
      *     @OA\Response(
@@ -58,33 +54,25 @@ class GroupContactController extends Controller
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=false),
      *             @OA\Property(property="message", type="string", example="Contact already assigned to this group"),
-     *             @OA\Property(property="data", type="array", @OA\Items())
+     *             @OA\Property(property="code", type="integer", example=409),
      *         )
      *     ),
      *
      *     @OA\Response(
      *         response=422,
      *         description="Validation failed",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string", example="Failed to validate fields"),
-     *             @OA\Property(property="data", type="object")
-     *         )
+     *         ref="#/components/responses/422"
      *     ),
-     *
-     *     @OA\Response(
-     *         response=401,
-     *         description="Unauthenticated"
+     *      @OA\Response(
+     *       response=401,
+     *       description="Unauthroized",
+     *       ref="#/components/responses/401"
      *     ),
      *
      *     @OA\Response(
      *         response=500,
      *         description="Server error",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string", example="Error: Something went wrong"),
-     *             @OA\Property(property="data", type="array", @OA\Items())
-     *         )
+     *         ref="#/components/responses/500"
      *     )
      * )
      */

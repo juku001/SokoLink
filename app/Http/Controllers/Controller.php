@@ -38,8 +38,17 @@ namespace App\Http\Controllers;
  *     description="Unauthorized",
  *     @OA\JsonContent(
  *         @OA\Property(property="status", type="boolean", example=false),
- *         @OA\Property(property="message", type="string", example="Unauthorized"),
+ *         @OA\Property(property="message", type="string", example="Unauthorized: Please log in"),
  *         @OA\Property(property="code", type="integer", example=401)
+ *     )
+ * ),
+ * @OA\Response(
+ *     response=403,
+ *     description="Forbidden",
+ *     @OA\JsonContent(
+ *         @OA\Property(property="status", type="boolean", example=false),
+ *         @OA\Property(property="message", type="string", example="Forbidden: You do not have permission to access this resource."),
+ *         @OA\Property(property="code", type="integer", example=403)
  *     )
  * ),
  * @OA\Response(
@@ -62,11 +71,12 @@ namespace App\Http\Controllers;
  *   title="User",
  *   description="User model schema",
  *   @OA\Property(property="id", type="integer", example=2),
- *   @OA\Property(property="name", type="string", example="John Doe"),
+ *   @OA\Property(property="name", type="string",nullable=true,example=null),
  *   @OA\Property(property="email", type="string",nullable=true,format="email",  example=null),
  *   @OA\Property(property="phone", type="string", example="+255712345678"),
  *   @OA\Property(property="email_verified_at", type="string", format="date-time", nullable=true, example="2025-08-21T17:26:14.000000Z"),
  *   @OA\Property(property="phone_verified_at", type="string", format="date-time", nullable=true, example="2025-08-21T17:26:14.000000Z"),
+ *   @OA\Property(property="role", type="string", example="buyer"),
  *   @OA\Property(property="created_by", type="integer", nullable=true, example=null),
  *   @OA\Property(property="deleted_by", type="integer", nullable=true, example=null),
  *   @OA\Property(property="status", type="string", example="active", enum={"active","inactive","suspended","deleted"}),
@@ -203,9 +213,17 @@ namespace App\Http\Controllers;
  *     name="Users",
  *     description="User related APIs, specifically designed for the admin to manage its users."
  * ),
+  * @OA\Tag(
+ *     name="Search",
+ *     description="Its for the buyer to look for the products or stores from the first page by searching for the name or description.."
+ * ),
  * @OA\Tag(
  *     name="Dashboard",
  *     description="Dashboard APIs for all the users, showing stats and other important data."
+ * ),
+ *  * @OA\Tag(
+ *     name="Graphical",
+ *     description="These are the APIs that will be used to show Graphical Illustrations on the Dashboards. These APIs includes for both, Admin and Seller's Dashboards."
  * ),
  * @OA\Tag(
  *     name="Admin",

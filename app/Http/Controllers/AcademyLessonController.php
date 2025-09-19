@@ -44,6 +44,7 @@ class AcademyLessonController extends Controller
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="Lesson added successfully"),
+     *             @OA\Property(property="code", type="integer", example=201),
      *             @OA\Property(property="data", type="object")
      *         )
      *     ),
@@ -53,17 +54,24 @@ class AcademyLessonController extends Controller
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=false),
      *             @OA\Property(property="message", type="string", example="Academy not found"),
+     *             @OA\Property(property="code", type="integer", example=404),
      *             
      *         )
      *     ),
      *     @OA\Response(
      *         response=422,
      *         description="Validation failed",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string", example="Validation failed"),
-     *             @OA\Property(property="data", type="object")
-     *         )
+     *         ref="#/components/responses/422"
+     *     ),
+     *      @OA\Response(
+     *       response=401,
+     *       description="Unauthroized",
+     *       ref="#/components/responses/401"
+     *     ),
+     *     @OA\Response(
+     *       response=403,
+     *       description="Forbidden",
+     *       ref="#/components/responses/403"
      *     )
      * )
      */
@@ -131,6 +139,7 @@ class AcademyLessonController extends Controller
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="Lesson details"),
+     *             @OA\Property(property="code", type="integer", example=200),
      *             @OA\Property(property="data", type="object")
      *         )
      *     ),
@@ -140,6 +149,7 @@ class AcademyLessonController extends Controller
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=false),
      *             @OA\Property(property="message", type="string", example="Lesson not found"),
+     *             @OA\Property(property="code", type="integer", example=404),
      *             
      *         )
      *     )
@@ -193,6 +203,7 @@ class AcademyLessonController extends Controller
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="Lesson updated successfully"),
+     *             @OA\Property(property="code", type="integer", example=200),
      *             @OA\Property(property="data", type="object")
      *         )
      *     ),
@@ -202,17 +213,14 @@ class AcademyLessonController extends Controller
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=false),
      *             @OA\Property(property="message", type="string", example="Lesson not found"),
+     *             @OA\Property(property="code", type="integer", example=404),
      *             
      *         )
      *     ),
      *     @OA\Response(
      *         response=422,
      *         description="Validation failed",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string", example="Validation failed"),
-     *             @OA\Property(property="data", type="object")
-     *         )
+     *         ref="#/components/responses/422"
      *     )
      * )
      */
@@ -276,6 +284,7 @@ class AcademyLessonController extends Controller
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="Lesson successfully deleted"),
+     *             @OA\Property(property="code", type="integer", example=200),             
      *             
      *         )
      *     ),
@@ -285,8 +294,19 @@ class AcademyLessonController extends Controller
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=false),
      *             @OA\Property(property="message", type="string", example="Lesson not found"),
+     *             @OA\Property(property="code", type="integer", example=404),
      *             
      *         )
+     *     ),
+     *      @OA\Response(
+     *       response=401,
+     *       description="Unauthroized",
+     *       ref="#/components/responses/401"
+     *     ),
+     *     @OA\Response(
+     *       response=403,
+     *       description="Forbidden",
+     *       ref="#/components/responses/403"
      *     )
      * )
      */

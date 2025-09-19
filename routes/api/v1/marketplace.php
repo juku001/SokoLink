@@ -2,38 +2,74 @@
 
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\StoreFollowingController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\SearchController;
+use App\Http\Controllers\SellerOverviewController;
 use App\Http\Controllers\StoreController;
 
 
-Route::resource('/categories', CategoryController::class); //these are the categories resource
-Route::get('/categories/{id}/stores', [CategoryController::class, 'stores']); //this is for getting all the stores in that category 
-Route::get('/categories/{id}/children', [CategoryController::class, 'children']);
 
-Route::get('/dashboard/seller', [DashboardController::class, 'seller']); //this is for the stats for the seller dashboard
-Route::get('/dashboard/products', [DashboardController::class, 'products']);
 
-Route::get('/search'); //get list of stores or products or categories searched by name
 
-Route::get('/stores/all', [StoreController::class, 'all'])->middleware('user.type:super_admin'); //all the online stores.
+
+Route::resource('/categories', CategoryController::class);
+Route::get('/categories/{id}/stores', [CategoryController::class, 'stores']);
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::get('/categories/{id}/children', [CategoryController::class, 'children']);
+});
+Route::get('/search', [SearchController::class, 'index']);
+
+Route::prefix('/stores/{id}')->group(function () {
+
+    Route::get('/products', [ProductController::class, 'stores']);
+    Route::middleware('auth:sanctum')->group(function () {
+
+        Route::post('/reviews', [ReviewController::class, 'storeStoreReview']);
+        Route::get('/reviews', [ReviewController::class, 'stores']);
+        Route::get('/follows', [StoreFollowingController::class, 'index'])->middleware('user.type:seller');
+        Route::patch('/follows', [StoreFollowingController::class, 'update'])
+            ->middleware('user.type:buyer');
+    });
+
+    Route::get('/detailed', [StoreController::class, 'detailed']);
+    Route::get('/online-status', [StoreController::class, 'status']);
+    Route::patch('/online-status', [StoreController::class, 'updateStatus'])->middleware(['auth:sanctum', 'user.type:seller']);
+
+})->whereNumber('id');
+
+Route::middleware(['auth:sanctum', 'user.type:seller'])->group(function () {
+
+    Route::get('/stores/active-store', [StoreController::class, 'active']);
+    Route::patch('/stores/active-store', [StoreController::class, 'updateActive']);
+
+});
 Route::resource('/stores', StoreController::class);
-Route::get('/stores/{id}/list', [StoreController::class, 'list']); //only the online stores for one specific user.
 
-Route::get('/products/all', [ProductController::class, 'all'])->middleware('user.type:super_admin'); //this is getting all the products regardless of the stores
-Route::resource('/products', ProductController::class);
+Route::middleware('auth:sanctum')->group(function () {
+
+    Route::get('/products/{id}/reviews', [ReviewController::class, 'products']);
+    Route::post('/products/{id}/reviews', [ReviewController::class, 'storeProductReview']);
+
+    Route::middleware('user.type:seller')->group(function () {
+
+        Route::patch('/products/{id}/online-status', [ProductController::class, 'online']);
+        Route::post('/products/excel', [ProductController::class, 'bulk']);
+
+    });
+
+});
+Route::get('/products/all', [ProductController::class, 'all'])->middleware(['auth:sanctum', 'user.type:super_admin']);
+Route::get('/products/{id}/detailed', [ProductController::class, 'detailed']);
+Route::resource('products', ProductController::class);
 
 
-Route::patch('/products/{id}/online', [ProductController::class, 'status']);//this is for changint the online toggle for the product 
-Route::post('/products/bulk-upload', [ProductController::class, 'bulk']); //uploading products from an excel file
 
-Route::get('/products/{id}/reviews', [ReviewController::class, 'products']); // getting all the product reviews
-Route::post('/products/{id}/reviews', [ReviewController::class, 'storeProductReview']); //adding the product reviews
 
-Route::get('/stores/{id}/products', [ProductController::class, 'stores']); //getting all the products of that particular store, filter by name and category
-Route::patch('/stores/{id}/online', [StoreController::class, 'status']); //this is for changint the online toggle for the store
-Route::get('/stores/{id}/reviews', [ReviewController::class, 'stores']); // this is for getting all the reviews of a specific store
-Route::post('/stores/{id}/reviews', [ReviewController::class, 'storeStoreReview']);// thsi si for reviewing on a specific store
-Route::post('/stores/{id}/follow', [StoreController::class, 'followStore']); // this is for following and unfoollowing for the store.
-Route::get('/stores/following', [StoreController::class, 'following']); //this is for the buyer to get list of stores they follow
+
+
+//     //     Route::get('/dashboard/seller/overview/stats', [SellerOverviewController::class, 'index']);
+// //     Route::get('/seller/overview/recent-sales', [SellerOverviewController::class, 'recentSales']);
+// //     Route::get('/seller/overview/low-stock', [SellerOverviewController::class, 'lowStock']);
 

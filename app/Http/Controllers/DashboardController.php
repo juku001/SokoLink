@@ -19,13 +19,15 @@ class DashboardController extends Controller
     public function seller()
     {
 
+        
+
     }
 
 
     /**
      * @OA\Get(
      *   tags={"Dashboard"},
-     *   path="/dashboard/contacts",
+     *   path="/dashboard/seller/contacts",
      *   summary="Get Contact Stats",
      *   @OA\Response(
      *     response=200, 

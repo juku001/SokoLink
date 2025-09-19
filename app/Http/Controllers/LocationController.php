@@ -263,7 +263,7 @@ class LocationController extends Controller
      *         @OA\JsonContent(
      *             type="object",
      *             @OA\Property(property="status", type="boolean", example=true),
-     *             @OA\Property(property="code", type="integer", example=200),
+     *             @OA\Property(property="code", type="integer", example=201),
      *             @OA\Property(property="message", type="string", example="New country added."),
      *             @OA\Property(
      *                 property="data",
@@ -280,6 +280,16 @@ class LocationController extends Controller
      *         response=422,
      *         description="Validation failed",
      *         ref="#/components/responses/422"
+     *     ),
+     *     @OA\Response(
+     *       response=401,
+     *       description="Unauthroized",
+     *       ref="#/components/responses/401"
+     *     ),
+     *     @OA\Response(
+     *       response=403,
+     *       description="Unauthroized",
+     *       ref="#/components/responses/403"
      *     )
      * )
      */
@@ -328,7 +338,7 @@ class LocationController extends Controller
      *         @OA\JsonContent(
      *             type="object",
      *             @OA\Property(property="status", type="boolean", example=true),
-     *             @OA\Property(property="code", type="integer", example=200),
+     *             @OA\Property(property="code", type="integer", example=201),
      *             @OA\Property(property="message", type="string", example="New regions added."),
      *             @OA\Property(
      *                 property="data",
@@ -346,6 +356,16 @@ class LocationController extends Controller
      *         response=422,
      *         description="Validation failed",
      *         ref="#/components/responses/422"
+     *     ),
+     *      @OA\Response(
+     *       response=401,
+     *       description="Unauthroized",
+     *       ref="#/components/responses/401"
+     *     ),
+     *     @OA\Response(
+     *       response=403,
+     *       description="Unauthroized",
+     *       ref="#/components/responses/403"
      *     )
      * )
      */
@@ -433,6 +453,16 @@ class LocationController extends Controller
      *         response=422,
      *         description="Validation failed",
      *         ref="#/components/responses/422"
+     *     ),
+     *      @OA\Response(
+     *       response=401,
+     *       description="Unauthroized",
+     *       ref="#/components/responses/401"
+     *     ),
+     *     @OA\Response(
+     *       response=403,
+     *       description="Unauthroized",
+     *       ref="#/components/responses/403"
      *     )
      * )
      */
@@ -527,6 +557,16 @@ class LocationController extends Controller
      *         response=422,
      *         description="Validation failed",
      *         ref="#/components/responses/422"
+     *     ),
+     *      @OA\Response(
+     *       response=401,
+     *       description="Unauthroized",
+     *       ref="#/components/responses/401"
+     *     ),
+     *     @OA\Response(
+     *       response=403,
+     *       description="Unauthroized",
+     *       ref="#/components/responses/403"
      *     )
      * )
      */
@@ -596,6 +636,16 @@ class LocationController extends Controller
      *             @OA\Property(property="code", type="integer", example=404),
      *             @OA\Property(property="message", type="string", example="Country not found.")
      *         )
+     *     ),
+     *      @OA\Response(
+     *       response=401,
+     *       description="Unauthroized",
+     *       ref="#/components/responses/401"
+     *     ),
+     *     @OA\Response(
+     *       response=403,
+     *       description="Unauthroized",
+     *       ref="#/components/responses/403"
      *     )
      * )
      */
@@ -650,7 +700,17 @@ class LocationController extends Controller
      *             @OA\Property(property="status", type="boolean", example=false),
      *             @OA\Property(property="code", type="integer", example=404),
      *             @OA\Property(property="message", type="string", example="Region not found.")
-     *         )
+     *         ),
+     *      @OA\Response(
+     *       response=401,
+     *       description="Unauthroized",
+     *       ref="#/components/responses/401"
+     *     ),
+     *     @OA\Response(
+     *       response=403,
+     *       description="Unauthroized",
+     *       ref="#/components/responses/403"
+     *     )
      *     )
      * )
      */

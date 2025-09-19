@@ -253,7 +253,7 @@ class PaymentController extends Controller
             }
 
             $subTotal = $cart->items->sum(fn($i) => $i->price * $i->quantity);
-            $shipping = 5000;
+            $shipping = 0;
             $total = $subTotal + $shipping;
 
 

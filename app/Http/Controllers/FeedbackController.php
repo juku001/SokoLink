@@ -57,6 +57,16 @@ class FeedbackController extends Controller
      *         response=422,
      *         description="Validation failed",
      *         ref="#/components/responses/422"
+     *     ),
+     *      @OA\Response(
+     *       response=401,
+     *       description="Unauthroized",
+     *       ref="#/components/responses/401"
+     *     ),
+     *     @OA\Response(
+     *       response=403,
+     *       description="Forbidden",
+     *       ref="#/components/responses/403"
      *     )
      * )
      */
@@ -139,10 +149,15 @@ class FeedbackController extends Controller
      *             )
      *         )
      *     ),
+     *      @OA\Response(
+     *       response=401,
+     *       description="Unauthroized",
+     *       ref="#/components/responses/401"
+     *     ),
      *     @OA\Response(
-     *         response=401,
-     *         description="Unauthorized",
-     *         ref="#/components/responses/401"
+     *       response=403,
+     *       description="Forbidden",
+     *       ref="#/components/responses/403"
      *     )
      * )
      */
