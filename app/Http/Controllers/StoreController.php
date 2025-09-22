@@ -61,6 +61,7 @@ class StoreController extends Controller implements HasMiddleware
      *                     @OA\Property(property="thumbnail", type="string", example="https://example.com/images/store-thumb.jpg"),
      *                     @OA\Property(property="address", type="string", example="123 Main Street"),
      *                     @OA\Property(property="region", type="string", nullable=true, example="Dar es Salaam"),
+     *                     @OA\Property(property="category", type="string", nullable=true, example="Vifaa vya umeme"),
      *                     @OA\Property(property="country", type="string", nullable=true, example="Tanzania"),
      *                     @OA\Property(property="rating", type="number", format="float", example=4.7),
      *                     @OA\Property(property="reviews_count", type="integer", example=23),
@@ -86,18 +87,18 @@ class StoreController extends Controller implements HasMiddleware
         }
 
         // eager-load relations for performance
-        $stores = Store::with('region.country', 'reviews')->where('is_online', true)->get()->map(function ($store) use ($user) {
+        $stores = Store::with('category', 'region.country', 'reviews')->where('is_online', true)->get()->map(function ($store) use ($user) {
             return [
                 'id' => $store->id,
                 'name' => $store->name,
                 'subtitle' => $store->subtitle,
                 'thumbnail' => $store->thumbnail,
                 'address' => $store->address,
+                'category' => optional($store->category)->name,
                 'region' => optional($store->region)->name,
                 'country' => optional(optional($store->region)->country)->name,
                 'rating' => $store->rating_avg,
                 'reviews_count' => $store->reviews->count(),
-
                 // true if authenticated user follows this store
                 'is_follow' => $user
                     ? $store->followers()->where('user_id', $user->id)->exists()
@@ -325,6 +326,8 @@ class StoreController extends Controller implements HasMiddleware
 
     public function update(Request $request, $id)
     {
+
+
         $store = Store::where('id', $id)
             ->where('seller_id', auth()->id())
             ->first();
@@ -417,6 +420,7 @@ class StoreController extends Controller implements HasMiddleware
      *                 @OA\Property(property="description", type="string", example="Best gadgets in town"),
      *                 @OA\Property(property="followers_count", type="integer", example=150),
      *                 @OA\Property(property="reviews_count", type="integer", example=20),
+     *                 @OA\Property(property="category", type="string", example="Electronics"),
      *                 @OA\Property(property="rating_avg", type="number", format="float", example=4.5),
      *                 @OA\Property(property="is_follow", type="boolean", example=false)
      *             )
@@ -437,7 +441,7 @@ class StoreController extends Controller implements HasMiddleware
     public function show(Request $request, string $id)
     {
 
-        $store = Store::withCount(['followers', 'reviews'])->where('is_online', true)->find($id);
+        $store = Store::withCount(['category', 'followers', 'reviews'])->where('is_online', true)->find($id);
 
         if (!$store) {
             return ResponseHelper::error([], 'Store not found.', 404);
@@ -469,7 +473,7 @@ class StoreController extends Controller implements HasMiddleware
             'followers_count' => $store->followers_count,
             'rating_avg' => $store->rating_avg,
             'reviews_count' => $store->reviews_count,
-
+            'category' => optional($store->category)->name,
             // true if authenticated user follows this store
             'is_follow' => $user
                 ? $store->followers()->where('user_id', $user->id)->exists()

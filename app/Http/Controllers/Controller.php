@@ -128,15 +128,7 @@ namespace App\Http\Controllers;
  *     @OA\Property(property="barcode", type="string", nullable=true, example="1234567890123"),
  *     @OA\Property(property="is_online", type="boolean", example=true),
  *     @OA\Property(property="stock_qty", type="integer", nullable=true, example=10),
- *     @OA\Property(
- *         property="categories",
- *         type="array",
- *         @OA\Items(
- *             type="object",
- *             @OA\Property(property="id", type="integer", example=3),
- *             @OA\Property(property="name", type="string", example="Electronics")
- *         )
- *     ),
+ *     @OA\Property(property="category_id", type="integer",example=1),
  *     @OA\Property(
  *         property="images",
  *         type="array",
@@ -149,6 +141,26 @@ namespace App\Http\Controllers;
  *     ),
  *     @OA\Property(property="created_at", type="string", format="date-time", example="2025-09-14T10:00:00Z"),
  *     @OA\Property(property="updated_at", type="string", format="date-time", example="2025-09-14T10:00:00Z")
+ * ),
+ *  * @OA\Schema(
+ *     schema="Sale",
+ *     type="object",
+ *     required={"seller_id","sale_ref","amount","sales_date","sales_time","status"},
+ *     @OA\Property(property="id", type="integer", format="int64", example=42),
+ *     @OA\Property(property="seller_id", type="integer", format="int64", description="ID of the user who recorded the sale", example=7),
+ *     @OA\Property(property="store_id", type="integer", format="int64", nullable=true, description="Store where the sale occurred", example=3),
+ *     @OA\Property(property="sale_ref", type="string", description="Unique reference code for this sale", example="SAL-2025-0001"),
+ *     @OA\Property(property="order_id", type="integer", format="int64", nullable=true, description="Linked order if applicable", example=null),
+ *     @OA\Property(property="payment_id", type="integer", format="int64", nullable=true, description="Linked payment record if any", example=null),
+ *     @OA\Property(property="payment_method_id", type="integer", format="int64", nullable=true, description="Specific payment method used", example=5),
+ *     @OA\Property(property="payment_type", type="string", enum={"cash","mno","bank","card"}, description="Broad payment category", example="mno"),
+ *     @OA\Property(property="buyer_name", type="string", nullable=true, description="Name of the buyer/customer", example="Jane Doe"),
+ *     @OA\Property(property="amount", type="number", format="double", description="Total sale amount", example=1500.75),
+ *     @OA\Property(property="sales_date", type="string", format="date", description="Date of the sale (YYYY-MM-DD)", example="2025-09-20"),
+ *     @OA\Property(property="sales_time", type="string", format="time", description="Time of the sale (HH:MM:SS)", example="14:30:00"),
+ *     @OA\Property(property="status", type="string", enum={"pending","completed"}, description="Whether the sale is finalized or awaiting completion", example="completed"),
+ *     @OA\Property(property="created_at", type="string", format="date-time", readOnly=true, example="2025-09-20T15:45:00Z"),
+ *     @OA\Property(property="updated_at", type="string", format="date-time", readOnly=true, example="2025-09-20T16:00:00Z")
  * ),
  * @OA\Schema(
  *     schema="Review",
@@ -205,6 +217,10 @@ namespace App\Http\Controllers;
  *     )
  * ),
  *
+ *  @OA\Tag(
+ *     name="Location",
+ *     description="APIs for managing geographic data including regions, cities, and addresses."
+ * ),
  * @OA\Tag(
  *     name="Authentication",
  *     description="APIs related to user authentication like login, logout, registration, password updates, etc."
@@ -217,43 +233,7 @@ namespace App\Http\Controllers;
  *     name="Search",
  *     description="Its for the buyer to look for the products or stores from the first page by searching for the name or description.."
  * ),
- * @OA\Tag(
- *     name="Dashboard",
- *     description="Dashboard APIs for all the users, showing stats and other important data."
- * ),
  *  * @OA\Tag(
- *     name="Graphical",
- *     description="These are the APIs that will be used to show Graphical Illustrations on the Dashboards. These APIs includes for both, Admin and Seller's Dashboards."
- * ),
- * @OA\Tag(
- *     name="Admin",
- *     description="Endpoints for managing administrative actions such as approving/rejecting instructor applications, overseeing users, and handling system-level operations."
- * ),
- * @OA\Tag(
- *     name="Admin Manage Users",
- *     description="Endpoints for managing users, changing user status , editing and deleting."
- * ),
- * @OA\Tag(
- *     name="Payment Options",
- *     description="APIs to manage available payment options for customers, such as pay-now, save-pay-later, etc."
- * ),
- * @OA\Tag(
- *     name="Payment Methods",
- *     description="APIs to manage payment methods like card, bank, and mobile money."
- * ),
- * @OA\Tag(
- *     name="Location",
- *     description="APIs for managing geographic data including regions, cities, and addresses."
- * ),
- * @OA\Tag(
- *     name="Contacts",
- *     description="APIs to manage contact information of users, customers, or business partners."
- * ),
- * @OA\Tag(
- *     name="Academy",
- *     description="APIs related to academy features, including courses, lessons, and instructors."
- * ),
- * @OA\Tag(
  *     name="Categories",
  *     description="APIs to manage categories for stores, products, or any classified data."
  * ),
@@ -261,9 +241,17 @@ namespace App\Http\Controllers;
  *     name="Stores",
  *     description="APIs to manage stores, their details, and operational information."
  * ),
+  * @OA\Tag(
+ *     name="Inventory",
+ *     description="APIs to manage products count in the store. The API's for the Inventory Stock Management for the seller."
+ * ),
  * @OA\Tag(
  *     name="Products",
  *     description="APIs to manage products, including creation, updates, and retrieval of product details."
+ * ),
+ * @OA\Tag(
+ *     name="Cart",
+ *     description="APIs to manage cart. Viewing the available cart details, add , removing and adjusting items to Cart and Checkout."
  * ),
  * @OA\Tag(
  *     name="Orders",
@@ -288,6 +276,34 @@ namespace App\Http\Controllers;
  * @OA\Tag(
  *     name="Payouts",
  *     description="APIs for handling payouts to users, vendors, or other entities."
+ * ),
+ * @OA\Tag(
+ *     name="Seller Dashboard",
+ *     description="Dashboard APIs for the sellers, showing stats and other important data on the seller panel."
+ * ),
+ * @OA\Tag(
+ *     name="Admin Dashboard",
+ *     description="Dashboard APIs for the admins, showing stats and other important data on the admin panel."
+ * ),
+ *  * @OA\Tag(
+ *     name="Graphical",
+ *     description="These are the APIs that will be used to show Graphical Illustrations on the Dashboards. These APIs includes for both, Admin and Seller's Dashboards."
+ * ),
+ * @OA\Tag(
+ *     name="Admin",
+ *     description="Endpoints for managing administrative actions such as approving/rejecting instructor applications, overseeing users, and handling system-level operations."
+ * ),
+ * @OA\Tag(
+ *     name="Admin Manage Users",
+ *     description="Endpoints for managing users, changing user status , editing and deleting."
+ * ),
+ * @OA\Tag(
+ *     name="Contacts",
+ *     description="APIs to manage contact information of users, customers, or business partners."
+ * ),
+ * @OA\Tag(
+ *     name="Academy",
+ *     description="APIs related to academy features, including courses, lessons, and instructors."
  * ),
  * @OA\Tag(
  *     name="Reports",

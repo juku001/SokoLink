@@ -26,7 +26,7 @@ class CartController extends Controller implements HasMiddleware
     /**
      * @OA\Get(
      *     path="/carts",
-     *     tags={"Payments"},
+     *     tags={"Cart"},
      *     summary="Get cart summary",
      *     description="Returns the authenticated buyer's cart with items, subtotal, shipping and total.",
      *     security={{"sanctum":{}}},
@@ -102,7 +102,7 @@ class CartController extends Controller implements HasMiddleware
     /**
      * @OA\Post(
      *     path="/carts",
-     *     tags={"Payments"},
+     *     tags={"Cart"},
      *     summary="Add product to cart",
      *     security={{"sanctum":{}}},
      *     @OA\RequestBody(
@@ -136,13 +136,20 @@ class CartController extends Controller implements HasMiddleware
             $authId = auth()->id();
             $product = Product::find($request->product_id);
 
-            // Ensure cart exists
+            $deductQty = (int) $request->quantity;
+            if ($product->stock_qty <= 0) {
+                return ResponseHelper::error([], "Product is already out of stock.", 400);
+            }
+
+            if ($deductQty > $product->stock_qty) {
+                return ResponseHelper::error([], "Cannot add more than available stock.", 400);
+            }
+
             $cart = Cart::firstOrCreate(
                 ['buyer_id' => $authId],
                 ['buyer_id' => $authId]
             );
 
-            // Check if product already exists in the cart
             $cartItem = CartItem::where('cart_id', $cart->id)
                 ->where('product_id', $request->product_id)
                 ->first();
@@ -174,8 +181,8 @@ class CartController extends Controller implements HasMiddleware
 
     /**
      * @OA\Patch(
-     *     path="/carts/items/{itemId}",
-     *     tags={"Payments"},
+     *     path="/carts/{itemId}",
+     *     tags={"Cart"},
      *     summary="Update quantity of a cart item",
      *     security={{"sanctum":{}}},
      *     @OA\Parameter(
@@ -225,6 +232,15 @@ class CartController extends Controller implements HasMiddleware
             return ResponseHelper::error([], "Cart item not found", 404);
         }
 
+
+        $product = Product::find($cartItem->product_id);
+        if ($product->stock_qty <= 0) {
+            return ResponseHelper::error([], "Product is already out of stock.", 400);
+        }
+
+        if ($request->quantity > $product->stock_qty) {
+            return ResponseHelper::error([], "Cannot update more than available stock.", 400);
+        }
         // Update quantity
         $cartItem->update([
             'quantity' => $request->quantity
@@ -245,7 +261,7 @@ class CartController extends Controller implements HasMiddleware
     /**
      * @OA\Post(
      *     path="/carts/{cartId}/add/{productId}/increment",
-     *     tags={"Payments"},
+     *     tags={"Cart"},
      *     summary="Increment quantity of a product in the cart",
      *     security={{"sanctum":{}}},
      *     @OA\Parameter(name="cartId", in="path", required=true, @OA\Schema(type="integer")),
@@ -276,7 +292,15 @@ class CartController extends Controller implements HasMiddleware
             return ResponseHelper::error([], "Product not found in cart", 404);
         }
 
-        // decrement quantity (you can also allow decrement if $request->has('decrement'))
+        $product = Product::find($productId);
+
+        if ($product->stock_qty <= 0) {
+            return ResponseHelper::error([], "Product is already out of stock.", 400);
+        }
+
+        if (($cartItem->quantity + 1) > $product->stock_qty) {
+            return ResponseHelper::error([], "Cannot add more than available stock.", 400);
+        }
         $cartItem->quantity += 1;
         $cartItem->save();
 
@@ -295,7 +319,7 @@ class CartController extends Controller implements HasMiddleware
     /**
      * @OA\Delete(
      *     path="/carts/{cartId}/remove/{productId}/decrement",
-     *     tags={"Payments"},
+     *     tags={"Cart"},
      *     summary="Decrement quantity or remove product from cart",
      *     security={{"sanctum":{}}},
      *     @OA\Parameter(name="cartId", in="path", required=true, @OA\Schema(type="integer")),

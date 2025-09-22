@@ -20,7 +20,7 @@ class SellerOverviewController extends Controller
     /**
      * @OA\Get(
      *     path="/dashboard/seller/overview/stats",
-     *     tags={"Dashboard"},
+     *     tags={"Seller Dashboard"},
      *     summary="These are statistics on the first overview page on the seller dashboard.",
      *     description="Returns key performance metrics for the authenticated seller (sales, expenses, products, customers) including month-over-month percentage changes.",
      *     operationId="getDashboardOverviewStats",
@@ -258,7 +258,7 @@ class SellerOverviewController extends Controller
     /**
      * @OA\Get(
      *     path="/dashboard/seller/overview/recent-sales",
-     *     tags={"Dashboard"},
+     *     tags={"Seller Dashboard"},
      *     summary="Get recent sales",
      *     description="Fetches the 5 most recent sales of the authenticated seller, including products in each sale.",
      *     @OA\Response(

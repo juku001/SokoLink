@@ -3,20 +3,25 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\ResponseHelper;
+use App\Models\InventoryLedger;
+use App\Models\Product;
 use App\Models\Sale;
+use App\Models\Seller;
 use DB;
 use Exception;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Maatwebsite\Excel\Facades\Excel;
+use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
 use Illuminate\Support\Facades\Validator;
 
 class SalesController extends Controller
 {
     /**
      * @OA\Get(
-     *     path="/dashboard/sales",
-     *     tags={"Dashboard"},
+     *     path="/dashboard/sales/stats",
+     *     tags={"Seller Dashboard"},
      *     summary="Get sales dashboard for the authenticated seller",
      *     description="Retrieve today's sales, pending sales, and total transactions for the current month",
      *     security={{"bearerAuth":{}}},
@@ -45,11 +50,7 @@ class SalesController extends Controller
      *     @OA\Response(
      *         response=401,
      *         description="Unauthorized",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string", example="Unauthenticated"),
-     *             @OA\Property(property="data", type="object", example={})
-     *         )
+     *         ref="#/components/responses/401"
      *     )
      * )
      */
@@ -198,213 +199,373 @@ class SalesController extends Controller
      * @OA\Post(
      *     path="/sales",
      *     tags={"Sales"},
-     *     summary="Create a new single-product sale",
-     *     description="Records a new sale for a single product",
-     *     operationId="createSale",
+     *     summary="Create a new sale (single or multiple products)",
+     *     description="Creates a sale record with one or more products on the current active store. 
+     *                  Deducts stock and records inventory ledger entries if status is `completed`.",
+     *     security={{"bearerAuth": {}}},
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             @OA\Property(property="product_id", type="integer", example=1),
-     *             @OA\Property(property="quantity", type="number", example=2),
-     *             @OA\Property(property="sale_price", type="number", example=199.99),
-     *             @OA\Property(property="payment_method_id", type="integer", example=1),
-     *             @OA\Property(property="buyer_name", type="string", example="John Doe"),
-     *             @OA\Property(property="sale_date", type="string", format="date", example="2025-09-14"),
-     *             @OA\Property(property="sale_time", type="string", format="H:i:s", example="14:30:00")
+     *             required={"store_id","sales_date","sales_time","status","products"},
+     *             @OA\Property(property="store_id", type="integer", example=1, description="Store ID where the sale occurs"),
+     *             @OA\Property(property="payment_method_id", type="integer", nullable=true, example=2),
+     *             @OA\Property(property="buyer_name", type="string", nullable=true, example="John Doe"),
+     *             @OA\Property(property="sales_date", type="string", format="date", example="2025-09-20"),
+     *             @OA\Property(property="sales_time", type="string", format="time", example="15:30:00"),
+     *             @OA\Property(property="payment_type", type="string", example="cash"),
+     *             @OA\Property(property="status", type="string", enum={"pending","completed"}, example="completed"),
+     *             @OA\Property(
+     *                 property="products",
+     *                 type="array",
+     *                 @OA\Items(
+     *                     required={"product_id","price","quantity"},
+     *                     @OA\Property(property="product_id", type="integer", example=5),
+     *                     @OA\Property(property="price", type="number", format="float", example=100.50),
+     *                     @OA\Property(property="quantity", type="integer", example=2)
+     *                 )
+     *             )
      *         )
      *     ),
      *     @OA\Response(
      *         response=201,
-     *         description="New single-product sale added successfully",
+     *         description="Sale recorded successfully",
      *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="New single-product sale added"),
-     *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="id", type="integer", example=1),
-     *                 @OA\Property(property="quantity", type="number", example=2),
-     *                 @OA\Property(property="price", type="number", example=199.99),
-     *                 @OA\Property(property="products", type="array",
+     *             @OA\Property(property="status", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Sale recorded successfully"),
+     *             @OA\Property(property="code", type="integer", example=201),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="id", type="integer", example=123),
+     *                 @OA\Property(property="sale_ref", type="string", example="SAL650FAB12"),
+     *                 @OA\Property(
+     *                     property="sale_products",
+     *                     type="array",
      *                     @OA\Items(
-     *                         @OA\Property(property="id", type="integer", example=1),
-     *                         @OA\Property(property="name", type="string", example="Product Name"),
-     *                         @OA\Property(property="pivot", type="object",
-     *                             @OA\Property(property="quantity", type="number", example=2),
-     *                             @OA\Property(property="price", type="number", example=199.99)
-     *                         )
+     *                         @OA\Property(property="product_id", type="integer", example=5),
+     *                         @OA\Property(property="quantity", type="integer", example=2),
+     *                         @OA\Property(property="price", type="number", format="float", example=100.50)
      *                     )
      *                 )
      *             )
      *         )
      *     ),
      *     @OA\Response(
-     *         response=400,
-     *         description="Validation or database error",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string", example="Failed to validate fields"),
-     *             @OA\Property(property="data", type="object", example={})
-     *         )
+     *         response=422,
+     *         description="Validation error",
+     *         ref="#/components/responses/422"
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Validation error",
+     *         ref="#/components/responses/401"
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Server error",
+     *         ref="#/components/responses/500"
      *     )
      * )
      */
+
+
 
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'product_id' => 'required|integer|exists:products,id',
-            'quantity' => 'required|numeric|min:1',
-            'sale_price' => 'required|numeric|min:0',
-            'payment_method_id' => 'required|integer|exists:payment_methods,id',
-            'buyer_name' => 'nullable|string',
-            'sale_date' => 'nullable|date',
-            'sale_time' => 'nullable|date_format:H:i:s'
+            'payment_method_id' => 'nullable|exists:payment_methods,id',
+            'buyer_name' => 'nullable|string|max:255',
+            'payment_type' => 'required|in:cash,mno,bank,card',
+            'sales_date' => 'required|date',
+            'sales_time' => 'required|date_format:H:i:s',
+            'status' => 'required|in:pending,completed',
+            // Array of products: each needs id, price, quantity
+            'products' => 'required|array|min:1',
+            'products.*.product_id' => 'required|exists:products,id',
+            'products.*.price' => 'required|numeric|min:0',
+            'products.*.quantity' => 'required|integer|min:1',
+        ], [
+            'products.*.product_id.exists' => 'Product does not exist',
+            'status.in' => 'Status should  be pending or completed',
+            'payment_type.in' => 'Payment Type is cash, mno, card or bank'
         ]);
 
         if ($validator->fails()) {
-            return ResponseHelper::error($validator->errors(), 'Failed to validate fields');
+            return ResponseHelper::error($validator->errors(), 'Validation failed', 422);
         }
+
+        $authId = auth()->id();
+        $seller = Seller::where('user_id', $authId)->first();
+        $storeId = $seller->active_store;
+
+
 
         DB::beginTransaction();
 
         try {
-            $saleData = [
-                'quantity' => $request->quantity,
-                'price' => $request->sale_price,
+            $productsInput = $request->input('products');
+
+            // 1. Lock products to prevent race conditions when deducting stock
+            $productIds = collect($productsInput)->pluck('product_id');
+            $products = Product::whereIn('id', $productIds)
+                ->lockForUpdate()
+                ->get()
+                ->keyBy('id');
+
+            // 2. Calculate total and validate stock (if completed)
+            $totalAmount = 0;
+            foreach ($productsInput as $item) {
+                $product = $products[$item['product_id']] ?? null;
+                if (!$product) {
+                    throw new Exception("Product {$item['product_id']} not found.");
+                }
+
+                if ($request->status === 'completed' && $item['quantity'] > $product->stock_qty) {
+                    throw new Exception("Insufficient stock for {$product->name}.");
+                }
+
+                $totalAmount += $item['price'] * $item['quantity'];
+            }
+
+            // 3. Create sale record
+            $sale = Sale::create([
+                'seller_id' => auth()->id(),
+                'store_id' => $storeId,
                 'payment_method_id' => $request->payment_method_id,
+                'payment_type' => $request->payment_type,
                 'buyer_name' => $request->buyer_name,
-                'sale_date' => $request->sale_date,
-                'sale_time' => $request->sale_time,
-            ];
-
-            $sale = Sale::create($saleData);
-
-            $sale->products()->attach($request->product_id, [
-                'quantity' => $request->quantity,
-                'price' => $request->sale_price
+                'amount' => $totalAmount,
+                'sales_date' => $request->sales_date,
+                'sales_time' => $request->sales_time,
+                'status' => $request->status,
             ]);
 
-            DB::commit();
 
-            return ResponseHelper::success($sale->load('products'), 'New single-product sale added', 201);
+            foreach ($productsInput as $item) {
 
-        } catch (QueryException $e) {
-            DB::rollBack();
-            return ResponseHelper::error([], 'Error DB: ' . $e->getMessage(), 400);
-        } catch (Exception $e) {
-            DB::rollBack();
-            return ResponseHelper::error([], 'Error: ' . $e->getMessage());
-        }
-    }
+                $latestLedger = InventoryLedger::where('store_id', $product->store_id)
+                    ->where('product_id', $product->id)
+                    ->latest('id')
+                    ->first();
+
+                $previousBalance = $latestLedger ? $latestLedger->balance : 0;
 
 
 
-    /**
-     * @OA\Post(
-     *     path="/sales/bulk",
-     *     tags={"Sales"},
-     *     summary="Create a new bulk-product sale",
-     *     description="Records a new sale for multiple products at once",
-     *     operationId="createBulkSale",
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             @OA\Property(
-     *                 property="products",
-     *                 type="array",
-     *                 description="List of products in the sale",
-     *                 @OA\Items(
-     *                     @OA\Property(property="id", type="integer", example=1),
-     *                     @OA\Property(property="quantity", type="number", example=2),
-     *                     @OA\Property(property="price", type="number", example=199.99)
-     *                 )
-     *             ),
-     *             @OA\Property(property="payment_method_id", type="integer", example=1),
-     *             @OA\Property(property="buyer_name", type="string", example="John Doe"),
-     *             @OA\Property(property="sale_date", type="string", format="date", example="2025-09-14"),
-     *             @OA\Property(property="sale_time", type="string", format="H:i:s", example="14:30:00")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=201,
-     *         description="New bulk-product sale added successfully",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="New bulk-product sale added"),
-     *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="id", type="integer", example=1),
-     *                 @OA\Property(property="products", type="array",
-     *                     @OA\Items(
-     *                         @OA\Property(property="id", type="integer", example=1),
-     *                         @OA\Property(property="name", type="string", example="Product Name"),
-     *                         @OA\Property(property="pivot", type="object",
-     *                             @OA\Property(property="quantity", type="number", example=2),
-     *                             @OA\Property(property="price", type="number", example=199.99)
-     *                         )
-     *                     )
-     *                 )
-     *             )
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=400,
-     *         description="Validation or database error",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string", example="Failed to validate fields"),
-     *             @OA\Property(property="data", type="object", example={})
-     *         )
-     *     )
-     * )
-     */
 
-    public function storeBulk(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'products' => 'required|array|min:1',
-            'products.*.id' => 'required|integer|exists:products,id',
-            'products.*.quantity' => 'required|numeric|min:1',
-            'products.*.price' => 'required|numeric|min:0',
-            'payment_method_id' => 'required|integer|exists:payment_methods,id',
-            'buyer_name' => 'nullable|string',
-            'sale_date' => 'nullable|date',
-            'sale_time' => 'nullable|date_format:H:i:s'
-        ]);
-
-        if ($validator->fails()) {
-            return ResponseHelper::error($validator->errors(), 'Failed to validate fields');
-        }
-
-        DB::beginTransaction();
-
-        try {
-            $saleData = [
-                'payment_method_id' => $request->payment_method_id,
-                'buyer_name' => $request->buyer_name,
-                'sale_date' => $request->sale_date,
-                'sale_time' => $request->sale_time,
-            ];
-
-            $sale = Sale::create($saleData);
-
-            foreach ($request->products as $product) {
-                $sale->products()->attach($product['id'], [
-                    'quantity' => $product['quantity'],
-                    'price' => $product['price']
+                $sale->saleProducts()->create([
+                    'product_id' => $item['product_id'],
+                    'quantity' => $item['quantity'],
+                    'price' => $item['price'],
                 ]);
+
+                if ($request->status === 'completed') {
+                    $product = $products[$item['product_id']];
+                    $product->decrement('stock_qty', $item['quantity']);
+                    $newBalance = $previousBalance - $item['quantity'];
+
+
+                    InventoryLedger::create([
+                        'store_id' => $product->store_id,
+                        'product_id' => $product->id,
+                        'change' => -1 * $item['quantity'],
+                        'balance' => $newBalance,
+                        'reason' => 'sale',
+                    ]);
+                }
             }
 
             DB::commit();
 
-            return ResponseHelper::success($sale->load('products'), 'New bulk-product sale added', 201);
+            return ResponseHelper::success(
+                $sale->load('saleProducts.product'),
+                'Sale recorded successfully',
+                201
+            );
 
-        } catch (QueryException $e) {
+        } catch (\Throwable $e) {
             DB::rollBack();
-            return ResponseHelper::error([], 'Error DB: ' . $e->getMessage(), 400);
-        } catch (Exception $e) {
-            DB::rollBack();
-            return ResponseHelper::error([], 'Error: ' . $e->getMessage());
+            return ResponseHelper::error([], 'Error: ' . $e->getMessage(), 500);
         }
     }
+
+
+
+
+
+/**
+ * @OA\Post(
+ *     path="/api/sales/bulk",
+ *     summary="Upload an Excel file to create multiple sales records",
+ *     description="Accepts an Excel file (.xlsx or .csv) that contains multiple sales with their products.  
+ * Each row represents a single sale line item. The API groups rows with the same `sale_ref` into one sale.",
+ *     operationId="storeBulkSales",
+ *     tags={"Sales"},
+ *     security={{"sanctum":{}}},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\MediaType(
+ *             mediaType="multipart/form-data",
+ *             @OA\Schema(
+ *                 required={"file"},
+ *                 @OA\Property(
+ *                     property="file",
+ *                     type="string",
+ *                     format="binary",
+ *                     description="Excel or CSV file containing the sales data"
+ *                 )
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=201,
+ *         description="Bulk sales stored successfully",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Bulk sales stored successfully"),
+ *             @OA\Property(property="data", type="array",
+ *                 @OA\Items(ref="#/components/schemas/Sale")
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=422,
+ *         description="Validation error",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string", example="Validation failed"),
+ *             @OA\Property(property="errors", type="object")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=500,
+ *         description="Server error"
+ *     )
+ * )
+ */
+
+
+
+    public function storeBulk(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'file' => 'required|file|mimes:xlsx,xls'
+        ]);
+
+        if ($validator->fails()) {
+            return ResponseHelper::error($validator->errors(), 'Validation failed', 422);
+        }
+
+        $authId = auth()->id();
+        $seller = Seller::where('user_id', $authId)->firstOrFail();
+        $storeId = $seller->active_store;
+
+        try {
+            $rows = Excel::toArray([], $request->file('file'))[0]; // first sheet
+            /**
+             * Expected columns in Excel:
+             * product_id | quantity | price | payment_method_id | payment_type | buyer_name | sales_date | sales_time | status
+             */
+
+            // Remove header row if present
+            if (!is_numeric($rows[0][0])) {
+                array_shift($rows);
+            }
+
+            DB::beginTransaction();
+
+            foreach ($rows as $index => $row) {
+                // Map row -> fields safely
+                [$productId, $qty, $price, $paymentMethod, $paymentType, $buyerName, $salesDate, $salesTime, $status] = array_pad($row, 9, null);
+
+                // Convert Excel date/time if necessary
+                if (is_numeric($salesDate)) {
+                    $salesDate = ExcelDate::excelToDateTimeObject($salesDate)->format('Y-m-d');
+                }
+                if (is_numeric($salesTime)) {
+                    $salesTime = ExcelDate::excelToDateTimeObject($salesTime)->format('H:i:s');
+                }
+
+                // Basic validation per row
+                $v = Validator::make([
+                    'product_id' => $productId,
+                    'quantity' => $qty,
+                    'price' => $price,
+                    'payment_method_id' => $paymentMethod,
+                    'payment_type' => $paymentType,
+                    'sales_date' => $salesDate,
+                    'sales_time' => $salesTime,
+                    'status' => $status,
+                ], [
+                    'product_id' => 'required|exists:products,id',
+                    'quantity' => 'required|integer|min:1',
+                    'price' => 'required|numeric|min:0',
+                    'payment_method_id' => 'nullable|exists:payment_methods,id',
+                    'payment_type' => 'required|in:cash,mno,bank,card',
+                    'sales_date' => 'required|date',
+                    'sales_time' => 'required|date_format:H:i:s',
+                    'status' => 'required|in:pending,completed',
+                ]);
+
+                if ($v->fails()) {
+                    throw new Exception("Row " . ($index + 1) . " validation error: " . json_encode($v->errors()->all()));
+                }
+
+                // Lock product for stock check
+                $product = Product::where('id', $productId)->lockForUpdate()->first();
+
+                if ($status === 'completed' && $qty > $product->stock_qty) {
+                    throw new Exception("Row " . ($index + 1) . ": insufficient stock for product {$product->name}");
+                }
+
+                // Create sale
+                $sale = Sale::create([
+                    'seller_id' => $authId,
+                    'store_id' => $storeId,
+                    'payment_method_id' => $paymentMethod,
+                    'payment_type' => $paymentType,
+                    'buyer_name' => $buyerName,
+                    'amount' => $price * $qty,
+                    'sales_date' => $salesDate,
+                    'sales_time' => $salesTime,
+                    'status' => $status,
+                ]);
+
+                // Link product to sale
+                $sale->saleProducts()->create([
+                    'product_id' => $productId,
+                    'quantity' => $qty,
+                    'price' => $price,
+                ]);
+
+                // Stock + Ledger
+                if ($status === 'completed') {
+                    $latestLedger = InventoryLedger::where('store_id', $product->store_id)
+                        ->where('product_id', $product->id)
+                        ->latest('id')->first();
+
+                    $previousBalance = $latestLedger ? $latestLedger->balance : $product->stock_qty;
+                    $product->decrement('stock_qty', $qty);
+                    $newBalance = $previousBalance - $qty;
+
+                    InventoryLedger::create([
+                        'store_id' => $product->store_id,
+                        'product_id' => $product->id,
+                        'change' => -1 * $qty,
+                        'balance' => $newBalance,
+                        'reason' => 'bulk-sale',
+                    ]);
+                }
+            }
+
+            DB::commit();
+
+            return ResponseHelper::success([], 'Bulk sales imported successfully.', 201);
+
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return ResponseHelper::error([], 'Error: ' . $e->getMessage(), 500);
+        }
+    }
+
 
 
 

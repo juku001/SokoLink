@@ -19,15 +19,15 @@ class DashboardController extends Controller
     public function seller()
     {
 
-        
+
 
     }
 
 
     /**
      * @OA\Get(
-     *   tags={"Dashboard"},
-     *   path="/dashboard/seller/contacts",
+     *   tags={"Seller Dashboard"},
+     *   path="/dashboard/contacts/stats",
      *   summary="Get Contact Stats",
      *   @OA\Response(
      *     response=200, 
@@ -86,26 +86,74 @@ class DashboardController extends Controller
         return ResponseHelper::success($data, 'Contact Dashboard Stats');
     }
 
+
+
+    /**
+     * @OA\Get(
+     *     path="/dashboard/academy/stats",
+     *     summary="Academy Statistics ",
+     *     description="Returns overall stats for academy lessons.",
+     *     tags={"Seller Dashboard"},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Statistics retrieved successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="status", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Academy statistics"),
+     *             @OA\Property(property="code", type="integer", example=200),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="videos", type="integer", example=42),
+     *                 @OA\Property(property="ratings", type="number", format="float", example=4.5),
+     *                 @OA\Property(property="students", type="integer", example=1200),
+     *                 @OA\Property(property="content", type="object",
+     *                     @OA\Property(property="state", type="string", example="Free"),
+     *                     @OA\Property(property="message", type="string", example="All Content")
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *       response=401,
+     *       description="Unauthorized",
+     *       ref="#/components/responses/401"
+     *     ),
+     *      @OA\Response(
+     *       response=403,
+     *       description="Unauthorized",
+     *       ref="#/components/responses/403"
+     *     )
+     * )
+     */
+
     public function academy()
     {
         $videos = AcademyLesson::count();
+
+        $ratings = AcademyLesson::avg('rating') ?? 0;
+
+        $students = AcademyLesson::sum('student_count') ?? 0;
+
         $data = [
-            'videos' => $videos ?? 0,
-            'ratings' => $ratings ?? 0,
-            'students' => $students ?? 0,
+            'videos' => $videos,
+            'ratings' => round($ratings, 1),
+            'students' => $students,
             'content' => [
                 'state' => 'Free',
-                'message' => 'All Content'
-            ]
+                'message' => 'All Content',
+            ],
         ];
+
+        return ResponseHelper::success($data, 'Academy statistics');
     }
+
 
 
 
     /**
      * @OA\Get(
-     *     path="/dashboard/expenses",
-     *     tags={"Dashboard"},
+     *     path="/dashboard/expenses/stats",
+     *     tags={"Seller Dashboard"},
      *     summary="Get expense statistics for the dashboard",
      *     description="Retrieve monthly totals, pending expenses, and average daily expenses for the authenticated seller",
      *     security={{"bearerAuth":{}}},
@@ -214,7 +262,7 @@ class DashboardController extends Controller
      *     summary="Admin customer management dashboard",
      *     description="Returns key buyer statistics for the admin dashboard, including totals, active buyers, and growth trends.",
      *     operationId="adminCustomerManagement",
-     *     tags={"Dashboard"},
+     *     tags={"Admin Dashboard"},
      *     security={{"sanctum":{}}},  
      *     @OA\Response(
      *         response=200,
@@ -371,7 +419,7 @@ class DashboardController extends Controller
      *     summary="Platform health dashboard",
      *     description="Provides real-time metrics on system uptime, average response time, database connections, and API request load for platform monitoring.",
      *     operationId="platformHealth",
-     *     tags={"Dashboard"},
+     *     tags={"Admin Dashboard"},
      *     security={{"sanctum":{}}},
      *     @OA\Response(
      *         response=200,
@@ -504,7 +552,7 @@ class DashboardController extends Controller
      *     summary="Admin payments dashboard statistics",
      *     description="Provides monthly payment analytics such as total revenue, success rate, failed payments, and revenue growth compared to the previous month.",
      *     operationId="adminPayments",
-     *     tags={"Dashboard"},
+     *     tags={"Admin Dashboard"},
      *     security={{"sanctum":{}}},  
      *     @OA\Response(
      *         response=200,
@@ -668,7 +716,7 @@ class DashboardController extends Controller
      *     summary="Admin merchants dashboard statistics",
      *     description="Returns monthly merchant (store) metrics including total, active, pending, and suspended stores with growth percentages compared to the previous month.",
      *     operationId="adminMerchants",
-     *     tags={"Dashboard"},
+     *     tags={"Admin Dashboard"},
      *     security={{"sanctum":{}}},
      *     @OA\Response(
      *         response=200,

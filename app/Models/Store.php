@@ -43,6 +43,10 @@ class Store extends Model
                 $store->slug = static::generateSlug($store->name);
             }
         });
+
+        static::created(function ($store) {
+            $store->createDefaultStoreLink();
+        });
     }
     /**
      * Generate a unique slug.
@@ -53,6 +57,27 @@ class Store extends Model
         $count = static::where('slug', 'LIKE', "{$slug}%")->count();
 
         return $count ? "{$slug}-" . ($count + 1) : $slug;
+    }
+
+
+    public function createDefaultStoreLink(): void
+    {
+        $base = strtoupper(Str::slug($this->slug ?? $this->name, ''));
+        $base = substr($base, 0, 6);
+        $code = $base;
+        $suffix = 1;
+
+        while (StoreLink::where('code', $code)->exists()) {
+            $code = $base . $suffix;
+            $suffix++;
+        }
+
+        $url = 'stores/' . $this->slug;
+
+        $this->storeLink()->create([
+            'code' => $code,
+            'url' => $url,
+        ]);
     }
 
 
@@ -88,6 +113,13 @@ class Store extends Model
     public function followers()
     {
         return $this->hasMany(StoreFollow::class, 'store_id');
+    }
+
+
+
+    public function storeLink()
+    {
+        return $this->hasOne(StoreLink::class);
     }
 
 

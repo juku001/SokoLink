@@ -26,6 +26,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
  
     Route::post('/payment/process', [PaymentController::class, 'initiate']); //initiate payment for
+    
     Route::get('/payments', [PaymentController::class, 'index']); //get buyers payment history
 
 

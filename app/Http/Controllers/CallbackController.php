@@ -6,6 +6,8 @@ use App\Helpers\ResponseHelper;
 use App\Models\Address;
 use App\Models\Escrow;
 use App\Models\Payment;
+use App\Models\Sale;
+use App\Models\SaleProduct;
 use App\Models\Shipment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -63,10 +65,10 @@ class CallbackController extends Controller
 
             foreach ($itemsBySeller as $sellerId => $sellerData) {
                 $total = $sellerData['total'];
-                $platformFee = round($total * 0.10, 2); // 10% fee
+                $platformFee = round($total * 0.10, 2);
                 $sellerAmount = $total - $platformFee;
 
-                Escrow::create([
+                $escrow = Escrow::create([
                     'order_id' => $order->id,
                     'buyer_id' => $order->buyer_id,
                     'seller_id' => $sellerId,
@@ -77,13 +79,41 @@ class CallbackController extends Controller
                     'status' => 'holding',
                 ]);
 
-                $shipment = new Shipment();
-                $shipment->order_id = $order->id;
-                $shipment->seller_id = $sellerId; // new field in shipments table
-                $shipment->address_id = $order->address->id;
-                $shipment->status = 'pending';
-                $shipment->save();
+                $sale = Sale::create([
+                    'seller_id' => $sellerId,
+                    'order_id' => $order->id,
+                    'store_id' => $order->store_id,
+                    'payment_id' => $payment->id,
+                    'payment_method_id' => $payment->payment_method_id,
+                    'payment_type' => 'mno',
+                    'buyer_name' => $order->address->fullname,
+                    'amount' => $order->total_amount,
+                    'sale_date' => now()->toDateString(),
+                    'sale_time' => now()->toTimeString(),
+                    'status' => 'completed',
+                ]);
+
+                foreach ($sellerData['items'] as $item) {
+                    SaleProduct::create([
+                        'sale_id' => $sale->id,
+                        'product_id' => $item['product_id'],
+                        'quantity' => $item['quantity'],
+                        'price' => $item['price'],
+                        'total' => $item['quantity'] * $item['price'],
+                    ]);
+                }
+
+
+                if ($order->shipping_cost > 0) {
+                    Shipment::create([
+                        'order_id' => $order->id,
+                        'seller_id' => $sellerId,
+                        'address_id' => $order->address->id,
+                        'status' => 'pending',
+                    ]);
+                }
             }
+
 
             DB::commit();
 

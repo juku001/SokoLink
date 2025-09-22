@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Helpers\ResponseHelper;
 use App\Models\Expense;
+use App\Models\Seller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -51,6 +52,7 @@ class ExpenseController extends Controller
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="List of expenses"),
+     *             @OA\Property(property="code", type="integer", example=200),
      *             @OA\Property(property="data", type="object",
      *                 @OA\Property(property="current_page", type="integer", example=1),
      *                 @OA\Property(property="data", type="array",
@@ -73,11 +75,7 @@ class ExpenseController extends Controller
      *     @OA\Response(
      *         response=401,
      *         description="Unauthorized",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string", example="Unauthenticated"),
-     *             @OA\Property(property="data", type="object", example={})
-     *         )
+     *         ref="#/components/responses/401"
      *     )
      * )
      */
@@ -172,11 +170,13 @@ class ExpenseController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'supplier' => 'required|string|max:255',
-            'expense_type_id' => 'nullable|exists:expense_types,id',
+            'expense_type_id' => 'required|exists:expense_types,id',
             'store_id' => 'nullable|exists:stores,id',
             'amount' => 'required|numeric|min:0',
             'expense_date' => 'required|date',
             'status' => 'required|in:pending,paid,overdue',
+        ],[
+            'status.in' => 'Status should be pending, paid or overdue'
         ]);
 
         if ($validator->fails()) {
@@ -189,12 +189,15 @@ class ExpenseController extends Controller
 
         try {
             $validated = $validator->validated();
+            $sellerId = auth()->id();
+            $seller = Seller::where('user_id', $sellerId)->first();
+
 
             $expense = Expense::create([
                 'supplier' => $validated['supplier'],
                 'expense_type_id' => $validated['expense_type_id'] ?? null,
-                'store_id' => $validated['store_id'] ?? null,
-                'seller_id' => auth()->id(), // seller = authenticated user
+                'store_id' => $validated['store_id'] ?? $seller->active_store,
+                'seller_id' => $sellerId, // seller = authenticated user
                 'amount' => $validated['amount'],
                 'expense_date' => $validated['expense_date'],
                 'status' => $validated['status'],

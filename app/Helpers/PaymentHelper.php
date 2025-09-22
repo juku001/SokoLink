@@ -8,11 +8,6 @@ class PaymentHelper
 {
 
 
-    public function __construct()
-    {
-
-    }
-
 
     /**
      * Initiates a payment based on method and type.

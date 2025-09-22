@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\StoreFollowingController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ReviewController;
@@ -54,6 +55,14 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::middleware('user.type:seller')->group(function () {
 
+        Route::get('/products/inventory', [InventoryController::class, 'index']); // list of all products with their stock balance
+        Route::get('/products/{id}/inventory', [InventoryController::class, 'show']); //get the stock balance of one specific product 
+        Route::patch('/products/{id}/inventory', [InventoryController::class, 'update']); //this is for adjustign the stock amount 
+        Route::get('/products/{id}/inventory/balance', [InventoryController::class, 'balance']); //get only the balance of a particular product 
+
+        Route::post('/products/{id}/add', [InventoryController::class, 'add']);
+        Route::delete('/products/{id}/deduct', [InventoryController::class, 'deduct']);
+
         Route::patch('/products/{id}/online-status', [ProductController::class, 'online']);
         Route::post('/products/excel', [ProductController::class, 'bulk']);
 
@@ -69,7 +78,9 @@ Route::resource('products', ProductController::class);
 
 
 
-//     //     Route::get('/dashboard/seller/overview/stats', [SellerOverviewController::class, 'index']);
-// //     Route::get('/seller/overview/recent-sales', [SellerOverviewController::class, 'recentSales']);
+
+Route::get('/dashboard/seller/overview/stats', [SellerOverviewController::class, 'index']);
+Route::get('/seller/overview/recent-sales', [SellerOverviewController::class, 'recentSales']);
+
 // //     Route::get('/seller/overview/low-stock', [SellerOverviewController::class, 'lowStock']);
 

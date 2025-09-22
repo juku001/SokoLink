@@ -19,6 +19,7 @@ return new class extends Migration {
             $table->decimal('ratings')->default(0);
             $table->string('video_path');
             $table->enum('video_location',['online', 'stored'])->default('online');
+            $table->integer('student_count')->default(0);
             $table->timestamps();
         });
     }

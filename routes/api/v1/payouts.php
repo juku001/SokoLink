@@ -8,14 +8,17 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     Route::middleware('user.type:seller')->group(function () {
 
-        Route::get('/balance/merchant', [EscrowController::class, 'merchant']); //get all total balance for the merchant
-        Route::get('/merchant/store', [EscrowController::class, 'store']); //get all total balance for the merchant store
+        Route::get('/escrow/balance/merchant', [EscrowController::class, 'merchantBalance']); //get all total balance for the merchant
+        Route::get('/escrow/balance/stores/{id}', [EscrowController::class, 'storesBalance']); //get all total balance for the merchant store
+        Route::get('/escrows',[EscrowController::class,'index']);
 
     });
 
-    Route::get('/escrows', [EscrowController::class, 'index'])->middleware('user.type:super_admin'); //get list of all merchants and their balance. 
+    Route::get('/admin/escrows', [EscrowController::class, 'index'])->middleware('user.type:super_admin'); //get list of all merchants and their balance. 
 
     Route::middleware('user.type:seller')->group(function () {
+
+        Route::patch('/payouts/settlement-type',[PayoutController::class, 'type']);
         Route::get('/payouts', [PayoutController::class, 'index']);
         Route::post('/payouts', [PayoutController::class, 'store']);
         Route::get('/payouts/{id}', [PayoutController::class, 'show'])->whereNumber('id');

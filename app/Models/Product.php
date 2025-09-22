@@ -12,6 +12,7 @@ class Product extends Model
         'name',
         'slug',
         'description',
+        'category_id',
         'price',
         'sku',
         'barcode',
@@ -33,10 +34,12 @@ class Product extends Model
         return $this->morphMany(Review::class, 'reviewable');
     }
 
-    public function categories()
+
+    public function category()
     {
-        return $this->hasMany(ProductCategory::class);
+        return $this->belongsTo(Category::class);
     }
+
 
 
     public function images()

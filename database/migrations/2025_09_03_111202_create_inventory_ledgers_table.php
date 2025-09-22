@@ -16,8 +16,8 @@ return new class extends Migration {
             $table->foreignId('product_id')->constrained()->cascadeOnDelete();
             $table->integer('change');
             $table->integer('balance');
-            $table->enum('reason', ['sale', 'restock', 'adjustment', 'return'])->default('sale');
-
+            $table->enum('reason', ['sale', 'restock', 'adjustment', 'return','expiry'])->default('sale');
+            $table->string('description')->nullable();
             $table->timestamps();
         });
     }

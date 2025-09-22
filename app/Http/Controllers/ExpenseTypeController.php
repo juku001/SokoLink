@@ -6,10 +6,23 @@ use App\Helpers\ResponseHelper;
 use App\Models\ExpenseType;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use Validator;
 
-class ExpenseTypeController extends Controller
+class ExpenseTypeController extends Controller implements HasMiddleware
 {
+
+    public static function middleware()
+    {
+        return [
+            new Middleware(
+                ['auth:sanctum', 'user.type:super_admin'],
+                only: ['store', 'update', 'destroy']
+            )
+        ];
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -25,8 +38,9 @@ class ExpenseTypeController extends Controller
      *         response=200,
      *         description="List of expense types",
      *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="status", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="List of expenses type"),
+     *             @OA\Property(property="code", type="integer", example=200),
      *             @OA\Property(property="data", type="array",
      *                 @OA\Items(
      *                     @OA\Property(property="id", type="integer", example=1),
@@ -55,6 +69,7 @@ class ExpenseTypeController extends Controller
      *     tags={"Expense Types"},
      *     summary="Create a new expense type",
      *     description="Add a new expense type",
+     *     security={{"bearerAuth":{}}},
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
@@ -65,8 +80,9 @@ class ExpenseTypeController extends Controller
      *         response=201,
      *         description="Expense Type created successfully",
      *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="status", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="Type added successful"),
+     *             @OA\Property(property="code", type="integer", example=200),
      *             @OA\Property(property="data", type="object",
      *                 @OA\Property(property="id", type="integer", example=1),
      *                 @OA\Property(property="name", type="string", example="Office Supplies")
@@ -76,11 +92,7 @@ class ExpenseTypeController extends Controller
      *     @OA\Response(
      *         response=422,
      *         description="Validation failed",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string", example="Failed to validate fields"),
-     *             @OA\Property(property="data", type="object")
-     *         )
+     *         ref="#/components/responses/422"
      *     )
      * )
      */
@@ -120,8 +132,9 @@ class ExpenseTypeController extends Controller
      *         response=200,
      *         description="Expense Type details",
      *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="status", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="Expense Type details"),
+     *             @OA\Property(property="code", type="integer", example=200),
      *             @OA\Property(property="data", type="object",
      *                 @OA\Property(property="id", type="integer", example=1),
      *                 @OA\Property(property="name", type="string", example="Office Supplies")
@@ -132,9 +145,9 @@ class ExpenseTypeController extends Controller
      *         response=404,
      *         description="Expense Type not found",
      *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="status", type="boolean", example=false),
      *             @OA\Property(property="message", type="string", example="Expense Type not found"),
-     *             @OA\Property(property="data", type="object", example={})
+     *             @OA\Property(property="code", type="integer", example=404),
      *         )
      *     )
      * )
@@ -159,6 +172,7 @@ class ExpenseTypeController extends Controller
      *     tags={"Expense Types"},
      *     summary="Update an expense type",
      *     description="Update the name of a specific expense type",
+     *     security={{"bearerAuth":{}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -176,8 +190,9 @@ class ExpenseTypeController extends Controller
      *         response=200,
      *         description="Expense Type updated successfully",
      *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="status", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="Expense Type updated successfully"),
+     *             @OA\Property(property="code", type="integer", example=200),
      *             @OA\Property(property="data", type="object",
      *                 @OA\Property(property="id", type="integer", example=1),
      *                 @OA\Property(property="name", type="string", example="Office Equipment")
@@ -187,11 +202,7 @@ class ExpenseTypeController extends Controller
      *     @OA\Response(
      *         response=422,
      *         description="Validation failed",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string", example="Failed to validate fields"),
-     *             @OA\Property(property="data", type="object")
-     *         )
+     *         ref="#/components/responses/422"
      *     )
      * )
      */
@@ -245,6 +256,7 @@ class ExpenseTypeController extends Controller
      *     tags={"Expense Types"},
      *     summary="Delete an expense type",
      *     description="Remove a specific expense type from the system",
+     *     security={{"bearerAuth":{}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -256,8 +268,9 @@ class ExpenseTypeController extends Controller
      *         response=200,
      *         description="Expense Type deleted successfully",
      *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="status", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="Expense Type deleted successful."),
+     *             @OA\Property(property="code", type="integer", example=200),
      *             @OA\Property(property="data", type="object",
      *                 @OA\Property(property="id", type="integer", example=1),
      *                 @OA\Property(property="name", type="string", example="Office Supplies")
@@ -268,9 +281,9 @@ class ExpenseTypeController extends Controller
      *         response=404,
      *         description="Expense Type not found",
      *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="status", type="boolean", example=false),
      *             @OA\Property(property="message", type="string", example="Expense Type not found"),
-     *             @OA\Property(property="data", type="object", example={})
+     *             @OA\Property(property="code", type="integer", example=404),
      *         )
      *     )
      * )

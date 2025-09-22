@@ -16,7 +16,7 @@ class StoreFollowingController extends Controller
      *     path="/stores/{id}/follows",
      *     summary="List buyers who follow a store",
      *     description="Returns buyers following the given store. Seller must own the store.",
-     *     tags={"Store Follows"},
+     *     tags={"Stores"},
      *     security={{"sanctum":{}}},
      *     @OA\Parameter(
      *         name="id",
@@ -93,7 +93,7 @@ class StoreFollowingController extends Controller
      *     path="/stores/{id}/follows",
      *     summary="Follow or unfollow a store",
      *     description="Toggle the follow status for the authenticated buyer.",
-     *     tags={"Store Follows"},
+     *     tags={"Stores"},
      *     security={{"sanctum":{}}},
      *     @OA\Parameter(
      *         name="id",

@@ -34,7 +34,8 @@
             "app/Helpers/ResponseHelper.php",
             "app/Helpers/MobileNetworkHelper.php",
             "app/Helpers/PaymentHelper.php",
-            "app/Helpers/SMSHelper.php"
+            "app/Helpers/SMSHelper.php",
+            "app/Helpers/PayoutHelper.php"
         ]
     },
     "autoload-dev": {

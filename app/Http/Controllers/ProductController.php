@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\ResponseHelper;
+use App\Models\InventoryLedger;
 use Exception;
 use Illuminate\Http\Request;
 
@@ -122,7 +123,7 @@ class ProductController extends Controller implements HasMiddleware
     public function index(Request $request)
     {
 
-        $query = Product::with(['categories', 'images', 'store']);
+        $query = Product::with(['category', 'images', 'store']);
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -134,7 +135,7 @@ class ProductController extends Controller implements HasMiddleware
         }
 
         if ($request->filled('category_id')) {
-            $query->whereHas('categories', function ($q) use ($request) {
+            $query->whereHas('category', function ($q) use ($request) {
                 $q->where('category_id', $request->category_id);
             });
         }
@@ -188,9 +189,9 @@ class ProductController extends Controller implements HasMiddleware
      *             @OA\Property(property="is_online", type="boolean", example=true),
      *             @OA\Property(property="stock_qty", type="integer", nullable=true, example=10),
      *             @OA\Property(
-     *                 property="categories",
-     *                 type="array",
-     *                 @OA\Items(type="integer", example=3)
+     *                 property="category_id",
+     *                 type="integer",
+     *                 example=1
      *             ),
      *             @OA\Property(
      *                 property="images",
@@ -228,11 +229,12 @@ class ProductController extends Controller implements HasMiddleware
             'sku' => 'nullable|string|max:50|unique:products,sku',
             'barcode' => 'nullable|string|max:50|unique:products,barcode',
             'is_online' => 'nullable|boolean',
-            'stock_qty' => 'nullable|integer|min:0',
+            'stock_qty' => 'required|integer|min:0',
 
             // categories
-            'categories' => 'nullable|array|min:1',
-            'categories.*' => 'exists:categories,id',
+            'category_id' => 'required|numeric|exists:categories,id',
+            // 'categories' => 'required|array|min:1',
+            // 'categories.*' => 'exists:categories,id',
 
             // images
             'images' => 'nullable|array',
@@ -262,14 +264,14 @@ class ProductController extends Controller implements HasMiddleware
             $data['slug'] = Str::slug($data['name']);
 
             $product = Product::create($data);
-            if (isset($data['categories'])) {
-                foreach ($data['categories'] as $categoryId) {
-                    ProductCategory::create([
-                        'product_id' => $product->id,
-                        'category_id' => $categoryId,
-                    ]);
-                }
-            }
+            // if (isset($data['categories'])) {
+            //     foreach ($data['categories'] as $categoryId) {
+            //         ProductCategory::create([
+            //             'product_id' => $product->id,
+            //             'category_id' => $categoryId,
+            //         ]);
+            //     }
+            // }
 
             if (!empty($data['images'])) {
                 foreach ($data['images'] as $image) {
@@ -282,8 +284,26 @@ class ProductController extends Controller implements HasMiddleware
                 }
             }
 
+            $latestLedger = InventoryLedger::where('store_id', $request->store_id)
+                ->where('product_id', $product->id)
+                ->latest('id')
+                ->first();
+
+            $previousBalance = $latestLedger ? $latestLedger->balance : 0;
+
+            $newBalance = $previousBalance + $request->stock_qty;
+
+            InventoryLedger::create([
+                'store_id' => $request->store_id,
+                'product_id' => $product->id,
+                'change' => $request->stock_qty,
+                'balance' => $newBalance,
+                'reason' => 'restock',
+            ]);
+
+
             DB::commit();
-            return ResponseHelper::success($product->load(['categories', 'images']), 'Product created successfully', 201);
+            return ResponseHelper::success($product->load(['category', 'images']), 'Product created successfully', 201);
 
         } catch (Exception $e) {
             DB::rollBack();
@@ -351,7 +371,7 @@ class ProductController extends Controller implements HasMiddleware
      */
     public function show($id)
     {
-        $product = Product::with(['categories', 'images', 'store'])->find($id);
+        $product = Product::with(['category', 'images', 'store'])->find($id);
 
         if (!$product) {
             return ResponseHelper::error([], 'Product not found', 404);
@@ -396,6 +416,7 @@ class ProductController extends Controller implements HasMiddleware
      *             @OA\Property(property="description", type="string", example="Updated high-end laptop"),
      *             @OA\Property(property="price", type="number", format="float", example=349.99),
      *             @OA\Property(property="sku", type="string", example="LAP12345"),
+     *             @OA\Property(property="category_id", type="integer", example=1),
      *             @OA\Property(property="barcode", type="string", example="1234567890123"),
      *             @OA\Property(property="is_online", type="boolean", example=true),
      *             @OA\Property(property="stock_qty", type="integer", example=15),
@@ -418,7 +439,7 @@ class ProductController extends Controller implements HasMiddleware
      *         @OA\JsonContent(ref="#/components/schemas/Product")
      *     ),
      *
-     *     @OA\Response(response=403, description="Unauthorized: Seller does not own this product"),
+     *     @OA\Response(response=403, description="Unauthorized: Seller does not own this product",ref="#/components/responses/403"),
      *     @OA\Response(
      *         response=404,
      *         description="Product not found",
@@ -438,7 +459,7 @@ class ProductController extends Controller implements HasMiddleware
 
     public function update(Request $request, $id)
     {
-        $product = Product::with(['categories', 'images'])->find($id);
+        $product = Product::with(['category', 'images'])->find($id);
 
         if (!$product) {
             return ResponseHelper::error([], 'Product not found', 404);
@@ -459,8 +480,9 @@ class ProductController extends Controller implements HasMiddleware
             'stock_qty' => 'nullable|integer|min:0',
 
             // categories
-            'categories' => 'nullable|array',
-            'categories.*' => 'exists:categories,id',
+            'category_id' => 'sometimes|required|numeric|exists:categories,id',
+            // 'categories' => 'nullable|array',
+            // 'categories.*' => 'exists:categories,id',
 
             // images
             'images' => 'nullable|array',
@@ -484,16 +506,16 @@ class ProductController extends Controller implements HasMiddleware
             }
             $product->update($updateData);
 
-            // sync categories if provided
-            if (isset($data['categories'])) {
-                ProductCategory::where('product_id', $product->id)->delete();
-                foreach ($data['categories'] as $categoryId) {
-                    ProductCategory::create([
-                        'product_id' => $product->id,
-                        'category_id' => $categoryId,
-                    ]);
-                }
-            }
+            // // sync categories if provided
+            // if (isset($data['categories'])) {
+            //     ProductCategory::where('product_id', $product->id)->delete();
+            //     foreach ($data['categories'] as $categoryId) {
+            //         ProductCategory::create([
+            //             'product_id' => $product->id,
+            //             'category_id' => $categoryId,
+            //         ]);
+            //     }
+            // }
 
             // sync images if provided
             if (isset($data['images'])) {
@@ -710,7 +732,7 @@ class ProductController extends Controller implements HasMiddleware
 
     /**
      * @OA\Post(
-     *     path="/products/bulk-upload",
+     *     path="/products/excel",
      *     tags={"Products"},
      *     summary="Bulk upload products",
      *     description="Upload multiple products using a CSV or XLSX file. The file must contain valid product data according to the import rules.",

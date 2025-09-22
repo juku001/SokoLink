@@ -3,12 +3,15 @@
 use App\Http\Controllers\AcademyController;
 use App\Http\Controllers\AcademyLessonController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ReviewController;
 
 
 Route::middleware(['auth:sanctum'])->group(function () {
 
+    Route::post('academy/{id}/reviews', [ReviewController::class, 'storeAcademyReview']);
+    Route::get('academy{id}/reviews', [ReviewController::class, 'academy']);
 
-    Route::get('/dashboard/seller/academy', [DashboardController::class, 'academy']);
+    Route::get('/dashboard/academy/stats', [DashboardController::class, 'academy']);
     Route::resource('/academy', AcademyController::class);
     Route::get('/academy/lessons/{id}', [AcademyLessonController::class, 'show']); //getting a video from an academy group
 

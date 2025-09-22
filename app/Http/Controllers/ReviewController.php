@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\ResponseHelper;
+use App\Models\AcademyLesson;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\Store;
@@ -35,8 +36,9 @@ class ReviewController extends Controller
      *         description="Reviews retrieved successfully",
      *         @OA\JsonContent(
      *             type="object",
-     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="status", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="Reviews for product"),
+     *             @OA\Property(property="code", type="integer", example=200),
      *             @OA\Property(
      *                 property="data",
      *                 type="array",
@@ -106,8 +108,9 @@ class ReviewController extends Controller
      *         description="Review added successfully",
      *         @OA\JsonContent(
      *             type="object",
-     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="status", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="Review added successfully"),
+     *             @OA\Property(property="code", type="integer", example=201),
      *             @OA\Property(property="data", ref="#/components/schemas/Review")
      *         )
      *     ),
@@ -201,8 +204,9 @@ class ReviewController extends Controller
      *         description="Reviews retrieved successfully",
      *         @OA\JsonContent(
      *             type="object",
-     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="status", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="Reviews for store"),
+     *             @OA\Property(property="code", type="integer", example=200),
      *             @OA\Property(
      *                 property="data",
      *                 type="array",
@@ -272,8 +276,9 @@ class ReviewController extends Controller
      *         description="Review added successfully",
      *         @OA\JsonContent(
      *             type="object",
-     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="status", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="Review added successfully"),
+     *             @OA\Property(property="code", type="integer", example=201),
      *             @OA\Property(property="data", ref="#/components/schemas/Review")
      *         )
      *     ),
@@ -349,5 +354,172 @@ class ReviewController extends Controller
         );
     }
 
+
+
+
+
+    /**
+     * @OA\Get(
+     *     path="/academy/{id}/reviews",
+     *     tags={"Academy"},
+     *     summary="Get reviews for a Academy",
+     *     description="Retrieve all reviews for a specific Academy, optionally including reviewer info.",
+     *     operationId="getAcademyReviews",
+     *     security={{"sanctum":{}}},
+     *
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="ID of the Academy",
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Reviews retrieved successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="status", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Reviews for Academy Lesson"),
+     *             @OA\Property(property="code", type="integer", example=200),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="array",
+     *                 @OA\Items(ref="#/components/schemas/Review")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Invalid user state or database error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Academy Lesson not found"),
+     *             @OA\Property(property="code", type="integer", example=404)
+     *         )
+     *     ),
+     *     @OA\Response(response=401, description="Unauthenticated",ref="#/components/responses/401"),
+     *     @OA\Response(response=500, description="Internal server error",ref="#/components/responses/500")
+     * )
+     */
+    public function academy(string $id)
+    {
+        $academyLesson = AcademyLesson::find($id);
+
+        if (!$academyLesson) {
+            return ResponseHelper::error([], "academy lesson not found", 404);
+        }
+
+        $reviews = $academyLesson->reviews()->with('user')->get(); // optional: include reviewer info
+
+        return ResponseHelper::success($reviews, "Reviews for Academy");
+    }
+
+
+
+
+
+    /**
+     * @OA\Post(
+     *     path="/academy/{id}/reviews",
+     *     tags={"Academy"},
+     *     summary="Add a review to a academy",
+     *     description="Submit a rating and review for a specific academy. Users can only review a academy once.",
+     *     operationId="storeAcademyReview",
+     *     security={{"sanctum":{}}},
+     *
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="ID of the Academy Lesson to review",
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             type="object",
+     *             required={"rating","review"},
+     *             @OA\Property(property="rating", type="integer", enum={1,2,3,4,5}, example=5, description="Rating from 1 to 5"),
+     *             @OA\Property(property="review", type="string", example="Excellent service!", description="Textual review")
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=201,
+     *         description="Review added successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="status", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Review added successfully"),
+     *             @OA\Property(property="code", type="integer", example=201),
+     *             @OA\Property(property="data", ref="#/components/schemas/Review")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *       response=409, 
+     *       description="User has already reviewed this store",
+     *       @OA\JsonContent(
+     *             @OA\Property(property="status", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Store not found"),
+     *             @OA\Property(property="code", type="integer", example=409)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Invalid user state or database error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Store not found"),
+     *             @OA\Property(property="code", type="integer", example=404)
+     *         )
+     *     ),
+     *     @OA\Response(response=422, description="Validation error",ref="#/components/responses/422"),
+     *     @OA\Response(response=401, description="Unauthenticated",ref="#/components/responses/401"),
+     *     @OA\Response(response=500, description="Internal server error",ref="#/components/responses/500")
+     * )
+     */
+    public function storeAcademyReview(Request $request, string $id)
+    {
+        $validator = Validator::make($request->all(), [
+            'rating' => 'required|integer|in:1,2,3,4,5',
+            'review' => 'required|string'
+        ]);
+
+        if ($validator->fails()) {
+            return ResponseHelper::error(
+                $validator->errors(),
+                "Failed to validate fields.",
+                422
+            );
+        }
+
+        $academyLesson = AcademyLesson::find($id);
+
+        if (!$academyLesson) {
+            return ResponseHelper::error([], "Academy Lesson not found", 404);
+        }
+
+        if ($academyLesson->reviews()->where('user_id', auth()->id())->exists()) {
+            return ResponseHelper::error([], "You have already reviewed this academy lesson", 409);
+        }
+
+        $data = $validator->validated();
+
+        $review = $academyLesson->reviews()->create([
+            'user_id' => auth()->id(),
+            'rating' => $data['rating'],
+            'review' => $data['review'],
+            'is_verified_purchase' => false,
+        ]);
+
+        return ResponseHelper::success(
+            $review,
+            "Review added successfully",
+            201
+        );
+    }
 
 }

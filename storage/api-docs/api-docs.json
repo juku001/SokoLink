@@ -2598,6 +2598,98 @@
             }
         },
         "/be/seller": {
+            "put": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Update seller payout details",
+                "operationId": "7f43890aa4d747242d9c8c4c0fddb7f7",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "payout_account",
+                                    "payout_method"
+                                ],
+                                "properties": {
+                                    "payout_account": {
+                                        "type": "string",
+                                        "example": "mpesa-254700123456"
+                                    },
+                                    "payout_method": {
+                                        "type": "integer",
+                                        "example": 2
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Seller details updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Seller details updated."
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 200
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Not a seller or database error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Not a seller or database error."
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 400
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/422"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/500"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
             "post": {
                 "tags": [
                     "Users"
@@ -2671,7 +2763,7 @@
         "/carts": {
             "get": {
                 "tags": [
-                    "Payments"
+                    "Cart"
                 ],
                 "summary": "Get cart summary",
                 "description": "Returns the authenticated buyer's cart with items, subtotal, shipping and total.",
@@ -2742,7 +2834,7 @@
             },
             "post": {
                 "tags": [
-                    "Payments"
+                    "Cart"
                 ],
                 "summary": "Add product to cart",
                 "operationId": "4166fd0418f4557cdaaf8dfcc29eb00d",
@@ -2785,13 +2877,13 @@
                 ]
             }
         },
-        "/carts/items/{itemId}": {
+        "/carts/{itemId}": {
             "patch": {
                 "tags": [
-                    "Payments"
+                    "Cart"
                 ],
                 "summary": "Update quantity of a cart item",
-                "operationId": "50b107a7959e3bd8ce186afe6b1f7223",
+                "operationId": "8f8bdadddd1975d9a2a3323343d19028",
                 "parameters": [
                     {
                         "name": "itemId",
@@ -2840,7 +2932,7 @@
         "/carts/{cartId}/add/{productId}/increment": {
             "post": {
                 "tags": [
-                    "Payments"
+                    "Cart"
                 ],
                 "summary": "Increment quantity of a product in the cart",
                 "operationId": "9147453322696344a8ed87bc0df3feee",
@@ -2880,7 +2972,7 @@
         "/carts/{cartId}/remove/{productId}/decrement": {
             "delete": {
                 "tags": [
-                    "Payments"
+                    "Cart"
                 ],
                 "summary": "Decrement quantity or remove product from cart",
                 "operationId": "152d6e73f85d75abac5cd7ca5f344b93",
@@ -4524,13 +4616,13 @@
                 ]
             }
         },
-        "/dashboard/seller/contacts": {
+        "/dashboard/contacts/stats": {
             "get": {
                 "tags": [
-                    "Dashboard"
+                    "Seller Dashboard"
                 ],
                 "summary": "Get Contact Stats",
-                "operationId": "8961e2bc9bd2dc7351c247162d7a3bd3",
+                "operationId": "ea5a3f588da5738aa89e5459d5aef0af",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -4583,14 +4675,87 @@
                 }
             }
         },
-        "/dashboard/expenses": {
+        "/dashboard/academy/stats": {
             "get": {
                 "tags": [
-                    "Dashboard"
+                    "Seller Dashboard"
+                ],
+                "summary": "Academy Statistics ",
+                "description": "Returns overall stats for academy lessons.",
+                "operationId": "085dd232493e26f4c7311515841f977f",
+                "responses": {
+                    "200": {
+                        "description": "Statistics retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Academy statistics"
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "videos": {
+                                                    "type": "integer",
+                                                    "example": 42
+                                                },
+                                                "ratings": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 4.5
+                                                },
+                                                "students": {
+                                                    "type": "integer",
+                                                    "example": 1200
+                                                },
+                                                "content": {
+                                                    "properties": {
+                                                        "state": {
+                                                            "type": "string",
+                                                            "example": "Free"
+                                                        },
+                                                        "message": {
+                                                            "type": "string",
+                                                            "example": "All Content"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/403"
+                    }
+                }
+            }
+        },
+        "/dashboard/expenses/stats": {
+            "get": {
+                "tags": [
+                    "Seller Dashboard"
                 ],
                 "summary": "Get expense statistics for the dashboard",
                 "description": "Retrieve monthly totals, pending expenses, and average daily expenses for the authenticated seller",
-                "operationId": "6444bbcfab552470d48ef2ec1baa1194",
+                "operationId": "01d9ffa214e87093a9de5071708a93b3",
                 "responses": {
                     "200": {
                         "description": "Expenses dashboard stats retrieved successfully",
@@ -4677,7 +4842,7 @@
         "/dashboard/admin/customers": {
             "get": {
                 "tags": [
-                    "Dashboard"
+                    "Admin Dashboard"
                 ],
                 "summary": "Admin customer management dashboard",
                 "description": "Returns key buyer statistics for the admin dashboard, including totals, active buyers, and growth trends.",
@@ -4840,7 +5005,7 @@
         "/dashboard/admin/platform/health": {
             "get": {
                 "tags": [
-                    "Dashboard"
+                    "Admin Dashboard"
                 ],
                 "summary": "Platform health dashboard",
                 "description": "Provides real-time metrics on system uptime, average response time, database connections, and API request load for platform monitoring.",
@@ -5022,7 +5187,7 @@
         "/dashboard/admin/payments": {
             "get": {
                 "tags": [
-                    "Dashboard"
+                    "Admin Dashboard"
                 ],
                 "summary": "Admin payments dashboard statistics",
                 "description": "Provides monthly payment analytics such as total revenue, success rate, failed payments, and revenue growth compared to the previous month.",
@@ -5190,7 +5355,7 @@
         "/dashboard/admin/merchants": {
             "get": {
                 "tags": [
-                    "Dashboard"
+                    "Admin Dashboard"
                 ],
                 "summary": "Admin merchants dashboard statistics",
                 "description": "Returns monthly merchant (store) metrics including total, active, pending, and suspended stores with growth percentages compared to the previous month.",
@@ -5353,17 +5518,49 @@
                 ]
             }
         },
-        "/orders/shipping": {
-            "get": {
+        "/orders/{id}/delivered": {
+            "put": {
                 "tags": [
                     "Orders"
                 ],
-                "summary": "Get list of shipment orders for the authenticated seller",
-                "description": "Retrieve all shipments associated with the authenticated seller along with related order information.",
-                "operationId": "listShipments",
+                "summary": "Mark a product in an order as delivered",
+                "description": "Buyer marks a specific product within an order as delivered. \n     *                  If all products for the same seller are delivered, the seller's escrow is released. \n     *                  If all products in the order are delivered, the order status is updated to 'delivered'.",
+                "operationId": "26f8c04be643e7393d6602f4f2ba7fb2",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Order ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 123
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "product_id"
+                                ],
+                                "properties": {
+                                    "product_id": {
+                                        "description": "ID of the product to mark as delivered",
+                                        "type": "integer",
+                                        "example": 456
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
-                        "description": "List of shipment orders",
+                        "description": "Product marked as delivered successfully",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -5374,7 +5571,296 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "List of shipment order for the sellers."
+                                            "example": "Product marked as delivered and escrow updated if applicable."
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 200
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request (e.g. product already delivered or order not paid)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Order is not yet paid."
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 400
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Order or product not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Order not found."
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 404
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Failed to validate fields."
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 422
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "product_id": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "The product id field is required."
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/escrow/balance/stores/{id}": {
+            "get": {
+                "tags": [
+                    "Payouts"
+                ],
+                "summary": "Get escrow balance for a specific store",
+                "description": "Returns the escrow balance of a store owned by the authenticated seller.",
+                "operationId": "f9c4488d8a96aab1a8fd5a25df3e2899",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Store ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Store Balance retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Store Balance"
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "data": {
+                                            "type": "number",
+                                            "format": "float",
+                                            "example": 1200.5
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Store not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Store Not Found"
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 404
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Store is not on your ownership",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Store Not Found"
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 400
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/403"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/escrow/balance/merchant": {
+            "get": {
+                "tags": [
+                    "Payouts"
+                ],
+                "summary": "Get total escrow balance for authenticated merchant",
+                "description": "Sums all escrow balances across the merchant's stores.",
+                "operationId": "0595fb7ca282352058892b0f6d389f5d",
+                "responses": {
+                    "200": {
+                        "description": "Total merchant balance retrieved",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Merchant Balance"
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "data": {
+                                            "type": "number",
+                                            "format": "float",
+                                            "example": 3200.75
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/403"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/escrows": {
+            "get": {
+                "tags": [
+                    "Payouts"
+                ],
+                "summary": "List all escrows for authenticated seller",
+                "description": "Returns every escrow record where the current user is the seller.",
+                "operationId": "a4b2c23949ba35d49b47d1b9521ae861",
+                "responses": {
+                    "200": {
+                        "description": "List of escrows",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "List of all escrows"
                                         },
                                         "code": {
                                             "type": "integer",
@@ -5386,37 +5872,42 @@
                                                 "properties": {
                                                     "id": {
                                                         "type": "integer",
-                                                        "example": 1
+                                                        "example": 45
                                                     },
                                                     "order_id": {
                                                         "type": "integer",
-                                                        "example": 101
+                                                        "example": 102
+                                                    },
+                                                    "buyer_id": {
+                                                        "type": "integer",
+                                                        "example": 17
                                                     },
                                                     "seller_id": {
                                                         "type": "integer",
-                                                        "example": 10
+                                                        "example": 5
                                                     },
                                                     "status": {
                                                         "type": "string",
-                                                        "example": "pending"
+                                                        "example": "holding"
                                                     },
-                                                    "delivered_late": {
-                                                        "type": "boolean",
-                                                        "example": false
+                                                    "total_amount": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 250
+                                                    },
+                                                    "seller_amount": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 225
+                                                    },
+                                                    "platform_fee": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 25
                                                     },
                                                     "created_at": {
                                                         "type": "string",
-                                                        "format": "date-time",
-                                                        "example": "2025-09-16T12:00:00Z"
-                                                    },
-                                                    "updated_at": {
-                                                        "type": "string",
-                                                        "format": "date-time",
-                                                        "example": "2025-09-16T12:00:00Z"
-                                                    },
-                                                    "order": {
-                                                        "description": "Related order details",
-                                                        "type": "object"
+                                                        "format": "date-time"
                                                     }
                                                 },
                                                 "type": "object"
@@ -5430,138 +5921,14 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/403"
                     }
                 },
                 "security": [
                     {
-                        "sanctum": []
-                    }
-                ]
-            }
-        },
-        "/orders/shipping/{id}": {
-            "put": {
-                "tags": [
-                    "Orders"
-                ],
-                "summary": "Update a shipment and mark order as shipped",
-                "description": "Update carrier information for a shipment and change the order status to shipped. Only accessible by the seller who owns the shipment.",
-                "operationId": "updateShipment",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "Shipment ID",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "example": 1
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "properties": {
-                                    "carrier": {
-                                        "type": "string",
-                                        "example": "DHL"
-                                    },
-                                    "carrier_mobile": {
-                                        "type": "string",
-                                        "example": "+255712345678"
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Shipment updated successfully",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "boolean",
-                                            "example": true
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Products shipped to buyer."
-                                        },
-                                        "code": {
-                                            "type": "integer",
-                                            "example": 200
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad request (e.g., order not paid or already shipped)",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "boolean",
-                                            "example": false
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Order is not yet paid for."
-                                        },
-                                        "code": {
-                                            "type": "integer",
-                                            "example": 400
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Shipment not found",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "boolean",
-                                            "example": false
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Shipment not found"
-                                        },
-                                        "code": {
-                                            "type": "integer",
-                                            "example": 404
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/422"
-                    },
-                    "500": {
-                        "$ref": "#/components/responses/500"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctum": []
+                        "bearerAuth": []
                     }
                 ]
             }
@@ -5629,6 +5996,10 @@
                                             "type": "string",
                                             "example": "List of expenses"
                                         },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
                                         "data": {
                                             "properties": {
                                                 "current_page": {
@@ -5695,28 +6066,7 @@
                         }
                     },
                     "401": {
-                        "description": "Unauthorized",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": false
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Unauthenticated"
-                                        },
-                                        "data": {
-                                            "type": "object",
-                                            "example": []
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                        "$ref": "#/components/responses/401"
                     }
                 },
                 "security": [
@@ -6105,13 +6455,17 @@
                             "application/json": {
                                 "schema": {
                                     "properties": {
-                                        "success": {
+                                        "status": {
                                             "type": "boolean",
                                             "example": true
                                         },
                                         "message": {
                                             "type": "string",
                                             "example": "List of expenses type"
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 200
                                         },
                                         "data": {
                                             "type": "array",
@@ -6177,13 +6531,17 @@
                             "application/json": {
                                 "schema": {
                                     "properties": {
-                                        "success": {
+                                        "status": {
                                             "type": "boolean",
                                             "example": true
                                         },
                                         "message": {
                                             "type": "string",
                                             "example": "Type added successful"
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 200
                                         },
                                         "data": {
                                             "properties": {
@@ -6205,29 +6563,14 @@
                         }
                     },
                     "422": {
-                        "description": "Validation failed",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": false
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Failed to validate fields"
-                                        },
-                                        "data": {
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                        "$ref": "#/components/responses/422"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/expense/types/{id}": {
@@ -6257,13 +6600,17 @@
                             "application/json": {
                                 "schema": {
                                     "properties": {
-                                        "success": {
+                                        "status": {
                                             "type": "boolean",
                                             "example": true
                                         },
                                         "message": {
                                             "type": "string",
                                             "example": "Expense Type details"
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 200
                                         },
                                         "data": {
                                             "properties": {
@@ -6290,7 +6637,7 @@
                             "application/json": {
                                 "schema": {
                                     "properties": {
-                                        "success": {
+                                        "status": {
                                             "type": "boolean",
                                             "example": false
                                         },
@@ -6298,9 +6645,9 @@
                                             "type": "string",
                                             "example": "Expense Type not found"
                                         },
-                                        "data": {
-                                            "type": "object",
-                                            "example": []
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 404
                                         }
                                     },
                                     "type": "object"
@@ -6352,13 +6699,17 @@
                             "application/json": {
                                 "schema": {
                                     "properties": {
-                                        "success": {
+                                        "status": {
                                             "type": "boolean",
                                             "example": true
                                         },
                                         "message": {
                                             "type": "string",
                                             "example": "Expense Type updated successfully"
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 200
                                         },
                                         "data": {
                                             "properties": {
@@ -6380,29 +6731,14 @@
                         }
                     },
                     "422": {
-                        "description": "Validation failed",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": false
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Failed to validate fields"
-                                        },
-                                        "data": {
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                        "$ref": "#/components/responses/422"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             },
             "delete": {
                 "tags": [
@@ -6430,13 +6766,17 @@
                             "application/json": {
                                 "schema": {
                                     "properties": {
-                                        "success": {
+                                        "status": {
                                             "type": "boolean",
                                             "example": true
                                         },
                                         "message": {
                                             "type": "string",
                                             "example": "Expense Type deleted successful."
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 200
                                         },
                                         "data": {
                                             "properties": {
@@ -6463,7 +6803,7 @@
                             "application/json": {
                                 "schema": {
                                     "properties": {
-                                        "success": {
+                                        "status": {
                                             "type": "boolean",
                                             "example": false
                                         },
@@ -6471,9 +6811,9 @@
                                             "type": "string",
                                             "example": "Expense Type not found"
                                         },
-                                        "data": {
-                                            "type": "object",
-                                            "example": []
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 404
                                         }
                                     },
                                     "type": "object"
@@ -6481,7 +6821,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/feedbacks": {
@@ -7462,6 +7807,687 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/403"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/products/inventory": {
+            "get": {
+                "tags": [
+                    "Inventory"
+                ],
+                "summary": "List all products with stock balances",
+                "description": "Returns all products along with their latest stock balance.",
+                "operationId": "96f359fa31779fff113721975501e7e4",
+                "responses": {
+                    "200": {
+                        "description": "List of products with balances",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Product inventory list"
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 101
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "4K TV"
+                                                    },
+                                                    "store": {
+                                                        "type": "string",
+                                                        "example": "City Electronics"
+                                                    },
+                                                    "balance": {
+                                                        "type": "integer",
+                                                        "example": 25
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/products/{id}/inventory": {
+            "get": {
+                "tags": [
+                    "Inventory"
+                ],
+                "summary": "Show product stock ledger",
+                "description": "Returns the full inventory ledger for a specific product, including store and product details.",
+                "operationId": "9a3385b406aff996c630da353792b965",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the product",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 101
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Product ledger retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Product inventory ledger"
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "store_id": {
+                                                        "type": "integer",
+                                                        "example": 10
+                                                    },
+                                                    "store_name": {
+                                                        "type": "string",
+                                                        "example": "City Electronics"
+                                                    },
+                                                    "product_id": {
+                                                        "type": "integer",
+                                                        "example": 101
+                                                    },
+                                                    "product_name": {
+                                                        "type": "string",
+                                                        "example": "4K TV"
+                                                    },
+                                                    "change": {
+                                                        "type": "integer",
+                                                        "example": 10
+                                                    },
+                                                    "balance": {
+                                                        "type": "integer",
+                                                        "example": 25
+                                                    },
+                                                    "reason": {
+                                                        "type": "string",
+                                                        "example": "restock"
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "example": "2025-09-19T12:00:00Z"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Product not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Product not found"
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 404
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "patch": {
+                "tags": [
+                    "Inventory"
+                ],
+                "summary": "Adjust stock quantity for a product",
+                "description": "Allows the authenticated seller to adjust the stock quantity for their product.",
+                "operationId": "9d459960f92fd6ce3dc9e7ceab0cc449",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the product",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 101
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "stock_qty"
+                                ],
+                                "properties": {
+                                    "stock_qty": {
+                                        "type": "integer",
+                                        "example": 10
+                                    },
+                                    "reason": {
+                                        "type": "string",
+                                        "example": "restock"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Stock updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Stock updated successfully"
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "balance": {
+                                                    "type": "integer",
+                                                    "example": 35
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Unauthorized to adjust this product",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "You do not own this product"
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 403
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Product not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Product not found"
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 404
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Validation failed"
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 422
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "example": {
+                                                "stock_qty": [
+                                                    "The stock qty field is required."
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/products/{id}/inventory/balance": {
+            "get": {
+                "tags": [
+                    "Inventory"
+                ],
+                "summary": "Get current stock balance of a product",
+                "description": "Returns only the latest balance for a specific product.",
+                "operationId": "2a1a14275206e79325b259340394b7c5",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the product",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 101
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Product stock balance retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Product stock balance"
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "balance": {
+                                                    "type": "integer",
+                                                    "example": 35
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Product not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Product not found"
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 404
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/products/{id}/add": {
+            "post": {
+                "tags": [
+                    "Inventory"
+                ],
+                "summary": "Add stock to a product",
+                "description": "Increase the stock quantity of a product. Only the store owner (seller) can perform this action.",
+                "operationId": "8398027dbba65c487b712565487f8718",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the product to restock",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 101
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "product_id",
+                                    "quantity"
+                                ],
+                                "properties": {
+                                    "product_id": {
+                                        "type": "integer",
+                                        "example": 101
+                                    },
+                                    "quantity": {
+                                        "type": "integer",
+                                        "example": 20
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "New shipment arrived"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Stock successfully added",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Product Stock Added"
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 200
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Product not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Product not found"
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 404
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/422"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/403"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/products/{id}/deduct": {
+            "delete": {
+                "tags": [
+                    "Inventory"
+                ],
+                "summary": "Deduct stock from a product",
+                "description": "Decrease the stock quantity of a product (e.g., for expired or damaged items). Only the store owner (seller) can perform this action.",
+                "operationId": "b6dbe8b6f3a519905b507468f1f773c7",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the product to deduct stock from",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 101
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "product_id",
+                                    "quantity"
+                                ],
+                                "properties": {
+                                    "product_id": {
+                                        "type": "integer",
+                                        "example": 101
+                                    },
+                                    "quantity": {
+                                        "type": "integer",
+                                        "example": 5
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Damaged items removed"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Stock successfully deducted",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Product Stock Deducted"
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 200
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid deduction (e.g., insufficient stock)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Cannot deduct more than available stock"
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 400
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Product not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Product not found"
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 404
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/422"
                     },
                     "403": {
                         "$ref": "#/components/responses/403"
@@ -10523,7 +11549,7 @@
         "/checkout": {
             "post": {
                 "tags": [
-                    "Orders"
+                    "Cart"
                 ],
                 "summary": "Checkout the cart and create an order",
                 "description": "Transfers the buyer's cart items into an order with shipping address and payment details.",
@@ -12159,6 +13185,453 @@
                 ]
             }
         },
+        "/payouts": {
+            "get": {
+                "tags": [
+                    "Payouts"
+                ],
+                "summary": "List seller's payouts",
+                "description": "Returns all payouts that belong to the authenticated seller.",
+                "operationId": "84169e992838b79318aa0116b52bf550",
+                "responses": {
+                    "200": {
+                        "description": "List of payouts",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "List of payouts"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 12
+                                                    },
+                                                    "amount": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 500
+                                                    },
+                                                    "status": {
+                                                        "type": "string",
+                                                        "example": "pending"
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/403"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Payouts"
+                ],
+                "summary": "Request a payout",
+                "description": "Creates a payout request for the authenticated seller and sends the disbursement to Airtel. \n     *                  On success, the payout is recorded and the seller’s escrow balance is reduced.",
+                "operationId": "createPayout",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "amount"
+                                ],
+                                "properties": {
+                                    "amount": {
+                                        "description": "Amount to withdraw (TZS). Must be ≥ 1.",
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 25000
+                                    },
+                                    "note": {
+                                        "description": "Optional note for the payout.",
+                                        "type": "string",
+                                        "maxLength": 255,
+                                        "example": "Weekly withdrawal"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Payout processed successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Payout processed successfully."
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "transaction_id": {
+                                                    "description": "Airtel reference/transaction ID.",
+                                                    "type": "string",
+                                                    "example": "18****354"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/422"
+                    },
+                    "400": {
+                        "description": "Insufficient balance or seller account missing",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Insufficient balance"
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 400
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "502": {
+                        "description": "Payout failed on Airtel side",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Payout failed: Airtel error message"
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 502
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Error: database or processing failure"
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 500
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/payouts/{id}": {
+            "get": {
+                "tags": [
+                    "Payouts"
+                ],
+                "summary": "Get payout details",
+                "description": "Returns details of a specific payout if it belongs to the authenticated seller.",
+                "operationId": "e6f40f66141d8b0327f626f63ee83c13",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Payout ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Payout details",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Payout details"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 15
+                                                },
+                                                "amount": {
+                                                    "type": "number",
+                                                    "example": 500
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "pending"
+                                                },
+                                                "payment_method_id": {
+                                                    "type": "integer",
+                                                    "example": 3
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Payout not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Payout not found."
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 404
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/payouts/all": {
+            "get": {
+                "tags": [
+                    "Payouts"
+                ],
+                "summary": "List all payouts (Admin only)",
+                "description": "Accessible only by super admins to list every payout.",
+                "operationId": "f690efca795c62523e74d308370c373e",
+                "responses": {
+                    "200": {
+                        "description": "List of all payouts",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "List of all payouts"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 20
+                                                    },
+                                                    "seller_id": {
+                                                        "type": "integer",
+                                                        "example": 4
+                                                    },
+                                                    "amount": {
+                                                        "type": "number",
+                                                        "example": 750
+                                                    },
+                                                    "status": {
+                                                        "type": "string",
+                                                        "example": "completed"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/403"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/payout/settlement-type": {
+            "patch": {
+                "tags": [
+                    "Payouts"
+                ],
+                "summary": "Toggle seller settlement type (manual/auto)",
+                "operationId": "1d457d628d9f11e3eb7d100ca917f100",
+                "responses": {
+                    "200": {
+                        "description": "Settlement type changed successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Settlement type changed.."
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 200
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Seller record not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Seller record not found."
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 404
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/500"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/products": {
             "get": {
                 "tags": [
@@ -12354,12 +13827,9 @@
                                         "example": 10,
                                         "nullable": true
                                     },
-                                    "categories": {
-                                        "type": "array",
-                                        "items": {
-                                            "type": "integer",
-                                            "example": 3
-                                        }
+                                    "category_id": {
+                                        "type": "integer",
+                                        "example": 1
                                     },
                                     "images": {
                                         "type": "array",
@@ -12547,6 +14017,10 @@
                                         "type": "string",
                                         "example": "LAP12345"
                                     },
+                                    "category_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
                                     "barcode": {
                                         "type": "string",
                                         "example": "1234567890123"
@@ -12597,7 +14071,7 @@
                         }
                     },
                     "403": {
-                        "description": "Unauthorized: Seller does not own this product"
+                        "$ref": "#/components/responses/403"
                     },
                     "404": {
                         "description": "Product not found",
@@ -12866,7 +14340,7 @@
                 ]
             }
         },
-        "/products/bulk-upload": {
+        "/products/excel": {
             "post": {
                 "tags": [
                     "Products"
@@ -13797,13 +15271,17 @@
                             "application/json": {
                                 "schema": {
                                     "properties": {
-                                        "success": {
+                                        "status": {
                                             "type": "boolean",
                                             "example": true
                                         },
                                         "message": {
                                             "type": "string",
                                             "example": "Reviews for product"
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 200
                                         },
                                         "data": {
                                             "type": "array",
@@ -13913,13 +15391,17 @@
                             "application/json": {
                                 "schema": {
                                     "properties": {
-                                        "success": {
+                                        "status": {
                                             "type": "boolean",
                                             "example": true
                                         },
                                         "message": {
                                             "type": "string",
                                             "example": "Review added successfully"
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 201
                                         },
                                         "data": {
                                             "$ref": "#/components/schemas/Review"
@@ -14022,13 +15504,17 @@
                             "application/json": {
                                 "schema": {
                                     "properties": {
-                                        "success": {
+                                        "status": {
                                             "type": "boolean",
                                             "example": true
                                         },
                                         "message": {
                                             "type": "string",
                                             "example": "Reviews for store"
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 200
                                         },
                                         "data": {
                                             "type": "array",
@@ -14138,13 +15624,17 @@
                             "application/json": {
                                 "schema": {
                                     "properties": {
-                                        "success": {
+                                        "status": {
                                             "type": "boolean",
                                             "example": true
                                         },
                                         "message": {
                                             "type": "string",
                                             "example": "Review added successfully"
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 201
                                         },
                                         "data": {
                                             "$ref": "#/components/schemas/Review"
@@ -14220,14 +15710,247 @@
                 ]
             }
         },
-        "/dashboard/sales": {
+        "/academy/{id}/reviews": {
             "get": {
                 "tags": [
-                    "Dashboard"
+                    "Academy"
+                ],
+                "summary": "Get reviews for a Academy",
+                "description": "Retrieve all reviews for a specific Academy, optionally including reviewer info.",
+                "operationId": "getAcademyReviews",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the Academy",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Reviews retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Reviews for Academy Lesson"
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Review"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Invalid user state or database error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Academy Lesson not found"
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 404
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/500"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Academy"
+                ],
+                "summary": "Add a review to a academy",
+                "description": "Submit a rating and review for a specific academy. Users can only review a academy once.",
+                "operationId": "storeAcademyReview",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the Academy Lesson to review",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "rating",
+                                    "review"
+                                ],
+                                "properties": {
+                                    "rating": {
+                                        "description": "Rating from 1 to 5",
+                                        "type": "integer",
+                                        "enum": [
+                                            1,
+                                            2,
+                                            3,
+                                            4,
+                                            5
+                                        ],
+                                        "example": 5
+                                    },
+                                    "review": {
+                                        "description": "Textual review",
+                                        "type": "string",
+                                        "example": "Excellent service!"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Review added successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Review added successfully"
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 201
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Review"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "User has already reviewed this store",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Store not found"
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 409
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Invalid user state or database error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Store not found"
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 404
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/422"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/500"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/dashboard/sales/stats": {
+            "get": {
+                "tags": [
+                    "Seller Dashboard"
                 ],
                 "summary": "Get sales dashboard for the authenticated seller",
                 "description": "Retrieve today's sales, pending sales, and total transactions for the current month",
-                "operationId": "5d900c8e3a7e33f1889aab9b4278938e",
+                "operationId": "52dad2cd559e17789f5df1af76388561",
                 "responses": {
                     "200": {
                         "description": "Sales dashboard retrieved successfully",
@@ -14303,28 +16026,7 @@
                         }
                     },
                     "401": {
-                        "description": "Unauthorized",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": false
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Unauthenticated"
-                                        },
-                                        "data": {
-                                            "type": "object",
-                                            "example": []
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                        "$ref": "#/components/responses/401"
                     }
                 },
                 "security": [
@@ -14474,44 +16176,84 @@
                 "tags": [
                     "Sales"
                 ],
-                "summary": "Create a new single-product sale",
-                "description": "Records a new sale for a single product",
-                "operationId": "createSale",
+                "summary": "Create a new sale (single or multiple products)",
+                "description": "Creates a sale record with one or more products on the current active store. \n     *                  Deducts stock and records inventory ledger entries if status is `completed`.",
+                "operationId": "dfb5258201d9aae6151ea5593709a02e",
                 "requestBody": {
                     "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
+                                "required": [
+                                    "store_id",
+                                    "sales_date",
+                                    "sales_time",
+                                    "status",
+                                    "products"
+                                ],
                                 "properties": {
-                                    "product_id": {
+                                    "store_id": {
+                                        "description": "Store ID where the sale occurs",
                                         "type": "integer",
                                         "example": 1
-                                    },
-                                    "quantity": {
-                                        "type": "number",
-                                        "example": 2
-                                    },
-                                    "sale_price": {
-                                        "type": "number",
-                                        "example": 199.99
                                     },
                                     "payment_method_id": {
                                         "type": "integer",
-                                        "example": 1
+                                        "example": 2,
+                                        "nullable": true
                                     },
                                     "buyer_name": {
                                         "type": "string",
-                                        "example": "John Doe"
+                                        "example": "John Doe",
+                                        "nullable": true
                                     },
-                                    "sale_date": {
+                                    "sales_date": {
                                         "type": "string",
                                         "format": "date",
-                                        "example": "2025-09-14"
+                                        "example": "2025-09-20"
                                     },
-                                    "sale_time": {
+                                    "sales_time": {
                                         "type": "string",
-                                        "format": "H:i:s",
-                                        "example": "14:30:00"
+                                        "format": "time",
+                                        "example": "15:30:00"
+                                    },
+                                    "payment_type": {
+                                        "type": "string",
+                                        "example": "cash"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "pending",
+                                            "completed"
+                                        ],
+                                        "example": "completed"
+                                    },
+                                    "products": {
+                                        "type": "array",
+                                        "items": {
+                                            "required": [
+                                                "product_id",
+                                                "price",
+                                                "quantity"
+                                            ],
+                                            "properties": {
+                                                "product_id": {
+                                                    "type": "integer",
+                                                    "example": 5
+                                                },
+                                                "price": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 100.5
+                                                },
+                                                "quantity": {
+                                                    "type": "integer",
+                                                    "example": 2
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
                                     }
                                 },
                                 "type": "object"
@@ -14521,57 +16263,49 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "New single-product sale added successfully",
+                        "description": "Sale recorded successfully",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
-                                        "success": {
+                                        "status": {
                                             "type": "boolean",
                                             "example": true
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "New single-product sale added"
+                                            "example": "Sale recorded successfully"
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 201
                                         },
                                         "data": {
                                             "properties": {
                                                 "id": {
                                                     "type": "integer",
-                                                    "example": 1
+                                                    "example": 123
                                                 },
-                                                "quantity": {
-                                                    "type": "number",
-                                                    "example": 2
+                                                "sale_ref": {
+                                                    "type": "string",
+                                                    "example": "SAL650FAB12"
                                                 },
-                                                "price": {
-                                                    "type": "number",
-                                                    "example": 199.99
-                                                },
-                                                "products": {
+                                                "sale_products": {
                                                     "type": "array",
                                                     "items": {
                                                         "properties": {
-                                                            "id": {
+                                                            "product_id": {
                                                                 "type": "integer",
-                                                                "example": 1
+                                                                "example": 5
                                                             },
-                                                            "name": {
-                                                                "type": "string",
-                                                                "example": "Product Name"
+                                                            "quantity": {
+                                                                "type": "integer",
+                                                                "example": 2
                                                             },
-                                                            "pivot": {
-                                                                "properties": {
-                                                                    "quantity": {
-                                                                        "type": "number",
-                                                                        "example": 2
-                                                                    },
-                                                                    "price": {
-                                                                        "type": "number",
-                                                                        "example": 199.99
-                                                                    }
-                                                                },
-                                                                "type": "object"
+                                                            "price": {
+                                                                "type": "number",
+                                                                "format": "float",
+                                                                "example": 100.5
                                                             }
                                                         },
                                                         "type": "object"
@@ -14586,85 +16320,44 @@
                             }
                         }
                     },
-                    "400": {
-                        "description": "Validation or database error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": false
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Failed to validate fields"
-                                        },
-                                        "data": {
-                                            "type": "object",
-                                            "example": []
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                    "422": {
+                        "$ref": "#/components/responses/422"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/500"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
-        "/sales/bulk": {
+        "/api/sales/bulk": {
             "post": {
                 "tags": [
                     "Sales"
                 ],
-                "summary": "Create a new bulk-product sale",
-                "description": "Records a new sale for multiple products at once",
-                "operationId": "createBulkSale",
+                "summary": "Upload an Excel file to create multiple sales records",
+                "description": "Accepts an Excel file (.xlsx or .csv) that contains multiple sales with their products.  \n * Each row represents a single sale line item. The API groups rows with the same `sale_ref` into one sale.",
+                "operationId": "storeBulkSales",
                 "requestBody": {
                     "required": true,
                     "content": {
-                        "application/json": {
+                        "multipart/form-data": {
                             "schema": {
+                                "required": [
+                                    "file"
+                                ],
                                 "properties": {
-                                    "products": {
-                                        "description": "List of products in the sale",
-                                        "type": "array",
-                                        "items": {
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer",
-                                                    "example": 1
-                                                },
-                                                "quantity": {
-                                                    "type": "number",
-                                                    "example": 2
-                                                },
-                                                "price": {
-                                                    "type": "number",
-                                                    "example": 199.99
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "payment_method_id": {
-                                        "type": "integer",
-                                        "example": 1
-                                    },
-                                    "buyer_name": {
+                                    "file": {
+                                        "description": "Excel or CSV file containing the sales data",
                                         "type": "string",
-                                        "example": "John Doe"
-                                    },
-                                    "sale_date": {
-                                        "type": "string",
-                                        "format": "date",
-                                        "example": "2025-09-14"
-                                    },
-                                    "sale_time": {
-                                        "type": "string",
-                                        "format": "H:i:s",
-                                        "example": "14:30:00"
+                                        "format": "binary"
                                     }
                                 },
                                 "type": "object"
@@ -14674,55 +16367,38 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "New bulk-product sale added successfully",
+                        "description": "Bulk sales stored successfully",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": true
-                                        },
                                         "message": {
                                             "type": "string",
-                                            "example": "New bulk-product sale added"
+                                            "example": "Bulk sales stored successfully"
                                         },
                                         "data": {
-                                            "properties": {
-                                                "id": {
-                                                    "type": "integer",
-                                                    "example": 1
-                                                },
-                                                "products": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "properties": {
-                                                            "id": {
-                                                                "type": "integer",
-                                                                "example": 1
-                                                            },
-                                                            "name": {
-                                                                "type": "string",
-                                                                "example": "Product Name"
-                                                            },
-                                                            "pivot": {
-                                                                "properties": {
-                                                                    "quantity": {
-                                                                        "type": "number",
-                                                                        "example": 2
-                                                                    },
-                                                                    "price": {
-                                                                        "type": "number",
-                                                                        "example": 199.99
-                                                                    }
-                                                                },
-                                                                "type": "object"
-                                                            }
-                                                        },
-                                                        "type": "object"
-                                                    }
-                                                }
-                                            },
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Sale"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Validation failed"
+                                        },
+                                        "errors": {
                                             "type": "object"
                                         }
                                     },
@@ -14731,31 +16407,15 @@
                             }
                         }
                     },
-                    "400": {
-                        "description": "Validation or database error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": false
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Failed to validate fields"
-                                        },
-                                        "data": {
-                                            "type": "object",
-                                            "example": []
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                    "500": {
+                        "description": "Server error"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
             }
         },
         "/sales/{id}": {
@@ -15024,7 +16684,7 @@
         "/dashboard/seller/overview/stats": {
             "get": {
                 "tags": [
-                    "Dashboard"
+                    "Seller Dashboard"
                 ],
                 "summary": "These are statistics on the first overview page on the seller dashboard.",
                 "description": "Returns key performance metrics for the authenticated seller (sales, expenses, products, customers) including month-over-month percentage changes.",
@@ -15264,7 +16924,7 @@
         "/dashboard/seller/overview/recent-sales": {
             "get": {
                 "tags": [
-                    "Dashboard"
+                    "Seller Dashboard"
                 ],
                 "summary": "Get recent sales",
                 "description": "Fetches the 5 most recent sales of the authenticated seller, including products in each sale.",
@@ -15468,6 +17128,11 @@
                                                     "region": {
                                                         "type": "string",
                                                         "example": "Dar es Salaam",
+                                                        "nullable": true
+                                                    },
+                                                    "category": {
+                                                        "type": "string",
+                                                        "example": "Vifaa vya umeme",
                                                         "nullable": true
                                                     },
                                                     "country": {
@@ -15734,6 +17399,10 @@
                                                 "reviews_count": {
                                                     "type": "integer",
                                                     "example": 20
+                                                },
+                                                "category": {
+                                                    "type": "string",
+                                                    "example": "Electronics"
                                                 },
                                                 "rating_avg": {
                                                     "type": "number",
@@ -16542,7 +18211,7 @@
         "/stores/{id}/follows": {
             "get": {
                 "tags": [
-                    "Store Follows"
+                    "Stores"
                 ],
                 "summary": "List buyers who follow a store",
                 "description": "Returns buyers following the given store. Seller must own the store.",
@@ -16639,7 +18308,7 @@
             },
             "patch": {
                 "tags": [
-                    "Store Follows"
+                    "Stores"
                 ],
                 "summary": "Follow or unfollow a store",
                 "description": "Toggle the follow status for the authenticated buyer.",
@@ -17597,21 +19266,9 @@
                         "example": 10,
                         "nullable": true
                     },
-                    "categories": {
-                        "type": "array",
-                        "items": {
-                            "properties": {
-                                "id": {
-                                    "type": "integer",
-                                    "example": 3
-                                },
-                                "name": {
-                                    "type": "string",
-                                    "example": "Electronics"
-                                }
-                            },
-                            "type": "object"
-                        }
+                    "category_id": {
+                        "type": "integer",
+                        "example": 1
                     },
                     "images": {
                         "type": "array",
@@ -17642,6 +19299,119 @@
                         "type": "string",
                         "format": "date-time",
                         "example": "2025-09-14T10:00:00Z"
+                    }
+                },
+                "type": "object"
+            },
+            "Sale": {
+                "required": [
+                    "seller_id",
+                    "sale_ref",
+                    "amount",
+                    "sales_date",
+                    "sales_time",
+                    "status"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int64",
+                        "example": 42
+                    },
+                    "seller_id": {
+                        "description": "ID of the user who recorded the sale",
+                        "type": "integer",
+                        "format": "int64",
+                        "example": 7
+                    },
+                    "store_id": {
+                        "description": "Store where the sale occurred",
+                        "type": "integer",
+                        "format": "int64",
+                        "example": 3,
+                        "nullable": true
+                    },
+                    "sale_ref": {
+                        "description": "Unique reference code for this sale",
+                        "type": "string",
+                        "example": "SAL-2025-0001"
+                    },
+                    "order_id": {
+                        "description": "Linked order if applicable",
+                        "type": "integer",
+                        "format": "int64",
+                        "example": null,
+                        "nullable": true
+                    },
+                    "payment_id": {
+                        "description": "Linked payment record if any",
+                        "type": "integer",
+                        "format": "int64",
+                        "example": null,
+                        "nullable": true
+                    },
+                    "payment_method_id": {
+                        "description": "Specific payment method used",
+                        "type": "integer",
+                        "format": "int64",
+                        "example": 5,
+                        "nullable": true
+                    },
+                    "payment_type": {
+                        "description": "Broad payment category",
+                        "type": "string",
+                        "enum": [
+                            "cash",
+                            "mno",
+                            "bank",
+                            "card"
+                        ],
+                        "example": "mno"
+                    },
+                    "buyer_name": {
+                        "description": "Name of the buyer/customer",
+                        "type": "string",
+                        "example": "Jane Doe",
+                        "nullable": true
+                    },
+                    "amount": {
+                        "description": "Total sale amount",
+                        "type": "number",
+                        "format": "double",
+                        "example": 1500.75
+                    },
+                    "sales_date": {
+                        "description": "Date of the sale (YYYY-MM-DD)",
+                        "type": "string",
+                        "format": "date",
+                        "example": "2025-09-20"
+                    },
+                    "sales_time": {
+                        "description": "Time of the sale (HH:MM:SS)",
+                        "type": "string",
+                        "format": "time",
+                        "example": "14:30:00"
+                    },
+                    "status": {
+                        "description": "Whether the sale is finalized or awaiting completion",
+                        "type": "string",
+                        "enum": [
+                            "pending",
+                            "completed"
+                        ],
+                        "example": "completed"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "example": "2025-09-20T15:45:00Z"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true,
+                        "example": "2025-09-20T16:00:00Z"
                     }
                 },
                 "type": "object"
@@ -17861,6 +19631,10 @@
     },
     "tags": [
         {
+            "name": "Location",
+            "description": "APIs for managing geographic data including regions, cities, and addresses."
+        },
+        {
             "name": "Authentication",
             "description": "APIs related to user authentication like login, logout, registration, password updates, etc."
         },
@@ -17873,30 +19647,6 @@
             "description": "Its for the buyer to look for the products or stores from the first page by searching for the name or description.."
         },
         {
-            "name": "Dashboard",
-            "description": "Dashboard APIs for all the users, showing stats and other important data."
-        },
-        {
-            "name": "Admin",
-            "description": "Endpoints for managing administrative actions such as approving/rejecting instructor applications, overseeing users, and handling system-level operations."
-        },
-        {
-            "name": "Admin Manage Users",
-            "description": "Endpoints for managing users, changing user status , editing and deleting."
-        },
-        {
-            "name": "Location",
-            "description": "APIs for managing geographic data including regions, cities, and addresses."
-        },
-        {
-            "name": "Contacts",
-            "description": "APIs to manage contact information of users, customers, or business partners."
-        },
-        {
-            "name": "Academy",
-            "description": "APIs related to academy features, including courses, lessons, and instructors."
-        },
-        {
             "name": "Categories",
             "description": "APIs to manage categories for stores, products, or any classified data."
         },
@@ -17905,8 +19655,16 @@
             "description": "APIs to manage stores, their details, and operational information."
         },
         {
+            "name": "Inventory",
+            "description": "APIs to manage products count in the store. The API's for the Inventory Stock Management for the seller."
+        },
+        {
             "name": "Products",
             "description": "APIs to manage products, including creation, updates, and retrieval of product details."
+        },
+        {
+            "name": "Cart",
+            "description": "APIs to manage cart. Viewing the available cart details, add , removing and adjusting items to Cart and Checkout."
         },
         {
             "name": "Orders",
@@ -17929,20 +19687,40 @@
             "description": "This API is for managing all the seller's expenses in their stores. Adding, Editing and Deleting Seller's expenses in a stroe."
         },
         {
+            "name": "Payouts",
+            "description": "APIs for handling payouts to users, vendors, or other entities."
+        },
+        {
+            "name": "Seller Dashboard",
+            "description": "Dashboard APIs for the sellers, showing stats and other important data on the seller panel."
+        },
+        {
+            "name": "Admin Dashboard",
+            "description": "Dashboard APIs for the admins, showing stats and other important data on the admin panel."
+        },
+        {
+            "name": "Admin",
+            "description": "Endpoints for managing administrative actions such as approving/rejecting instructor applications, overseeing users, and handling system-level operations."
+        },
+        {
+            "name": "Admin Manage Users",
+            "description": "Endpoints for managing users, changing user status , editing and deleting."
+        },
+        {
+            "name": "Contacts",
+            "description": "APIs to manage contact information of users, customers, or business partners."
+        },
+        {
+            "name": "Academy",
+            "description": "APIs related to academy features, including courses, lessons, and instructors."
+        },
+        {
             "name": "Reports",
             "description": "APIs to generate and fetch system reports, analytics, and insights for various entities."
         },
         {
             "name": "Feedbacks",
             "description": "APIs for sellers to send feedbacks to the admins concerning different situations or suggestions."
-        },
-        {
-            "name": "Seller Dashboard",
-            "description": "Seller Dashboard"
-        },
-        {
-            "name": "Store Follows",
-            "description": "Store Follows"
         }
     ]
 }

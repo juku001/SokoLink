@@ -386,4 +386,89 @@ class AuthController extends Controller
         }
     }
 
+
+
+
+    /**
+     * @OA\Put(
+     *     path="/be/seller",
+     *     summary="Update seller payout details",
+     *     tags={"Users"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"payout_account","payout_method"},
+     *             @OA\Property(property="payout_account", type="string", example="mpesa-254700123456"),
+     *             @OA\Property(property="payout_method", type="integer", example=2)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Seller details updated successfully",
+     *         @OA\JsonContent(
+     *        type="object",
+     *        @OA\Property(property="status", type="boolean", example=true),
+     *        @OA\Property(property="message", type="string", example="Seller details updated."),
+     *        @OA\Property(property="code", type="integer", example=200),
+     *      )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Not a seller or database error",
+     *         @OA\JsonContent(
+     *        type="object",
+     *        @OA\Property(property="status", type="boolean", example=false),
+     *        @OA\Property(property="message", type="string", example="Not a seller or database error."),
+     *        @OA\Property(property="code", type="integer", example=400),
+     *      )
+     *         
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error",
+     *         ref="#/components/responses/422"
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Unexpected server error",
+     *         ref="#/components/responses/500"
+     *     )
+     * )
+     */
+    public function updateSeller(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'payout_account' => 'required|string',
+            'payout_method' => 'required|numeric|exists:payment_methods,id',
+        ]);
+
+        if ($validator->fails()) {
+            return ResponseHelper::error($validator->errors(), "Failed to validate fields", 422);
+        }
+
+        try {
+            $authId = auth()->id();
+            $seller = Seller::where('user_id', $authId)->first();
+
+            if (!$seller) {
+                return ResponseHelper::error([], "You are not registered as a seller.", 400);
+            }
+
+            $seller->update([
+                'payout_account' => $request->payout_account,
+                'payout_method' => $request->payout_method,
+            ]);
+
+            return ResponseHelper::success($seller, "Seller payout details updated.");
+
+        } catch (QueryException $e) {
+            return ResponseHelper::error([], "DB Error: " . $e->getMessage(), 400);
+        } catch (Exception $e) {
+            return ResponseHelper::error([], "Error: " . $e->getMessage(), 500);
+        }
+    }
+
+
+
 }

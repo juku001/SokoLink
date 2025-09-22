@@ -13,11 +13,17 @@ class AcademyLesson extends Model
         'instructor',
         'ratings',
         'video_path',
-        'duration'
+        'duration',
+        'student_count'
     ];
 
     public function academy()
     {
         return $this->belongsTo(Academy::class);
+    }
+
+    public function reviews()
+    {
+        return $this->morphMany(Review::class, 'reviewable');
     }
 }

@@ -18,4 +18,20 @@ class Escrow extends Model
         'released_at',
         'refunded_at'
     ];
+
+    public function buyer()
+    {
+        return $this->belongsTo(User::class, 'buyer_id');
+    }
+
+
+    public function seller()
+    {
+        return $this->belongsTo(User::class, 'seller_id');
+    }
+
+    public function payment()
+    {
+        return $this->belongsTo(Payment::class);
+    }
 }

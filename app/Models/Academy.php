@@ -16,4 +16,7 @@ class Academy extends Model
     {
         return $this->hasMany(AcademyLesson::class);
     }
+
+
+
 }

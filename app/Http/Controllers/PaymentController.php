@@ -139,7 +139,7 @@ class PaymentController extends Controller
      *     summary="Checkout the cart and create an order",
      *     description="Transfers the buyer's cart items into an order with shipping address and payment details.",
      *     operationId="checkout",
-     *     tags={"Orders"},
+     *     tags={"Cart"},
      *     security={{"sanctum":{}}},
      *
      *     @OA\RequestBody(
