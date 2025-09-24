@@ -39,10 +39,26 @@ class CallbackController extends Controller
         $payment = Payment::where('reference', $referenceId)->first();
 
         if (!$payment) {
+            AirtelCallbackLog::create([
+                'payload' => json_encode($transaction),
+                'airtel_money_id' => $txnId,
+                'reference' => $referenceId,
+                'result' => 'Payment not found',
+                'status_code' => $statusCode,
+                'status' => 'failed'
+            ]);
             return ResponseHelper::error([], 'Payment not found.', 404);
         }
 
         if ($payment->status !== 'pending') {
+            AirtelCallbackLog::create([
+                'payload' => json_encode($transaction),
+                'airtel_money_id' => $txnId,
+                'reference' => $referenceId,
+                'result' => 'Payment already processed',
+                'status_code' => $statusCode,
+                'status' => 'failed'
+            ]);
             return ResponseHelper::error([], 'Payment already processed.', 409);
         }
 
