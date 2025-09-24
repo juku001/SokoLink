@@ -15,9 +15,8 @@ Route::middleware(['auth:sanctum', 'user.type:seller'])->group(function () {
     Route::post('/sales/bulk', [SalesController::class, 'storeBulk']);
     Route::get('/sales', [SalesController::class, 'index']);
     Route::get('/sales/{id}', [SalesController::class, 'show']);
-    Route::get('/dashboard/sales/stats', [SalesController::class, 'dashboard']);
 
-    Route::get('/dashboard/expenses/stats', [DashboardController::class, 'expenses']);
+
     Route::get('/expenses', [ExpenseController::class, 'index']);
     Route::post('/expenses', [ExpenseController::class, 'store']);
     Route::patch('/expenses', [ExpenseController::class, 'update']);

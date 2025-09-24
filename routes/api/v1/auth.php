@@ -23,6 +23,7 @@ Route::prefix('auth')->group(function () {
     Route::post('/verify/email', [RegistrationController::class, 'verify'])->middleware('auth:sanctum');
 
     Route::post('/login', [LogInController::class, 'index']); //login in via mobile
+    
     Route::post('/verify/otp', [LogInController::class, 'verify']);//verify mobile number otp
 
 

@@ -107,8 +107,8 @@ class LogInController extends Controller
             );
 
             DB::commit();
-            // SMSHelper::send($phoneNumber, "Your OTP is $otp");
-            return ResponseHelper::success($otp, "Login successful. OTP sent.");
+            SMSHelper::send($phoneNumber, "Your OTP is $otp");
+            return ResponseHelper::success([], "Login successful. OTP sent.");
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -116,6 +116,10 @@ class LogInController extends Controller
         }
     }
 
+
+    public function resendOtp(){
+        
+    }
 
 
 

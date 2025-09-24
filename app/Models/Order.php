@@ -9,7 +9,6 @@ class Order extends Model
 {
     protected $fillable = [
         'buyer_id',
-        'store_id',
         'total_amount',
         'shipping_cost',
         'status',
@@ -23,12 +22,12 @@ class Order extends Model
         parent::boot();
 
         static::creating(function ($order) {
-          
+
             $order->order_ref = 'ORD-' . now()->format('Ymd') . '-' . strtoupper(Str::random(6));
         });
 
         static::created(function ($order) {
-          
+
             $order->statusHistories()->create([
                 'status' => 'pending',
                 'note' => 'Order created with reference ' . $order->order_ref,
@@ -47,6 +46,13 @@ class Order extends Model
             }
         });
     }
+
+
+    public function store()
+    {
+        return $this->belongsTo(Store::class);
+    }
+
 
 
     public function buyer()

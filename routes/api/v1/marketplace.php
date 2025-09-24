@@ -51,7 +51,7 @@ Route::resource('/stores', StoreController::class);
 Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/products/{id}/reviews', [ReviewController::class, 'products']);
-    Route::post('/products/{id}/reviews', [ReviewController::class, 'storeProductReview']);
+    Route::post('/products/{id}/reviews',   [ReviewController::class, 'storeProductReview']);
 
     Route::middleware('user.type:seller')->group(function () {
 
@@ -75,12 +75,4 @@ Route::resource('products', ProductController::class);
 
 
 
-
-
-
-
-Route::get('/dashboard/seller/overview/stats', [SellerOverviewController::class, 'index']);
-Route::get('/seller/overview/recent-sales', [SellerOverviewController::class, 'recentSales']);
-
-// //     Route::get('/seller/overview/low-stock', [SellerOverviewController::class, 'lowStock']);
 

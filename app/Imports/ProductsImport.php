@@ -3,57 +3,84 @@
 namespace App\Imports;
 
 use App\Models\Product;
-use App\Models\ProductCategory;
 use App\Models\ProductImage;
-use Illuminate\Support\Collection;
-use Maatwebsite\Excel\Concerns\ToCollection;
+use Illuminate\Support\Str;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 
-class ProductsImport implements ToCollection
+class ProductsImport
 {
-    public function collection(Collection $rows)
+    /**
+     * Import products from an Excel/CSV file.
+     *
+     * @param  string $filePath  Absolute path to the uploaded file
+     * @return int    Number of products created
+     * @throws \PhpOffice\PhpSpreadsheet\Reader\Exception
+     */
+    public function import(string $filePath): int
     {
-        // Skip header row if present
-        foreach ($rows->skip(1) as $row) {
-            $storeId = $row[0]; // store_id
-            $name = $row[1];
-            $description = $row[2];
-            $price = $row[3];
-            $sku = $row[4] ?? null;
-            $barcode = $row[5] ?? null;
-            $isOnline = $row[6] ?? true;
-            $stockQty = $row[7] ?? 0;
-            $categoryIds = explode(',', $row[8] ?? ''); // comma-separated category IDs
-            $images = explode(',', $row[9] ?? ''); // comma-separated image URLs
+        $reader = IOFactory::createReaderForFile($filePath);
+        $spreadsheet = $reader->load($filePath);
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Get rows as arrays keyed by column letters (A, B, C…)
+        $rows = $sheet->toArray(null, true, true, true);
+        $count = 0;
+
+        foreach ($rows as $index => $row) {
+            // Skip header row
+            if ($index === 1) {
+                continue;
+            }
+
+            $storeId     = $row['A'];
+            $name        = $row['B'];
+            $description = $row['C'];
+            $price       = $row['D'];
+            $sku         = $row['E'] ?? null;
+            $barcode     = $row['F'] ?? null;
+            $isOnline    = $row['G'] ?? true;
+            $stockQty    = $row['H'] ?? 0;
+            $categoryRaw = trim($row['I'] ?? '');
+            $images      = array_filter(explode(',', $row['J'] ?? ''));
+
+            // Must have a single category ID
+            $categoryIds = array_filter(explode(',', $categoryRaw));
+            if (empty($categoryIds)) {
+                // skip if no category supplied
+                continue;
+            }
+            $categoryId = $categoryIds[0]; // only the first one
+
+            if (empty($storeId) || empty($name) || empty($price)) {
+                continue; // minimal validation
+            }
 
             $product = Product::create([
-                'store_id' => $storeId,
-                'name' => $name,
-                'slug' => \Str::slug($name),
+                'store_id'    => $storeId,
+                'category_id' => $categoryId,
+                'name'        => $name,
+                'slug'        => Str::slug($name),
                 'description' => $description,
-                'price' => $price,
-                'sku' => $sku,
-                'barcode' => $barcode,
-                'is_online' => $isOnline,
-                'stock_qty' => $stockQty,
+                'price'       => $price,
+                'sku'         => $sku,
+                'barcode'     => $barcode,
+                'is_online'   => filter_var($isOnline, FILTER_VALIDATE_BOOLEAN),
+                'stock_qty'   => (int) $stockQty,
             ]);
 
-            // Add categories
-            foreach ($categoryIds as $catId) {
-                ProductCategory::create([
+            // Add images if any
+            foreach ($images as $position => $path) {
+                ProductImage::create([
                     'product_id' => $product->id,
-                    'category_id' => $catId
+                    'path'       => $path,
+                    'position'   => $position,
+                    'is_cover'   => $position === 0,
                 ]);
             }
 
-            // Add images
-            foreach ($images as $index => $imgPath) {
-                ProductImage::create([
-                    'product_id' => $product->id,
-                    'path' => $imgPath,
-                    'position' => $index,
-                    'is_cover' => $index === 0
-                ]);
-            }
+            $count++;
         }
+
+        return $count;
     }
 }

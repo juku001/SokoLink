@@ -188,6 +188,7 @@ class ProductController extends Controller implements HasMiddleware
      *             @OA\Property(property="barcode", type="string", nullable=true, example="1234567890123"),
      *             @OA\Property(property="is_online", type="boolean", example=true),
      *             @OA\Property(property="stock_qty", type="integer", nullable=true, example=10),
+     *             @OA\Property(property="stock_status", type="string",example="in_stock"),
      *             @OA\Property(
      *                 property="category_id",
      *                 type="integer",
@@ -420,6 +421,7 @@ class ProductController extends Controller implements HasMiddleware
      *             @OA\Property(property="barcode", type="string", example="1234567890123"),
      *             @OA\Property(property="is_online", type="boolean", example=true),
      *             @OA\Property(property="stock_qty", type="integer", example=15),
+     *             @OA\Property(property="stock_status", type="string",example="in_stock"),
      *             @OA\Property(
      *                 property="images",
      *                 type="array",
@@ -913,6 +915,7 @@ class ProductController extends Controller implements HasMiddleware
      *                 @OA\Property(property="description", type="string", example="High-definition television."),
      *                 @OA\Property(property="price", type="number", format="float", example=499.99),
      *                 @OA\Property(property="store", type="object"),
+     *                 @OA\Property(property="stock_status", type="string",example="in_stock"),
      *                 @OA\Property(property="reviews", type="array", @OA\Items(type="object")),
      *                 @OA\Property(property="categories", type="array", @OA\Items(type="object")),
      *                 @OA\Property(property="images", type="array", @OA\Items(type="object"))

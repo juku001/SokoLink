@@ -129,6 +129,7 @@ namespace App\Http\Controllers;
  *     @OA\Property(property="is_online", type="boolean", example=true),
  *     @OA\Property(property="stock_qty", type="integer", nullable=true, example=10),
  *     @OA\Property(property="category_id", type="integer",example=1),
+ *     @OA\Property(property="stock_status", type="string",example="in_stock"),
  *     @OA\Property(
  *         property="images",
  *         type="array",
@@ -162,6 +163,24 @@ namespace App\Http\Controllers;
  *     @OA\Property(property="created_at", type="string", format="date-time", readOnly=true, example="2025-09-20T15:45:00Z"),
  *     @OA\Property(property="updated_at", type="string", format="date-time", readOnly=true, example="2025-09-20T16:00:00Z")
  * ),
+ *  * @OA\Schema(
+ *     schema="AirtelCallbackLog",
+ *     type="object",
+ *     @OA\Property(property="id", type="integer", example=1),
+ *     @OA\Property(property="payload", type="object", nullable=true, example={}),
+ *     @OA\Property(property="payment_id", type="integer", nullable=true, example=null),
+ *     @OA\Property(property="reference", type="string", nullable=true, example=null),
+ *     @OA\Property(property="airtel_money_id", type="string", example="MP210603.1234.L06941"),
+ *     @OA\Property(property="amount", type="number", format="float", nullable=true, example=null),
+ *     @OA\Property(property="message", type="string", nullable=true, example=null),
+ *     @OA\Property(property="status_code", type="string", nullable=true, example=null),
+ *     @OA\Property(property="result", type="string", example="No reference ID provided"),
+ *     @OA\Property(property="status", type="string", example="failed"),
+ *     @OA\Property(property="created_at", type="string", format="date-time", example="2025-09-23T11:11:05.000000Z"),
+ *     @OA\Property(property="updated_at", type="string", format="date-time", example="2025-09-23T11:11:05.000000Z"),
+ *     @OA\Property(property="payment", type="object", nullable=true)
+ * ),
+ * 
  * @OA\Schema(
  *     schema="Review",
  *     type="object",

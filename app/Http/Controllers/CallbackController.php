@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Helpers\ResponseHelper;
 use App\Models\Address;
+use App\Models\AirtelCallbackLog;
 use App\Models\Escrow;
 use App\Models\Payment;
 use App\Models\Sale;
@@ -17,9 +18,21 @@ class CallbackController extends Controller
 
     public function airtel(Request $request)
     {
-        $referenceId = $request->input("ref");
+
+        $transaction = $request->transaction;
+        $referenceId = $transaction['id'] ?? null;
+        $message = $transaction['message'] ?? '';
+        $txnId = $transaction['airtel_money_id'] ?? null;
+        $statusCode = $transaction['status_code'] ?? null;
 
         if (empty($referenceId)) {
+            AirtelCallbackLog::create([
+                'payload' => json_encode($transaction),
+                'airtel_money_id' => $txnId,
+                'result' => 'No reference ID provided',
+                'status_code' => $statusCode,
+                'status' => 'failed'
+            ]);
             return ResponseHelper::error([], 'No reference ID provided.', 400);
         }
 
@@ -43,6 +56,20 @@ class CallbackController extends Controller
             if (!$order) {
                 return ResponseHelper::error([], 'Order not found for this payment.', 404);
             }
+
+
+            AirtelCallbackLog::create([
+                'payload' => json_encode($transaction),
+                'airtel_money_id' => $txnId,
+                'reference' => $referenceId,
+                'payment_id' => $payment->id,
+                'amount' => $payment->amount,
+                'message' => $message,
+                'result' => 'Payment made successful',
+                'status_code' => $statusCode,
+                'status' => 'success'
+            ]);
+
 
             $order->status = 'paid';
             $order->save();

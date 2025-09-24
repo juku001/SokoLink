@@ -16,20 +16,32 @@ class SMSHelper
     public static function send($to, $message)
     {
         try {
-            $response = Http::get('https://sendus.smartnology.co.tz/api/v1/sms/api', [
-                'action' => 'send-sms',
-                'api_key' => env('SMARTNOLOGY_API_KEY'), // keep keys in .env
-                'to' => $to,
-                'from' => env('SMARTNOLOGY_SENDER_ID', 'SokoLink'),
-                'sms' => $message,
-            ]);
+
+            $data = [
+                "channel" => [
+                    "channel" => env('SMARTNOLOGY_CLIENT_ID'),
+                    "password" => env('SMARTNOLOGY_CLIENT_SECRET')
+                ],
+                "messages" => [
+                    [
+                        "text" => $message,
+                        "msisdn" => $to,
+                        "source" => env('SMARTNOLOGY_SENDER_ID')
+                    ]
+                ]
+            ];
+
+            $response = Http::post('https://bulksms.fasthub.co.tz/fasthub/messaging/json/api', $data);
 
             if ($response->successful()) {
+
                 return [
                     'status' => true,
                     'message' => 'SMS sent successfully.',
                     'data' => $response->json(),
                 ];
+
+
             }
 
             return [

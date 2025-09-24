@@ -7,21 +7,18 @@ use App\Models\AcademyLesson;
 use App\Models\Contact;
 use App\Models\Expense;
 use App\Models\Payment;
+use App\Models\Product;
+use App\Models\Seller;
 use App\Models\Store;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
 
 
-    public function seller()
-    {
-
-
-
-    }
 
 
     /**
@@ -867,6 +864,94 @@ class DashboardController extends Controller
     }
 
 
+
+
+    /**
+     * @OA\Get(
+     *     path="/dashboard/products/stats",
+     *     summary="Get product statistics for the authenticated seller",
+     *     description="Returns counts of total products, published products, low-stock products, and total inventory value for the seller’s active store.",
+     *     operationId="getProductStats",
+     *     tags={"Seller Dashboard"},
+     *     security={{"sanctum":{}}},
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful response",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="string", example="true"),
+     *             @OA\Property(property="message", type="string", example="Product statistics fetched successfully"),
+     *           @OA\Property(property="code", type="integer", example=200),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="total_products", type="integer", example=120),
+     *                 @OA\Property(property="published", type="integer", example=85),
+     *                 @OA\Property(property="low_stock", type="integer", example=10),
+     *                 @OA\Property(property="total_value", type="number", format="float", example=45200.75)
+     *             ),
+     *             
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Seller account not set",
+     *         @OA\JsonContent(
+     *           type="object",
+     *           @OA\Property(property="status", type="boolean", example=false),
+     *           @OA\Property(property="message", type="string", example="Seller account not found"),
+     *           @OA\Property(property="code", type="integer", example=404),
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="No active store",
+     *         @OA\JsonContent(
+     *           type="object",
+     *           @OA\Property(property="status", type="boolean", example=false),
+     *           @OA\Property(property="message", type="string", example="Error : no active store"),
+     *           @OA\Property(property="code", type="integer", example=400),
+     *         )
+     *     )
+     * )
+     */
+    public function products()
+    {
+        $authId = auth()->id();
+        $seller = Seller::with('store')->where('user_id', $authId)->first();
+
+        if (!$seller) {
+            return ResponseHelper::error([], "Seller account not set", 404);
+        }
+
+        $store = $seller->store;
+        if (!$store) {
+            return ResponseHelper::error([], "Error: No active store.", 400);
+        }
+
+        $productsQuery = Product::where('store_id', $seller->active_store);
+
+        // Counts
+        $totalProducts = $productsQuery->count();
+        $published = (clone $productsQuery)->where('is_online', true)->count();
+
+        $lowStock = (clone $productsQuery)
+            ->whereColumn('stock_qty', '<', 'low_stock_threshold')
+            ->count();
+
+        $totalValue = (clone $productsQuery)
+            ->select(DB::raw('SUM(stock_qty * price) as total'))
+            ->value('total') ?? 0;
+
+        $data = [
+            'total_products' => $totalProducts,
+            'published' => $published,
+            'low_stock' => $lowStock,
+            'total_value' => $totalValue,
+        ];
+
+        return ResponseHelper::success($data, 'Product statistics fetched successfully');
+    }
 
 
 

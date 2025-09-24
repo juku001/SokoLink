@@ -12,62 +12,101 @@ use Illuminate\Support\Facades\Validator;
 
 class InventoryController extends Controller
 {
-    /**
-     * List all products with their current stock balance
-     */
+
+
+
 
     /**
      * @OA\Get(
-     *     path="/products/inventory",
-     *     summary="List all products with stock balances",
-     *     description="Returns all products along with their latest stock balance.",
+     *     path="/product/inventory",
      *     tags={"Inventory"},
-     *     security={{"sanctum":{}}},
+     *     summary="List product inventory",
+     *     description="Returns a list of products with stock status and latest ledger info.",
+     *     @OA\Parameter(
+     *         name="category_id",
+     *         in="query",
+     *         description="Filter by category ID",
+     *         required=false,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Parameter(
+     *         name="stock_status",
+     *         in="query",
+     *         description="Filter by stock status (in_stock, low_stock, out_of_stock)",
+     *         required=false,
+     *         @OA\Schema(type="string")
+     *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="List of products with balances",
+     *         description="Successful response",
      *         @OA\JsonContent(
      *             type="object",
-     *             @OA\Property(property="status", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="Product inventory list"),
-     *             @OA\Property(property="code", type="integer", example=200),
      *             @OA\Property(
      *                 property="data",
      *                 type="array",
      *                 @OA\Items(
-     *                     type="object",
-     *                     @OA\Property(property="id", type="integer", example=101),
-     *                     @OA\Property(property="name", type="string", example="4K TV"),
-     *                     @OA\Property(property="store", type="string", example="City Electronics"),
-     *                     @OA\Property(property="balance", type="integer", example=25)
+     *                     @OA\Property(property="id", type="integer"),
+     *                     @OA\Property(property="name", type="string"),
+     *                     @OA\Property(property="image", type="string", nullable=true),
+     *                     @OA\Property(property="price", type="number", format="float"),
+     *                     @OA\Property(property="category_name", type="string", nullable=true),
+     *                     @OA\Property(property="category_slug", type="string", nullable=true),
+     *                     @OA\Property(property="store", type="string", nullable=true),
+     *                     @OA\Property(property="sold_qty", type="integer"),
+     *                     @OA\Property(property="stock_status", type="string"),
+     *                     @OA\Property(property="stock_qty", type="integer")
      *                 )
      *             )
      *         )
      *     )
      * )
      */
-    public function index()
+
+    public function index(Request $request)
     {
-        $products = Product::with('store')->get()->map(function ($product) {
-            $latestLedger = InventoryLedger::where('product_id', $product->id)
-                ->latest('id')
-                ->first();
+        $products = Product::with([
+            'store',
+            'category',
+            'images' => fn($q) => $q->where('is_cover', true)
+        ])
+            ->when($request->filled('category_id'), function ($q) use ($request) {
+                $q->where('category_id', $request->category_id);
+            })
+            ->when($request->filled('stock_status'), function ($q) use ($request) {
 
-            return [
-                'id' => $product->id,
-                'name' => $product->name,
-                'store' => $product->store->name ?? null,
-                'balance' => $latestLedger ? $latestLedger->balance : 0,
-            ];
-        });
+                if ($request->stock_status === 'in_stock') {
+                    $q->whereHas('inventoryLedgers', fn($l) => $l->havingRaw('MAX(balance) > 0'));
+                }
+            })
+            ->get()
+            ->map(function ($product) {
+                $latestLedger = InventoryLedger::where('product_id', $product->id)
+                    ->latest('id')
+                    ->first();
 
-        return response()->json([
-            'status' => true,
-            'message' => 'Product inventory list',
-            'code' => 200,
-            'data' => $products
-        ]);
+                $soldQty = InventoryLedger::where('product_id', $product->id)
+                    ->where('reason', 'sale')
+                    ->sum('change');
+
+                return [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'image' => optional($product->images->first())->path,
+                    'price' => $product->price,
+                    'category_name' => optional($product->category)->name,
+                    'category_slug' => optional($product->category)->slug,
+                    'store' => optional($product->store)->name,
+                    'sold_qty' => abs($soldQty),                // ensure positive
+                    'stock_status' => $product->stock_status,       // accessor
+                    'stock_qty' => $latestLedger?->balance ?? 0,
+                ];
+            });
+
+        return ResponseHelper::success($products, 'Product Inventory List');
     }
+
+
+
 
     /**
      * Show stock ledger for a specific product

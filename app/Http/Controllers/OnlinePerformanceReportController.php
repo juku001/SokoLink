@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\ResponseHelper;
+use App\Models\Cart;
+use App\Models\CartItem;
+use App\Models\Order;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
@@ -103,33 +106,46 @@ class OnlinePerformanceReportController extends Controller
         $endOfMonth = Carbon::now()->endOfMonth();
 
         $visitsCurrent = DB::table('store_visits')
-            ->where('seller_id', $sellerId)
+            ->where('user_id', $sellerId)
             ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
             ->count();
 
         $visitsPrevious = DB::table('store_visits')
-            ->where('seller_id', $sellerId)
+            ->where('user_id', $sellerId)
             ->whereBetween('created_at', [
                 $startOfMonth->copy()->subMonth(),
                 $endOfMonth->copy()->subMonth()
             ])
             ->count();
 
-        $cartAdditions = DB::table('cart_items')
-            ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
+        $cartAdditions = CartItem::whereBetween('created_at', [$startOfMonth, $endOfMonth])
             ->whereHas('product.store', fn($q) => $q->where('seller_id', $sellerId))
             ->count();
 
-        $orders = DB::table('orders')
-            ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
-            ->whereHas('store', fn($q) => $q->where('seller_id', $sellerId))
+        /**
+         * Orders where at least one of its items belongs to a product
+         * whose store belongs to the given seller.
+         */
+        $orders = Order::whereBetween('created_at', [$startOfMonth, $endOfMonth])
+            ->whereHas('items.product.store', fn($q) => $q->where('seller_id', $sellerId))
             ->count();
 
         $abandonedCarts = DB::table('carts')
-            ->whereHas('items.product.store', fn($q) => $q->where('seller_id', $sellerId))
-            ->whereDoesntHave('order')
-            ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
+            ->join('cart_items', 'carts.id', '=', 'cart_items.cart_id')
+            ->join('products', 'cart_items.product_id', '=', 'products.id')
+            ->join('stores', 'products.store_id', '=', 'stores.id')
+            ->where('stores.seller_id', $sellerId)
+            ->whereBetween('carts.created_at', [$startOfMonth, $endOfMonth])
+            ->whereRaw('NOT EXISTS (
+        SELECT 1
+        FROM order_items oi
+        JOIN orders o ON o.id = oi.order_id
+        WHERE oi.product_id = cart_items.product_id
+          AND o.created_at >= carts.created_at
+    )')
+            ->distinct('carts.id')
             ->count();
+
 
         $percentChange = function ($current, $previous) {
             if ($previous == 0) {

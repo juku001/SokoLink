@@ -4,6 +4,7 @@ use App\Http\Controllers\AdminMerchantController;
 use App\Http\Controllers\AdminPaymentController;
 use App\Http\Controllers\AdminReportController;
 use App\Http\Controllers\AdminUserManagementController;
+use App\Http\Controllers\AirtelCallbackLogController;
 use App\Http\Controllers\CustomerManagementController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SystemSettingController;
@@ -12,14 +13,11 @@ use App\Http\Controllers\SystemSettingController;
 
 Route::middleware(['auth:sanctum', 'user.type:super_admin'])->group(function () {
 
-    Route::prefix('/dashboard/admin')->group(function () {
-        Route::get('/customers', [DashboardController::class, 'adminCustomerManagement']);
-        Route::get('/payments', [DashboardController::class, 'adminPayments']);
-        Route::get('/merchants',[DashboardController::class, 'merchants']);
-        Route::get('/platform/health', [DashboardController::class, 'platformHealth'])->middleware('response.time');
-    });
 
-    Route::get('/admin/performing/merchants',[AdminMerchantController::class,'top']);
+    Route::get('/admin/airtel/callback/logs', AirtelCallbackLogController::class);
+
+
+    Route::get('/admin/performing/merchants', [AdminMerchantController::class, 'top']);
 
 
     Route::prefix('admin/reports')->group(function () {

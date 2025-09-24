@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class Product extends Model
 {
-
     protected $fillable = [
         'store_id',
         'name',
@@ -19,10 +18,11 @@ class Product extends Model
         'is_online',
         'stock_qty',
         'sold_count',
+        'low_stock_threshold',
     ];
 
 
-
+    protected $appends = ['stock_status'];
 
     public function store()
     {
@@ -34,23 +34,35 @@ class Product extends Model
         return $this->morphMany(Review::class, 'reviewable');
     }
 
-
     public function category()
     {
         return $this->belongsTo(Category::class);
     }
-
-
 
     public function images()
     {
         return $this->hasMany(ProductImage::class);
     }
 
-
-
     public function sales()
     {
         return $this->hasMany(SaleProduct::class, 'product_id');
+    }
+
+
+    public function getStockStatusAttribute(): string
+    {
+        $qty = max(0, $this->stock_qty ?? 0);
+        $threshold = $this->low_stock_threshold ?? 0;
+
+        if ($qty <= 0) {
+            return 'out_of_stock';
+        }
+
+        if ($threshold > 0 && $qty <= $threshold) {
+            return 'low_stock';
+        }
+
+        return 'in_stock';
     }
 }

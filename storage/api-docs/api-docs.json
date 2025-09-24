@@ -2300,6 +2300,108 @@
                 ]
             }
         },
+        "/admin/airtel/callback/logs": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "List and filter Airtel callback logs",
+                "description": "Retrieve Airtel callback logs with optional search and filtering options.",
+                "operationId": "5697c03e9e3942d3de7e324cffed5259",
+                "parameters": [
+                    {
+                        "name": "reference",
+                        "in": "query",
+                        "description": "Search by internal reference",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "airtel_money_id",
+                        "in": "query",
+                        "description": "Search by Airtel Money transaction ID",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "min_amount",
+                        "in": "query",
+                        "description": "Filter by minimum amount",
+                        "required": false,
+                        "schema": {
+                            "type": "number",
+                            "format": "float"
+                        }
+                    },
+                    {
+                        "name": "max_amount",
+                        "in": "query",
+                        "description": "Filter by maximum amount",
+                        "required": false,
+                        "schema": {
+                            "type": "number",
+                            "format": "float"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Filter by status (success or failed)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "success",
+                                "failed"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "List of all airtel callback logs"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/AirtelCallbackLog"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/403"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/is_auth": {
             "get": {
                 "tags": [
@@ -5518,6 +5620,117 @@
                 ]
             }
         },
+        "/dashboard/products/stats": {
+            "get": {
+                "tags": [
+                    "Seller Dashboard"
+                ],
+                "summary": "Get product statistics for the authenticated seller",
+                "description": "Returns counts of total products, published products, low-stock products, and total inventory value for the seller’s active store.",
+                "operationId": "getProductStats",
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "true"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Product statistics fetched successfully"
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "total_products": {
+                                                    "type": "integer",
+                                                    "example": 120
+                                                },
+                                                "published": {
+                                                    "type": "integer",
+                                                    "example": 85
+                                                },
+                                                "low_stock": {
+                                                    "type": "integer",
+                                                    "example": 10
+                                                },
+                                                "total_value": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 45200.75
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Seller account not set",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Seller account not found"
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 404
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "No active store",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Error : no active store"
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 400
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/orders/{id}/delivered": {
             "put": {
                 "tags": [
@@ -6829,6 +7042,27 @@
                 ]
             }
         },
+        "/reports/export/excel": {
+            "get": {
+                "tags": [
+                    "Reports"
+                ],
+                "summary": "Export seller data to Excel",
+                "description": "Generates and downloads an Excel workbook containing sales, credit score, and online performance.",
+                "operationId": "exportSellerReport",
+                "responses": {
+                    "200": {
+                        "description": "Excel file download"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/403"
+                    }
+                }
+            }
+        },
         "/feedbacks": {
             "get": {
                 "tags": [
@@ -7819,52 +8053,79 @@
                 ]
             }
         },
-        "/products/inventory": {
+        "/product/inventory": {
             "get": {
                 "tags": [
                     "Inventory"
                 ],
-                "summary": "List all products with stock balances",
-                "description": "Returns all products along with their latest stock balance.",
-                "operationId": "96f359fa31779fff113721975501e7e4",
+                "summary": "List product inventory",
+                "description": "Returns a list of products with stock status and latest ledger info.",
+                "operationId": "ac1fcd11d0adbfe2720a3e697d152722",
+                "parameters": [
+                    {
+                        "name": "category_id",
+                        "in": "query",
+                        "description": "Filter by category ID",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "stock_status",
+                        "in": "query",
+                        "description": "Filter by stock status (in_stock, low_stock, out_of_stock)",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "List of products with balances",
+                        "description": "Successful response",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
-                                        "status": {
-                                            "type": "boolean",
-                                            "example": true
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Product inventory list"
-                                        },
-                                        "code": {
-                                            "type": "integer",
-                                            "example": 200
-                                        },
                                         "data": {
                                             "type": "array",
                                             "items": {
                                                 "properties": {
                                                     "id": {
-                                                        "type": "integer",
-                                                        "example": 101
+                                                        "type": "integer"
                                                     },
                                                     "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "image": {
                                                         "type": "string",
-                                                        "example": "4K TV"
+                                                        "nullable": true
+                                                    },
+                                                    "price": {
+                                                        "type": "number",
+                                                        "format": "float"
+                                                    },
+                                                    "category_name": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    },
+                                                    "category_slug": {
+                                                        "type": "string",
+                                                        "nullable": true
                                                     },
                                                     "store": {
                                                         "type": "string",
-                                                        "example": "City Electronics"
+                                                        "nullable": true
                                                     },
-                                                    "balance": {
-                                                        "type": "integer",
-                                                        "example": 25
+                                                    "sold_qty": {
+                                                        "type": "integer"
+                                                    },
+                                                    "stock_status": {
+                                                        "type": "string"
+                                                    },
+                                                    "stock_qty": {
+                                                        "type": "integer"
                                                     }
                                                 },
                                                 "type": "object"
@@ -7876,12 +8137,7 @@
                             }
                         }
                     }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
+                }
             }
         },
         "/products/{id}/inventory": {
@@ -13827,6 +14083,10 @@
                                         "example": 10,
                                         "nullable": true
                                     },
+                                    "stock_status": {
+                                        "type": "string",
+                                        "example": "in_stock"
+                                    },
                                     "category_id": {
                                         "type": "integer",
                                         "example": 1
@@ -14032,6 +14292,10 @@
                                     "stock_qty": {
                                         "type": "integer",
                                         "example": 15
+                                    },
+                                    "stock_status": {
+                                        "type": "string",
+                                        "example": "in_stock"
                                     },
                                     "images": {
                                         "type": "array",
@@ -14571,6 +14835,10 @@
                                                 },
                                                 "store": {
                                                     "type": "object"
+                                                },
+                                                "stock_status": {
+                                                    "type": "string",
+                                                    "example": "in_stock"
                                                 },
                                                 "reviews": {
                                                     "type": "array",
@@ -16681,7 +16949,7 @@
                 }
             }
         },
-        "/dashboard/seller/overview/stats": {
+        "/dashboard/overview/stats": {
             "get": {
                 "tags": [
                     "Seller Dashboard"
@@ -16921,14 +17189,14 @@
                 }
             }
         },
-        "/dashboard/seller/overview/recent-sales": {
+        "/dashboard/overview/recent-sales": {
             "get": {
                 "tags": [
                     "Seller Dashboard"
                 ],
                 "summary": "Get recent sales",
                 "description": "Fetches the 5 most recent sales of the authenticated seller, including products in each sale.",
-                "operationId": "407d4c3ba06d5442b045a20991c0b890",
+                "operationId": "20ea436862ef1fe7c2ce0046bae0c101",
                 "responses": {
                     "200": {
                         "description": "Recent sales retrieved successfully",
@@ -19270,6 +19538,10 @@
                         "type": "integer",
                         "example": 1
                     },
+                    "stock_status": {
+                        "type": "string",
+                        "example": "in_stock"
+                    },
                     "images": {
                         "type": "array",
                         "items": {
@@ -19412,6 +19684,72 @@
                         "format": "date-time",
                         "readOnly": true,
                         "example": "2025-09-20T16:00:00Z"
+                    }
+                },
+                "type": "object"
+            },
+            "AirtelCallbackLog": {
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "payload": {
+                        "type": "object",
+                        "example": [],
+                        "nullable": true
+                    },
+                    "payment_id": {
+                        "type": "integer",
+                        "example": null,
+                        "nullable": true
+                    },
+                    "reference": {
+                        "type": "string",
+                        "example": null,
+                        "nullable": true
+                    },
+                    "airtel_money_id": {
+                        "type": "string",
+                        "example": "MP210603.1234.L06941"
+                    },
+                    "amount": {
+                        "type": "number",
+                        "format": "float",
+                        "example": null,
+                        "nullable": true
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": null,
+                        "nullable": true
+                    },
+                    "status_code": {
+                        "type": "string",
+                        "example": null,
+                        "nullable": true
+                    },
+                    "result": {
+                        "type": "string",
+                        "example": "No reference ID provided"
+                    },
+                    "status": {
+                        "type": "string",
+                        "example": "failed"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2025-09-23T11:11:05.000000Z"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2025-09-23T11:11:05.000000Z"
+                    },
+                    "payment": {
+                        "type": "object",
+                        "nullable": true
                     }
                 },
                 "type": "object"

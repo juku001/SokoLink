@@ -11,8 +11,7 @@ use App\Http\Controllers\GroupController;
 Route::middleware(['auth:sanctum'])->group(function () {
 
     Route::middleware(['user.type:seller'])->group(function () {
-        Route::get('/dashboard/contacts/stats', [DashboardController::class, 'contacts']);
-
+    
         Route::resource('/contacts', ContactController::class);
 
         Route::resource('/groups', GroupController::class);
