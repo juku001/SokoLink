@@ -24,6 +24,7 @@ class Store extends Model
         'rating_avg',
         'rating_count',
         'region_id',
+        'is_featured',
         'address'
     ];
 

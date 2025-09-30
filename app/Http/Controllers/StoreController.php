@@ -75,7 +75,6 @@ class StoreController extends Controller implements HasMiddleware
 
     public function index(Request $request)
     {
-
         $token = $request->bearerToken();
         $user = null;
 
@@ -86,8 +85,16 @@ class StoreController extends Controller implements HasMiddleware
             }
         }
 
-        // eager-load relations for performance
-        $stores = Store::with('category', 'region.country', 'reviews')->where('is_online', true)->get()->map(function ($store) use ($user) {
+        // base query
+        $query = Store::with('category', 'region.country', 'reviews')
+            ->where('is_online', true);
+
+        // filter featured stores if requested
+        if ($request->has('is_featured') && $request->boolean('is_featured')) {
+            $query->where('is_featured', true);
+        }
+
+        $stores = $query->get()->map(function ($store) use ($user) {
             return [
                 'id' => $store->id,
                 'name' => $store->name,
@@ -99,7 +106,6 @@ class StoreController extends Controller implements HasMiddleware
                 'country' => optional(optional($store->region)->country)->name,
                 'rating' => $store->rating_avg,
                 'reviews_count' => $store->reviews->count(),
-                // true if authenticated user follows this store
                 'is_follow' => $user
                     ? $store->followers()->where('user_id', $user->id)->exists()
                     : false,
@@ -108,6 +114,7 @@ class StoreController extends Controller implements HasMiddleware
 
         return ResponseHelper::success($stores, 'Store listings');
     }
+
 
 
 
@@ -136,6 +143,7 @@ class StoreController extends Controller implements HasMiddleware
      *                 @OA\Property(property="whatsapp", type="string", maxLength=20, nullable=true, example="+255700000000"),
      *                 @OA\Property(property="shipping_origin", type="string", maxLength=255, nullable=true, example="Dar es Salaam Warehouse"),
      *                 @OA\Property(property="region_id", type="integer", nullable=true, example=5),
+     *                 @OA\Property(property="is_featured", type="boolean", nullable=true, example=false),
      *                 @OA\Property(property="address", type="string", maxLength=255, nullable=true, example="123 Main Street, Dar es Salaam")
      *             )
      *         )
@@ -196,6 +204,7 @@ class StoreController extends Controller implements HasMiddleware
             'whatsapp' => 'nullable|string|max:20',
             'shipping_origin' => 'nullable|string|max:255',
             'region_id' => 'nullable|exists:regions,id',
+            'is_featured' => 'nullable|boolean',
             'address' => 'nullable|string|max:255',
         ]);
 
@@ -274,6 +283,7 @@ class StoreController extends Controller implements HasMiddleware
      *                 @OA\Property(property="subtitle", type="string", maxLength=255, nullable=true, example="Updated subtitle"),
      *                 @OA\Property(property="thumbnail", type="string", format="binary", nullable=true, description="New thumbnail image (max 2 MB)"),
      *                 @OA\Property(property="is_online", type="boolean", nullable=true, example=true),
+     *                 @OA\Property(property="is_featured", type="boolean", nullable=true, example=true),
      *                 @OA\Property(property="contact_mobile", type="string", maxLength=20, nullable=true, example="+255711111111"),
      *                 @OA\Property(property="contact_email", type="string", format="email", maxLength=255, nullable=true, example="newcontact@store.tz"),
      *                 @OA\Property(property="whatsapp", type="string", maxLength=20, nullable=true, example="+255711111111"),
@@ -349,6 +359,7 @@ class StoreController extends Controller implements HasMiddleware
             'shipping_origin' => 'nullable|string|max:255',
             'region_id' => 'nullable|exists:regions,id',
             'address' => 'nullable|string|max:255',
+            'is_featured' => 'nullable|boolean',
         ]);
 
         if ($validator->fails()) {
