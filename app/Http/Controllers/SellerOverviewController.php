@@ -10,6 +10,7 @@ use App\Models\Product;
 use App\Models\Sale;
 use App\Models\Seller;
 use App\Models\Store;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -399,6 +400,113 @@ class SellerOverviewController extends Controller
             ->values();
 
         return ResponseHelper::success($lowStockProducts, 'Low stock products retrieved');
+    }
+
+
+
+
+
+    /**
+     * @OA\Get(
+     *     path="/dashboard/overview/sales-trend",
+     *     tags={"Seller Dashboard"},
+     *     summary="Get monthly sales vs expenses trend for the current year",
+     *     description="Returns aggregated sales and expenses data for each month of the current year for the authenticated seller. Useful for building performance charts on the seller dashboard.",
+     *     security={{"bearerAuth": {}}},
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Sales vs expenses by month retrieved successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Sales vs expenses by month for current year"),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="months",
+     *                     type="array",
+     *                     @OA\Items(type="string", example="Jan"),
+     *                     description="List of month names from January to the current month"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="sales",
+     *                     type="object",
+     *                     example={"Jan": 152000, "Feb": 134000, "Mar": 98000},
+     *                     description="Total sales amount per month"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="expenses",
+     *                     type="object",
+     *                     example={"Jan": 100000, "Feb": 125000, "Mar": 70000},
+     *                     description="Total expenses amount per month"
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthorized - No valid token provided",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Unauthenticated.")
+     *         )
+     *     )
+     * )
+     */
+
+    public function salesTrend()
+    {
+        $sellerId = auth()->id();
+
+        $storeIds = DB::table('stores')
+            ->where('seller_id', $sellerId)
+            ->pluck('id');
+
+        $startOfYear = Carbon::now()->startOfYear();
+        $endOfYear = Carbon::now()->endOfYear();
+
+        $sales = DB::table('sales')
+            ->select(
+                DB::raw("MONTH(created_at) as month"),
+                DB::raw('SUM(amount) as total')
+            )
+            ->whereIn('store_id', $storeIds)
+            ->whereBetween('created_at', [$startOfYear, $endOfYear])
+            ->groupBy(DB::raw('MONTH(created_at)'))
+            ->pluck('total', 'month');
+
+
+        $expenses = DB::table('expenses')
+            ->select(
+                DB::raw("MONTH(created_at) as month"),
+                DB::raw('SUM(amount) as total')
+            )
+            ->whereIn('store_id', $storeIds)
+            ->whereBetween('created_at', [$startOfYear, $endOfYear])
+            ->groupBy(DB::raw('MONTH(created_at)'))
+            ->pluck('total', 'month');
+
+        $months = range(1, Carbon::now()->month);
+        $salesData = [];
+        $expenseData = [];
+        $monthNames = [];
+
+        foreach ($months as $m) {
+            $monthName = Carbon::create()->month($m)->format('M');
+            $monthNames[] = $monthName;
+            $salesData[$monthName] = (float) ($sales[$m] ?? 0);
+            $expenseData[$monthName] = (float) ($expenses[$m] ?? 0);
+        }
+
+        $data = [
+            'months' => $monthNames,
+            'sales' => $salesData,
+            'expenses' => $expenseData,
+        ];
+
+        return ResponseHelper::success($data, 'Sales vs expenses by month for current year');
     }
 
 

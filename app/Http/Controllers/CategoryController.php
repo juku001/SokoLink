@@ -149,7 +149,7 @@ class CategoryController extends Controller implements HasMiddleware
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255|unique:categories,name',
             'icon' => 'required|string',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048', 
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'parent_id' => 'nullable|integer|exists:categories,id'
         ]);
 
@@ -344,62 +344,72 @@ class CategoryController extends Controller implements HasMiddleware
      */
 
 
-    public function update(Request $request, $id)
+    public function update(Request $request,int $id)
     {
+
         $category = Category::find($id);
+
 
         if (!$category) {
             return ResponseHelper::error([], 'Category not found', 404);
         }
 
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255|unique:categories,name,' . $category->id,
-            'parent_id' => 'nullable|integer|exists:categories,id|not_in:' . $category->id,
+            'name' => 'sometimes|string|max:255|unique:categories,name,' . $category->id,
+            'parent_id' => ['nullable', 'integer', 'exists:categories,id', 'not_in:' . $category->id],
             'icon' => 'nullable|string',
             'is_active' => 'nullable|boolean',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048', // add image validation
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ]);
 
+
         if ($validator->fails()) {
-            return ResponseHelper::error(
-                $validator->errors(),
-                'Failed to validate fields',
-                422
-            );
+            return ResponseHelper::error($validator->errors(), 'Failed to validate fields', 422);
         }
 
         try {
-            $data = [
-                'name' => $request->name,
-                'slug' => Str::slug($request->name),
-                'icon' => $request->icon,
-                'parent_id' => $request->parent_id,
-                'is_active' => $request->has('is_active') ? $request->is_active : $category->is_active,
-            ];
+            $data = [];
 
-            // Handle image replacement if a new file is uploaded
+            // Update name & slug only if provided
+            if ($request->filled('name')) {
+                $data['name'] = $request->name;
+                $data['slug'] = Str::slug($request->name);
+            }
+
+            // Update parent_id only if provided (can also be null intentionally)
+            if ($request->has('parent_id')) {
+                $data['parent_id'] = $request->parent_id;
+            }
+
+            // Update icon only if provided
+            if ($request->has('icon')) {
+                $data['icon'] = $request->icon;
+            }
+
+            // Update is_active only if provided
+            if ($request->has('is_active')) {
+                $data['is_active'] = $request->is_active;
+            }
+
+            // Update image only if a file is uploaded
             if ($request->hasFile('image')) {
-                // Optionally delete old image if it exists
                 if ($category->image && Storage::disk('public')->exists($category->image)) {
                     Storage::disk('public')->delete($category->image);
+                    
                 }
 
                 $path = $request->file('image')->store('categories', 'public');
-                $data['image'] = $path; // or Storage::url($path) if you prefer full URL
+                $data['image'] = $path;
             }
 
             $category->update($data);
 
             return ResponseHelper::success($category, 'Category updated successfully');
-
         } catch (Exception $e) {
-            return ResponseHelper::error(
-                [],
-                'Error: ' . $e->getMessage(),
-                500
-            );
+            return ResponseHelper::error([], 'Error: ' . $e->getMessage(), 500);
         }
     }
+
 
 
 

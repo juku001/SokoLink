@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\FeaturedStoreController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\StoreFollowingController;
 use App\Http\Controllers\ProductController;
@@ -9,10 +10,18 @@ use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\SellerOverviewController;
 use App\Http\Controllers\StoreController;
+use App\Http\Controllers\SuccessStoryController;
 
 
 
 
+
+Route::get('/success-stories', [SuccessStoryController::class, 'index']);
+Route::post('/success-stories', [SuccessStoryController::class, 'store'])->middleware(['auth:sanctum', 'user.type:buyer']);
+Route::middleware(['auth:sanctum', 'user.type:super_admin'])->group(function () {
+    Route::get('/success-stories/all', [SuccessStoryController::class, 'all']);
+    Route::patch('/success-stories/{id}', [SuccessStoryController::class, 'update']);
+});
 
 
 Route::resource('/categories', CategoryController::class);
@@ -24,7 +33,7 @@ Route::get('/search', [SearchController::class, 'index']);
 
 Route::prefix('/stores/{id}')->group(function () {
 
-    Route::get('/products', [ProductController::class, 'stores']);
+    Route::get('/products', [ProductController::class, 'stotores']);
     Route::middleware('auth:sanctum')->group(function () {
 
         Route::post('/reviews', [ReviewController::class, 'storeStoreReview']);
@@ -46,12 +55,16 @@ Route::middleware(['auth:sanctum', 'user.type:seller'])->group(function () {
     Route::patch('/stores/active-store', [StoreController::class, 'updateActive']);
 
 });
+Route::get('/stores/featured',[FeaturedStoreController::class, 'index']);
+Route::put('/stores/featured',[FeaturedStoreController::class, 'update']);
+
+Route::get('/stores/all',[StoreController::class, 'all']);
 Route::resource('/stores', StoreController::class);
 
 Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/products/{id}/reviews', [ReviewController::class, 'products']);
-    Route::post('/products/{id}/reviews',   [ReviewController::class, 'storeProductReview']);
+    Route::post('/products/{id}/reviews', [ReviewController::class, 'storeProductReview']);
 
     Route::middleware('user.type:seller')->group(function () {
 

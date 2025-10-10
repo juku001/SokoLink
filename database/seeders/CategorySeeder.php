@@ -17,28 +17,34 @@ class CategorySeeder extends Seeder
         $categories = [
             [
                 "icon" => "🍽️",
-                "name" => "Chakula na Vinywaji"
+                "name" => "Chakula na Vinywaji",
+                "image"=> "categories/fooddrinks.jpg"
 
             ],
             [
                 "icon" => "📱",
-                "name" => "Vifaa vya Umeme"
+                "name" => "Vifaa vya Umeme",
+                "image"=> "categories/electronics.jpg"
             ],
             [
                 "icon" => "👕",
-                "name" => "Mavazi"
+                "name" => "Mavazi",
+                "image" => "categories/clothes.jpg"
             ],
             [
                 "icon" => "🏠",
-                "name" => "Nyumba na Bustani"
+                "name" => "Nyumba na Bustani",
+                "image" => "categories/nyumba_bustani.jpeg"
             ],
             [
                 "icon" => "🎨",
-                "name" => "Sanaa za Mikono"
+                "name" => "Sanaa za Mikono",
+                "image" => "categories/kazimikono.jpg"
             ],
             [
                 "icon" => "🌾",
-                "name" => "Mazao ya Kilimo"
+                "name" => "Mazao ya Kilimo",
+                "image"=> "categories/mazao.jpg"
             ]
         ];
 
@@ -48,6 +54,7 @@ class CategorySeeder extends Seeder
                 "name" => $category['name'],
                 'slug' => Str::slug($category['name']),
                 'icon' => $category['icon'],
+                "image" => $category['image']
             ]);
         }
     }

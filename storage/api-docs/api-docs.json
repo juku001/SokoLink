@@ -970,8 +970,20 @@
                     "Admin"
                 ],
                 "summary": "Get list of all merchants",
-                "description": "Returns all merchants with details like email, status, revenue, and join date",
+                "description": "Returns all merchants with optional status filtering (e.g. active, inactive, pending, blocked), including email, status, revenue, and join date",
                 "operationId": "56688b538ae42b9364ecc9fe7692d571",
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Filter merchants by status (e.g. active, inactive, pending, blocked)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "active"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Merchant list retrieved successfully",
@@ -979,7 +991,7 @@
                             "application/json": {
                                 "schema": {
                                     "properties": {
-                                        "success": {
+                                        "status": {
                                             "type": "boolean",
                                             "example": true
                                         },
@@ -1026,6 +1038,12 @@
                                 }
                             }
                         }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/500"
                     }
                 },
                 "security": [
@@ -1062,7 +1080,7 @@
                             "application/json": {
                                 "schema": {
                                     "properties": {
-                                        "success": {
+                                        "status": {
                                             "type": "boolean",
                                             "example": true
                                         },
@@ -1221,7 +1239,7 @@
                             "application/json": {
                                 "schema": {
                                     "properties": {
-                                        "success": {
+                                        "status": {
                                             "type": "boolean",
                                             "example": false
                                         },
@@ -2699,13 +2717,13 @@
                 }
             }
         },
-        "/be/seller": {
+        "/auth/be/seller": {
             "put": {
                 "tags": [
                     "Users"
                 ],
                 "summary": "Update seller payout details",
-                "operationId": "7f43890aa4d747242d9c8c4c0fddb7f7",
+                "operationId": "241ddc34102bb92debbf706ca6393b51",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -2798,7 +2816,7 @@
                 ],
                 "summary": "Convert buyer account to seller",
                 "description": "Allows an authenticated user to become a seller by providing payout account details and payout method.",
-                "operationId": "2af99635470def7b53b7c9cc38b712c0",
+                "operationId": "da465b1b16f347e8aad4a26556742277",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -7063,6 +7081,238 @@
                 }
             }
         },
+        "/reports/export/pdf": {
+            "get": {
+                "tags": [
+                    "Reports"
+                ],
+                "summary": "Export seller data to PDF",
+                "description": "Generates and downloads a PDF report with sales, credit score, and online performance.",
+                "operationId": "exportSellerReportPdf",
+                "responses": {
+                    "200": {
+                        "description": "PDF file download"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/403"
+                    }
+                }
+            }
+        },
+        "/stores/featured": {
+            "get": {
+                "tags": [
+                    "Stores"
+                ],
+                "summary": "List all featured online stores",
+                "description": "Returns a list of stores that are currently featured online.  \n     *                  If a valid bearer token is provided, each store will include an `is_follow` flag\n     *                  indicating whether the authenticated user follows that store.",
+                "operationId": "7b73cba0cba171e494d06e8f84c39f13",
+                "responses": {
+                    "200": {
+                        "description": "List of featured online stores",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Featured Store listings"
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 15
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "City Electronics"
+                                                    },
+                                                    "subtitle": {
+                                                        "type": "string",
+                                                        "example": "Best gadgets in town"
+                                                    },
+                                                    "thumbnail": {
+                                                        "type": "string",
+                                                        "example": "https://example.com/images/store-thumb.jpg"
+                                                    },
+                                                    "address": {
+                                                        "type": "string",
+                                                        "example": "123 Main Street"
+                                                    },
+                                                    "region": {
+                                                        "type": "string",
+                                                        "example": "Dar es Salaam",
+                                                        "nullable": true
+                                                    },
+                                                    "category": {
+                                                        "type": "string",
+                                                        "example": "Vifaa vya umeme",
+                                                        "nullable": true
+                                                    },
+                                                    "country": {
+                                                        "type": "string",
+                                                        "example": "Tanzania",
+                                                        "nullable": true
+                                                    },
+                                                    "rating": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 4.7
+                                                    },
+                                                    "reviews_count": {
+                                                        "type": "integer",
+                                                        "example": 23
+                                                    },
+                                                    "is_follow": {
+                                                        "type": "boolean",
+                                                        "example": false
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Stores"
+                ],
+                "summary": "Toggle a store's featured status",
+                "description": "Allows an admin or super admin to mark a store as featured or unfeatured. This endpoint toggles the current status.",
+                "operationId": "b9468c4de6691e68d98162ab2999a30e",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "store_id"
+                                ],
+                                "properties": {
+                                    "store_id": {
+                                        "description": "The ID of the store to be featured or unfeatured",
+                                        "type": "integer",
+                                        "example": 12
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Store featured status updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Store featured status updated."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 422
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Failed to validate fields."
+                                        },
+                                        "errors": {
+                                            "properties": {
+                                                "store_id": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "The selected store_id is invalid."
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Unauthorized access",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 403
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthorized. Only admins can feature stores."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/feedbacks": {
             "get": {
                 "tags": [
@@ -9876,7 +10126,7 @@
                 "tags": [
                     "Authentication"
                 ],
-                "summary": "Login with email",
+                "summary": "Login with email. Used by Super Admin or Sellers who activated email provider.",
                 "description": "Authenticates a user using email and password, returning an access token on success.",
                 "operationId": "f6c0a736c345a65e2b0158108717c919",
                 "requestBody": {
@@ -13894,7 +14144,7 @@
                     "Products"
                 ],
                 "summary": "List products for authenticated seller",
-                "description": "Retrieve a paginated list of products belonging to the authenticated seller. Supports filtering by search, category, store, price range, and online status.",
+                "description": "Retrieve a paginated list of products belonging to the authenticated seller. Supports filtering by search, category, store, price range, online status, and stock status.",
                 "operationId": "listProducts",
                 "parameters": [
                     {
@@ -13951,6 +14201,20 @@
                         "required": false,
                         "schema": {
                             "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "stock_status",
+                        "in": "query",
+                        "description": "Filter by stock status (in_stock, low_stock, out_of_stock)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "in_stock",
+                                "low_stock",
+                                "out_of_stock"
+                            ]
                         }
                     },
                     {
@@ -16840,7 +17104,7 @@
                 "operationId": "179dd19869bd77bf830ec567d551930e",
                 "parameters": [
                     {
-                        "name": "q",
+                        "name": "query",
                         "in": "query",
                         "description": "Search keyword",
                         "required": true,
@@ -17342,6 +17606,94 @@
                 ]
             }
         },
+        "/dashboard/overview/sales-trend": {
+            "get": {
+                "tags": [
+                    "Seller Dashboard"
+                ],
+                "summary": "Get monthly sales vs expenses trend for the current year",
+                "description": "Returns aggregated sales and expenses data for each month of the current year for the authenticated seller. Useful for building performance charts on the seller dashboard.",
+                "operationId": "9a35f54f7cc8864080d14e0195b964cb",
+                "responses": {
+                    "200": {
+                        "description": "Sales vs expenses by month retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Sales vs expenses by month for current year"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "months": {
+                                                    "description": "List of month names from January to the current month",
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "Jan"
+                                                    }
+                                                },
+                                                "sales": {
+                                                    "description": "Total sales amount per month",
+                                                    "type": "object",
+                                                    "example": {
+                                                        "Jan": 152000,
+                                                        "Feb": 134000,
+                                                        "Mar": 98000
+                                                    }
+                                                },
+                                                "expenses": {
+                                                    "description": "Total expenses amount per month",
+                                                    "type": "object",
+                                                    "example": {
+                                                        "Jan": 100000,
+                                                        "Feb": 125000,
+                                                        "Mar": 70000
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - No valid token provided",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/stores": {
             "get": {
                 "tags": [
@@ -17416,10 +17768,6 @@
                                                     "reviews_count": {
                                                         "type": "integer",
                                                         "example": 23
-                                                    },
-                                                    "is_follow": {
-                                                        "type": "boolean",
-                                                        "example": false
                                                     }
                                                 },
                                                 "type": "object"
@@ -17678,6 +18026,10 @@
                                                     "example": 4.5
                                                 },
                                                 "is_follow": {
+                                                    "type": "boolean",
+                                                    "example": false
+                                                },
+                                                "is_online": {
                                                     "type": "boolean",
                                                     "example": false
                                                 }
@@ -18476,6 +18828,102 @@
                 ]
             }
         },
+        "/stores/all": {
+            "get": {
+                "tags": [
+                    "Stores"
+                ],
+                "summary": "List all stores",
+                "description": "Returns a list of all stores that are currently available.  \n     *                  If a valid bearer token is provided and logged in user is Super admin, returns both online and offline stores. If not then it only returns the online stores.",
+                "operationId": "4f71aeba2dc5fa80f9f07cc0f7558fea",
+                "responses": {
+                    "200": {
+                        "description": "List of all stores",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "All Store listings"
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 15
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "City Electronics"
+                                                    },
+                                                    "subtitle": {
+                                                        "type": "string",
+                                                        "example": "Best gadgets in town"
+                                                    },
+                                                    "thumbnail": {
+                                                        "type": "string",
+                                                        "example": "https://example.com/images/store-thumb.jpg"
+                                                    },
+                                                    "address": {
+                                                        "type": "string",
+                                                        "example": "123 Main Street"
+                                                    },
+                                                    "region": {
+                                                        "type": "string",
+                                                        "example": "Dar es Salaam",
+                                                        "nullable": true
+                                                    },
+                                                    "category": {
+                                                        "type": "string",
+                                                        "example": "Vifaa vya umeme",
+                                                        "nullable": true
+                                                    },
+                                                    "country": {
+                                                        "type": "string",
+                                                        "example": "Tanzania",
+                                                        "nullable": true
+                                                    },
+                                                    "rating": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 4.7
+                                                    },
+                                                    "reviews_count": {
+                                                        "type": "integer",
+                                                        "example": 23
+                                                    },
+                                                    "product_count": {
+                                                        "type": "integer",
+                                                        "example": 123
+                                                    },
+                                                    "is_online": {
+                                                        "type": "boolean",
+                                                        "example": false
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/stores/{id}/follows": {
             "get": {
                 "tags": [
@@ -18661,6 +19109,447 @@
                 "security": [
                     {
                         "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/success-stories": {
+            "get": {
+                "tags": [
+                    "Success Stories"
+                ],
+                "summary": "Get list of success stories",
+                "description": "Returns all the success stories allowed by the super admin , with related buyer, category, and store.",
+                "operationId": "3128b4ac3657530abe18f723f8807987",
+                "responses": {
+                    "200": {
+                        "description": "List of all the shown success stories",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "List of success stories."
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "John Doe"
+                                                    },
+                                                    "category": {
+                                                        "type": "string",
+                                                        "example": "Chakula na Vinywaji"
+                                                    },
+                                                    "content": {
+                                                        "type": "string",
+                                                        "example": "I bought this product and it changed my business."
+                                                    },
+                                                    "store": {
+                                                        "type": "string",
+                                                        "example": "Ulonda's Kitchen"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Success Stories"
+                ],
+                "summary": "Create a new success story",
+                "description": "Creates a new success story for a buyer. Has to be logged in.",
+                "operationId": "6e67d25dfcfe3c1ad3429a3e29082557",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "content",
+                                    "category_id"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "My First Success"
+                                    },
+                                    "category_id": {
+                                        "type": "integer",
+                                        "example": 2
+                                    },
+                                    "store_id": {
+                                        "type": "integer",
+                                        "example": 3,
+                                        "nullable": true
+                                    },
+                                    "content": {
+                                        "type": "string",
+                                        "example": "I bought this product and it changed my business."
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Success story created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Success story created successfully!"
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 201
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 10
+                                                },
+                                                "buyer_id": {
+                                                    "type": "integer",
+                                                    "example": 5
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "My First Success"
+                                                },
+                                                "category_id": {
+                                                    "type": "integer",
+                                                    "example": 2
+                                                },
+                                                "store_id": {
+                                                    "type": "integer",
+                                                    "example": 3
+                                                },
+                                                "content": {
+                                                    "type": "string",
+                                                    "example": "I bought this product and it changed my business."
+                                                },
+                                                "created_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2025-10-07T10:00:00Z"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/422"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/success-stories/all": {
+            "get": {
+                "tags": [
+                    "Success Stories"
+                ],
+                "summary": "Get all success stories",
+                "description": "Fetches a list of all success stories including buyer, category, and store relationships. This is for the Super Admin",
+                "operationId": "bd14a2c4cfebff45285a641fd18cb47c",
+                "responses": {
+                    "200": {
+                        "description": "List of all success stories",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "List of all success stories"
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "buyer_id": {
+                                                        "type": "integer",
+                                                        "example": 2
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "JuKu"
+                                                    },
+                                                    "category_id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "store_id": {
+                                                        "type": "integer",
+                                                        "example": null,
+                                                        "nullable": true
+                                                    },
+                                                    "content": {
+                                                        "type": "string",
+                                                        "example": "Here is my view on Soko Link. I really enjoyed it. the very first time i visited it was amazing."
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2025-10-07T10:55:17.000000Z"
+                                                    },
+                                                    "updated_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2025-10-07T10:55:17.000000Z"
+                                                    },
+                                                    "is_shown": {
+                                                        "type": "boolean",
+                                                        "example": true
+                                                    },
+                                                    "buyer": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 2
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": null,
+                                                                "nullable": true
+                                                            },
+                                                            "phone": {
+                                                                "type": "string",
+                                                                "example": "+255714257454"
+                                                            },
+                                                            "email": {
+                                                                "type": "string",
+                                                                "example": null,
+                                                                "nullable": true
+                                                            },
+                                                            "role": {
+                                                                "type": "string",
+                                                                "example": "buyer"
+                                                            },
+                                                            "status": {
+                                                                "type": "string",
+                                                                "example": "active"
+                                                            },
+                                                            "last_login_at": {
+                                                                "type": "string",
+                                                                "example": "2025-10-07 10:48:25"
+                                                            },
+                                                            "created_at": {
+                                                                "type": "string",
+                                                                "format": "date-time",
+                                                                "example": "2025-10-07T10:47:28.000000Z"
+                                                            },
+                                                            "updated_at": {
+                                                                "type": "string",
+                                                                "format": "date-time",
+                                                                "example": "2025-10-07T10:48:25.000000Z"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "category": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "parent_id": {
+                                                                "type": "integer",
+                                                                "example": null,
+                                                                "nullable": true
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "Chakula na Vinywaji"
+                                                            },
+                                                            "slug": {
+                                                                "type": "string",
+                                                                "example": "chakula-na-vinywaji"
+                                                            },
+                                                            "icon": {
+                                                                "type": "string",
+                                                                "example": "🍽️"
+                                                            },
+                                                            "is_active": {
+                                                                "type": "boolean",
+                                                                "example": true
+                                                            },
+                                                            "created_at": {
+                                                                "type": "string",
+                                                                "format": "date-time",
+                                                                "example": "2025-10-07T09:39:34.000000Z"
+                                                            },
+                                                            "updated_at": {
+                                                                "type": "string",
+                                                                "format": "date-time",
+                                                                "example": "2025-10-07T09:39:34.000000Z"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "store": {
+                                                        "type": "object",
+                                                        "example": null,
+                                                        "nullable": true
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/403"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/success-stories/{id}": {
+            "put": {
+                "tags": [
+                    "Success Stories"
+                ],
+                "summary": "Toggle the shown status of a success story",
+                "description": "Toggles the is_shown field of a success story between true and false.This is for the Super Admin",
+                "operationId": "7acb0afc30c9b4ff3793bf7861c01fbc",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the success story to toggle",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Status toggled successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Story shown status changed."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Story not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 404
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Story not found."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/403"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
                     }
                 ]
             }
@@ -20059,6 +20948,10 @@
         {
             "name": "Feedbacks",
             "description": "APIs for sellers to send feedbacks to the admins concerning different situations or suggestions."
+        },
+        {
+            "name": "Success Stories",
+            "description": "Endpoints for managing and viewing success stories."
         }
     ]
 }

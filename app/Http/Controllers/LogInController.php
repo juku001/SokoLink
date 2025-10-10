@@ -235,7 +235,7 @@ class LogInController extends Controller
      * @OA\Post(
      *     path="/auth/login/email",
      *     tags={"Authentication"},
-     *     summary="Login with email",
+     *     summary="Login with email. Used by Super Admin or Sellers who activated email provider.",
      *     description="Authenticates a user using email and password, returning an access token on success.",
      *     @OA\RequestBody(
      *         required=true,

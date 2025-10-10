@@ -15,6 +15,7 @@ use PhpOffice\PhpSpreadsheet\Chart\Legend;
 use PhpOffice\PhpSpreadsheet\Chart\PlotArea;
 use PhpOffice\PhpSpreadsheet\Chart\Title;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Pdf\Dompdf;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
@@ -67,6 +68,34 @@ class ExportFileReportController extends Controller
         $this->creditScore($spreadsheet);
         $this->onlinePerformance($spreadsheet);
         $response = $this->download($spreadsheet);
+
+        return $response;
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/reports/export/pdf",
+     *     tags={"Reports"},
+     *     summary="Export seller data to PDF",
+     *     description="Generates and downloads a PDF report with sales, credit score, and online performance.",
+     *     operationId="exportSellerReportPdf",
+     *     @OA\Response(
+     *         response=200,
+     *         description="PDF file download",
+     *     ),
+     *     @OA\Response(response=401, ref="#/components/responses/401"),
+     *     @OA\Response(response=403, ref="#/components/responses/403")
+     * )
+     */
+
+    public function pdf()
+    {
+        $spreadsheet = new Spreadsheet();
+
+        $this->salesReport($spreadsheet);
+        $this->creditScore($spreadsheet);
+        $this->onlinePerformance($spreadsheet);
+        $response = $this->downloadPdf($spreadsheet);
 
         return $response;
     }
@@ -418,6 +447,36 @@ class ExportFileReportController extends Controller
 
         $response->headers->set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         $response->headers->set('Content-Disposition', $disposition);
+        return $response;
+    }
+
+
+
+
+
+
+
+
+
+
+    private function downloadPdf($spreadsheet)
+    {
+        // Set the PDF renderer
+        $writer = new Dompdf($spreadsheet);
+        $fileName = 'sokolink_report_' . now()->format('Ymd_His') . '.pdf';
+
+        $response = new StreamedResponse(function () use ($writer) {
+            $writer->save('php://output');
+        });
+
+        $disposition = $response->headers->makeDisposition(
+            \Symfony\Component\HttpFoundation\ResponseHeaderBag::DISPOSITION_ATTACHMENT,
+            $fileName
+        );
+
+        $response->headers->set('Content-Type', 'application/pdf');
+        $response->headers->set('Content-Disposition', $disposition);
+
         return $response;
     }
 

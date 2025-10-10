@@ -65,7 +65,7 @@ class StoreController extends Controller implements HasMiddleware
      *                     @OA\Property(property="country", type="string", nullable=true, example="Tanzania"),
      *                     @OA\Property(property="rating", type="number", format="float", example=4.7),
      *                     @OA\Property(property="reviews_count", type="integer", example=23),
-     *                     @OA\Property(property="is_follow", type="boolean", example=false)
+     *                     
      *                 )
      *             )
      *         )
@@ -85,15 +85,38 @@ class StoreController extends Controller implements HasMiddleware
             }
         }
 
-        // base query
-        $query = Store::with('category', 'region.country', 'reviews')
-            ->where('is_online', true);
+        // Base query with relations
+        $query = Store::with('category', 'region.country', 'reviews');
 
-        // filter featured stores if requested
+        // Apply filtering based on user type
+        if ($user) {
+            switch ($user->role) {
+                case 'seller':
+                    // Show only stores owned by the seller
+                    $query->where('seller_id', $user->id);
+                    break;
+
+                case 'admin':
+                case 'super_admin':
+                    // Show all stores, online or offline — no extra filter
+                    break;
+
+                default:
+                    // Logged-in buyer or other type — show only online stores
+                    $query->where('is_online', true);
+                    break;
+            }
+        } else {
+            // Guest user — only online stores
+            $query->where('is_online', true);
+        }
+
+        // Filter featured stores if requested
         if ($request->has('is_featured') && $request->boolean('is_featured')) {
             $query->where('is_featured', true);
         }
 
+        // Execute query and map the results
         $stores = $query->get()->map(function ($store) use ($user) {
             return [
                 'id' => $store->id,
@@ -106,14 +129,12 @@ class StoreController extends Controller implements HasMiddleware
                 'country' => optional(optional($store->region)->country)->name,
                 'rating' => $store->rating_avg,
                 'reviews_count' => $store->reviews->count(),
-                'is_follow' => $user
-                    ? $store->followers()->where('user_id', $user->id)->exists()
-                    : false,
             ];
         });
 
         return ResponseHelper::success($stores, 'Store listings');
     }
+
 
 
 
@@ -143,7 +164,6 @@ class StoreController extends Controller implements HasMiddleware
      *                 @OA\Property(property="whatsapp", type="string", maxLength=20, nullable=true, example="+255700000000"),
      *                 @OA\Property(property="shipping_origin", type="string", maxLength=255, nullable=true, example="Dar es Salaam Warehouse"),
      *                 @OA\Property(property="region_id", type="integer", nullable=true, example=5),
-     *                 @OA\Property(property="is_featured", type="boolean", nullable=true, example=false),
      *                 @OA\Property(property="address", type="string", maxLength=255, nullable=true, example="123 Main Street, Dar es Salaam")
      *             )
      *         )
@@ -204,7 +224,6 @@ class StoreController extends Controller implements HasMiddleware
             'whatsapp' => 'nullable|string|max:20',
             'shipping_origin' => 'nullable|string|max:255',
             'region_id' => 'nullable|exists:regions,id',
-            'is_featured' => 'nullable|boolean',
             'address' => 'nullable|string|max:255',
         ]);
 
@@ -283,7 +302,6 @@ class StoreController extends Controller implements HasMiddleware
      *                 @OA\Property(property="subtitle", type="string", maxLength=255, nullable=true, example="Updated subtitle"),
      *                 @OA\Property(property="thumbnail", type="string", format="binary", nullable=true, description="New thumbnail image (max 2 MB)"),
      *                 @OA\Property(property="is_online", type="boolean", nullable=true, example=true),
-     *                 @OA\Property(property="is_featured", type="boolean", nullable=true, example=true),
      *                 @OA\Property(property="contact_mobile", type="string", maxLength=20, nullable=true, example="+255711111111"),
      *                 @OA\Property(property="contact_email", type="string", format="email", maxLength=255, nullable=true, example="newcontact@store.tz"),
      *                 @OA\Property(property="whatsapp", type="string", maxLength=20, nullable=true, example="+255711111111"),
@@ -359,7 +377,6 @@ class StoreController extends Controller implements HasMiddleware
             'shipping_origin' => 'nullable|string|max:255',
             'region_id' => 'nullable|exists:regions,id',
             'address' => 'nullable|string|max:255',
-            'is_featured' => 'nullable|boolean',
         ]);
 
         if ($validator->fails()) {
@@ -433,7 +450,8 @@ class StoreController extends Controller implements HasMiddleware
      *                 @OA\Property(property="reviews_count", type="integer", example=20),
      *                 @OA\Property(property="category", type="string", example="Electronics"),
      *                 @OA\Property(property="rating_avg", type="number", format="float", example=4.5),
-     *                 @OA\Property(property="is_follow", type="boolean", example=false)
+     *                 @OA\Property(property="is_follow", type="boolean", example=false),
+     *                 @OA\Property(property="is_online", type="boolean", example=false)
      *             )
      *         )
      *     ),
@@ -451,31 +469,43 @@ class StoreController extends Controller implements HasMiddleware
 
     public function show(Request $request, string $id)
     {
-
-        $store = Store::withCount(['category', 'followers', 'reviews'])->where('is_online', true)->find($id);
-
-        if (!$store) {
-            return ResponseHelper::error([], 'Store not found.', 404);
-        }
-
-
-        $token = $request->bearerToken();
         $user = null;
-
-        if ($token) {
+        if ($token = $request->bearerToken()) {
             $accessToken = PersonalAccessToken::findToken($token);
             if ($accessToken) {
                 $user = $accessToken->tokenable;
             }
         }
 
-        StoreVisit::create([
-            'store_id' => $store->id,
-            'user_id' => $user->role !== 'seller' ? $user->id ?? null : null,
-            'session_id' => session()->getId(),
-            'ip_address' => request()->ip(),
-        ]);
+        $isBuyer = $user && $user->role === 'buyer';
 
+        $query = Store::with(['category']) 
+            ->withCount(['followers', 'reviews']);
+
+        if (!$user || $isBuyer) {
+            $query->where('is_online', true);
+        } elseif ($user->role === 'seller') {
+            $query->where('seller_id', $user->id);
+        }
+
+        $store = $query->find($id);
+
+        if (!$store) {
+            return ResponseHelper::error([], 'Store not found.', 404);
+        }
+
+        if ($isBuyer) {
+            StoreVisit::create([
+                'store_id' => $store->id,
+                'user_id' => $user->id,
+                'session_id' => session()->getId(),
+                'ip_address' => $request->ip(),
+            ]);
+        }
+
+        $isFollow = $isBuyer
+            ? $store->followers()->where('buyer_id', $user->id)->exists()
+            : false;
 
         return ResponseHelper::success([
             'id' => $store->id,
@@ -485,12 +515,11 @@ class StoreController extends Controller implements HasMiddleware
             'rating_avg' => $store->rating_avg,
             'reviews_count' => $store->reviews_count,
             'category' => optional($store->category)->name,
-            // true if authenticated user follows this store
-            'is_follow' => $user
-                ? $store->followers()->where('user_id', $user->id)->exists()
-                : false,
-        ], 'Store details', 200);
+            'is_online' => (bool) $store->is_online,
+            'is_follow' => $isFollow,
+        ], 'Store details');
     }
+
 
 
 
@@ -789,7 +818,7 @@ class StoreController extends Controller implements HasMiddleware
 
         StoreVisit::create([
             'store_id' => $store->id,
-            'user_id' => $user->role !== 'seller' ? $user->id ?? null : null,
+            'user_id' => $user && $user->role !== 'seller' ? $user->id ?? null : null,
             'session_id' => session()->getId(),
             'ip_address' => request()->ip(),
         ]);
@@ -935,5 +964,88 @@ class StoreController extends Controller implements HasMiddleware
 
         return ResponseHelper::success([], 'Active Store Changed successfull.', 200);
 
+    }
+
+
+    /**
+     * @OA\Get(
+     *     path="/stores/all",
+     *     summary="List all stores",
+     *     description="Returns a list of all stores that are currently available.  
+     *                  If a valid bearer token is provided and logged in user is Super admin, returns both online and offline stores. If not then it only returns the online stores.",
+     *     tags={"Stores"},
+     *     @OA\Response(
+     *         response=200,
+     *         description="List of all stores",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="status", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="All Store listings"),
+     *             @OA\Property(property="code", type="integer", example=200),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     @OA\Property(property="id", type="integer", example=15),
+     *                     @OA\Property(property="name", type="string", example="City Electronics"),
+     *                     @OA\Property(property="subtitle", type="string", example="Best gadgets in town"),
+     *                     @OA\Property(property="thumbnail", type="string", example="https://example.com/images/store-thumb.jpg"),
+     *                     @OA\Property(property="address", type="string", example="123 Main Street"),
+     *                     @OA\Property(property="region", type="string", nullable=true, example="Dar es Salaam"),
+     *                     @OA\Property(property="category", type="string", nullable=true, example="Vifaa vya umeme"),
+     *                     @OA\Property(property="country", type="string", nullable=true, example="Tanzania"),
+     *                     @OA\Property(property="rating", type="number", format="float", example=4.7),
+     *                     @OA\Property(property="reviews_count", type="integer", example=23),
+     *                     @OA\Property(property="product_count", type="integer", example=123),
+     *                     @OA\Property(property="is_online", type="boolean", example=false)
+     *                 )
+     *             )
+     *         )
+     *     )
+     * )
+     */
+    public function all(Request $request)
+    {
+        $token = $request->bearerToken();
+        $user = null;
+
+        if ($token) {
+            $accessToken = PersonalAccessToken::findToken($token);
+            if ($accessToken) {
+                $user = $accessToken->tokenable;
+            }
+        }
+
+        $query = Store::with('category', 'region.country', 'reviews', 'products');
+
+
+        if ($user && $user->user_type == 'super_admin') {
+
+
+        } else {
+            $query = $query->where('is_online', true);
+        }
+
+
+
+        $stores = $query->get()->map(function ($store) {
+            return [
+                'id' => $store->id,
+                'name' => $store->name,
+                'subtitle' => $store->subtitle,
+                'thumbnail' => $store->thumbnail,
+                'address' => $store->address,
+                'category' => optional($store->category)->name,
+                'region' => optional($store->region)->name,
+                'country' => optional(optional($store->region)->country)->name,
+                'rating' => $store->rating_avg,
+                'reviews_count' => $store->reviews->count(),
+                'product_count' => $store->products->count(),
+                'is_online' => $store->is_online
+            ];
+        });
+
+        return ResponseHelper::success($stores, 'List of all stores.');
     }
 }

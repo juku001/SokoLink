@@ -18,7 +18,7 @@ class SearchController extends Controller
      *     summary="Global search for products and stores",
      *     description="Search across products and stores that are marked as online.",
      *     @OA\Parameter(
-     *         name="q",
+     *         name="query",
      *         in="query",
      *         required=true,
      *         description="Search keyword",
@@ -78,7 +78,10 @@ class SearchController extends Controller
 
     public function index(Request $request)
     {
-        $keyword = trim($request->query('q', '')); // ?q=shoes
+
+
+
+        $keyword = trim($request->query('query', '')); // ?q=shoes
         if ($keyword === '') {
             return ResponseHelper::error([], 'Search query is required', 422);
         }

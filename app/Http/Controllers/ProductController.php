@@ -41,7 +41,7 @@ class ProductController extends Controller implements HasMiddleware
      *     path="/products",
      *     tags={"Products"},
      *     summary="List products for authenticated seller",
-     *     description="Retrieve a paginated list of products belonging to the authenticated seller. Supports filtering by search, category, store, price range, and online status.",
+     *     description="Retrieve a paginated list of products belonging to the authenticated seller. Supports filtering by search, category, store, price range, online status, and stock status.",
      *     operationId="listProducts",
      *
      *     @OA\Parameter(
@@ -87,6 +87,16 @@ class ProductController extends Controller implements HasMiddleware
      *         @OA\Schema(type="boolean")
      *     ),
      *     @OA\Parameter(
+     *         name="stock_status",
+     *         in="query",
+     *         description="Filter by stock status (in_stock, low_stock, out_of_stock)",
+     *         required=false,
+     *         @OA\Schema(
+     *             type="string",
+     *             enum={"in_stock", "low_stock", "out_of_stock"}
+     *         )
+     *     ),
+     *     @OA\Parameter(
      *         name="per_page",
      *         in="query",
      *         description="Number of products per page",
@@ -116,13 +126,13 @@ class ProductController extends Controller implements HasMiddleware
      *             )
      *         )
      *     ),
-     *     @OA\Response(response=401, description="Unauthenticated",ref="#/components/responses/401"),
-     *     @OA\Response(response=500, description="Internal server error",ref="#/components/responses/500"),
+     *     @OA\Response(response=401, description="Unauthenticated", ref="#/components/responses/401"),
+     *     @OA\Response(response=500, description="Internal server error", ref="#/components/responses/500"),
      * )
      */
+
     public function index(Request $request)
     {
-
         $query = Product::with(['category', 'images', 'store']);
 
         if ($request->filled('search')) {
@@ -135,9 +145,7 @@ class ProductController extends Controller implements HasMiddleware
         }
 
         if ($request->filled('category_id')) {
-            $query->whereHas('category', function ($q) use ($request) {
-                $q->where('category_id', $request->category_id);
-            });
+            $query->where('category_id', $request->category_id);
         }
 
         if ($request->filled('store_id')) {
@@ -155,10 +163,28 @@ class ProductController extends Controller implements HasMiddleware
             $query->where('is_online', $request->is_online);
         }
 
+        if ($request->filled('stock_status')) {
+            switch ($request->stock_status) {
+                case 'in_stock':
+                    $query->whereColumn('stock_qty', '>', 'low_stock_threshold');
+                    break;
+
+                case 'low_stock':
+                    $query->whereColumn('stock_qty', '<=', 'low_stock_threshold')
+                        ->where('stock_qty', '>', 0);
+                    break;
+
+                case 'out_of_stock':
+                    $query->where('stock_qty', '=', 0);
+                    break;
+            }
+        }
+
         $products = $query->paginate($request->get('per_page', 15));
 
         return ResponseHelper::success($products, 'Products retrieved successfully');
     }
+
 
 
     /**

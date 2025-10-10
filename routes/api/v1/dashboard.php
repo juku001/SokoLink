@@ -13,6 +13,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::prefix('/dashboard')->group(function () {
             Route::get('/overview/recent-sales', [SellerOverviewController::class, 'recentSales']);
+            Route::get('/overview/sales-trend',[SellerOverviewController::class, 'salesTrend']);
             Route::get('/overview/low-stock', [SellerOverviewController::class, 'lowStock']);
             Route::get('/overview/stats', [SellerOverviewController::class, 'index']);
 

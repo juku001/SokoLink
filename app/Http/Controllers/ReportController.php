@@ -227,6 +227,10 @@ class ReportController extends Controller
 
 
 
+
+
+
+
     /**
      * @OA\Get(
      *     path="/reports/credit/score",

@@ -312,7 +312,7 @@ class AuthController extends Controller
      * @return \Illuminate\Http\JsonResponse
      *
      * @OA\Post(
-     *     path="/be/seller",
+     *     path="/auth/be/seller",
      *     tags={"Users"},
      *     summary="Convert buyer account to seller",
      *     description="Allows an authenticated user to become a seller by providing payout account details and payout method.",
@@ -391,7 +391,7 @@ class AuthController extends Controller
 
     /**
      * @OA\Put(
-     *     path="/be/seller",
+     *     path="/auth/be/seller",
      *     summary="Update seller payout details",
      *     tags={"Users"},
      *     security={{"bearerAuth":{}}},

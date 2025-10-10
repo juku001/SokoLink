@@ -7,6 +7,7 @@ use App\Http\Controllers\AdminUserManagementController;
 use App\Http\Controllers\AirtelCallbackLogController;
 use App\Http\Controllers\CustomerManagementController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\PlatformActivityController;
 use App\Http\Controllers\SystemSettingController;
 
 
@@ -47,13 +48,18 @@ Route::middleware(['auth:sanctum', 'user.type:super_admin'])->group(function () 
     Route::get('/system_settings', [SystemSettingController::class, 'index']);
     Route::post('/system_settings', [SystemSettingController::class, 'update']);
 
+    //here
+    Route::prefix('/admin/platform')->group(function () {
+        Route::get('/overview',[PlatformActivityController::class, 'overview']);
+        Route::get('/recent/alerts', [PlatformActivityController::class, 'recentAlerts']);
+        Route::get('/service/status', [PlatformActivityController::class, 'serviceStatus']);
+        Route::get('/activity', [PlatformActivityController::class, 'index']);
+    });
+
+    Route::get('/admin/operational/metrics', [AdminReportController::class, 'operationalMetrics']);
+    //upto here
 });
 
-//platform health (stats and percentage),
-//service status
-//recent alerts
 
 
 
-//platform overview stats
-//10 recent plaform activity (it should be all, but limited on reqsuest)

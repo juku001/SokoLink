@@ -189,4 +189,15 @@ class AdminReportController extends Controller
 
         return ResponseHelper::success($data, 'Marketplace Health');
     }
+
+
+    public function operationalMetrics(){
+
+
+        $data = [
+            'transaction'=> 0,
+            'system_uptime' => 0,
+            ''
+        ];
+    }
 }

@@ -331,6 +331,10 @@ namespace App\Http\Controllers;
  * @OA\Tag(
  *     name="Feedbacks",
  *     description="APIs for sellers to send feedbacks to the admins concerning different situations or suggestions."
+ * ),
+ * @OA\Tag(
+ *     name="Success Stories",
+ *     description="Endpoints for managing and viewing success stories."
  * )
  */
 

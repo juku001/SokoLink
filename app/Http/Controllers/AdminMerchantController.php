@@ -14,13 +14,22 @@ class AdminMerchantController extends Controller
      * @OA\Get(
      *     path="/admin/merchants",
      *     summary="Get list of all merchants",
-     *     description="Returns all merchants with details like email, status, revenue, and join date",
+     *     description="Returns all merchants with optional status filtering (e.g. active, inactive, pending, blocked), including email, status, revenue, and join date",
      *     tags={"Admin"},
+     *
+     *     @OA\Parameter(
+     *         name="status",
+     *         in="query",
+     *         required=false,
+     *         description="Filter merchants by status (e.g. active, inactive, pending, blocked)",
+     *         @OA\Schema(type="string", example="active")
+     *     ),
+     *
      *     @OA\Response(
      *         response=200,
      *         description="Merchant list retrieved successfully",
      *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="status", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="Merchant List"),
      *             @OA\Property(
      *                 property="data",
@@ -36,27 +45,35 @@ class AdminMerchantController extends Controller
      *             )
      *         )
      *     ),
+     *     @OA\Response(response=401, description="Unauthenticated", ref="#/components/responses/401"),
+     *     @OA\Response(response=500, description="Internal server error", ref="#/components/responses/500"),
      *     security={{"sanctum": {}}}
      * )
      */
-    public function index()
+    public function index(Request $request)
     {
+        $query = Store::with(['user', 'sales']);
 
-        $stores = Store::with('user')->all();
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $stores = $query->get();
 
         $data = $stores->map(function ($store) {
             return [
                 'id' => $store->id,
                 'name' => $store->name,
-                'email' => $store->email ?? $store->user->email,
+                'email' => $store->email ?? optional($store->user)->email,
                 'status' => $store->status,
-                'revenue' => $store->sales->count('amount') ?? 0,
-                'joined' => $store->created_at
+                'revenue' => $store->sales()->sum('amount') ?? 0,
+                'joined' => $store->created_at,
             ];
         });
 
         return ResponseHelper::success($data, 'Merchant List');
     }
+
 
 
 
@@ -77,7 +94,7 @@ class AdminMerchantController extends Controller
      *         response=200,
      *         description="Merchant details retrieved successfully",
      *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="status", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="Store details"),
      *             @OA\Property(
      *                 property="data",
@@ -143,7 +160,7 @@ class AdminMerchantController extends Controller
      *         response=404,
      *         description="Store not found",
      *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="status", type="boolean", example=false),
      *             @OA\Property(property="message", type="string", example="Store not found"),
      *             
      *         )

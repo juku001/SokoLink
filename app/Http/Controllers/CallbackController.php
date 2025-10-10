@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\ResponseHelper;
+use App\Helpers\SMSHelper;
 use App\Models\Address;
 use App\Models\AirtelCallbackLog;
 use App\Models\Escrow;
@@ -10,6 +11,7 @@ use App\Models\Payment;
 use App\Models\Sale;
 use App\Models\SaleProduct;
 use App\Models\Shipment;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -111,6 +113,11 @@ class CallbackController extends Controller
                 $platformFee = round($total * 0.10, 2);
                 $sellerAmount = $total - $platformFee;
 
+                $seller = User::find($sellerId);
+
+                $SellerMessage = "Hello SokoLink Merchant, you have a new payment of " . $total . " with an order " . $order->order_ref;
+                SMSHelper::send($seller->phone, $SellerMessage);
+
                 $escrow = Escrow::create([
                     'order_id' => $order->id,
                     'buyer_id' => $order->buyer_id,
@@ -157,6 +164,9 @@ class CallbackController extends Controller
                 }
             }
 
+            $buyer = $payment->user;
+            $buyerMessage = "Hello Dear Customer, you payment with order " . $order->order_ref . " was successful.";
+            SMSHelper::send($buyer->phone, $buyerMessage);
 
             DB::commit();
 
