@@ -1056,7 +1056,7 @@ class StoreController extends Controller implements HasMiddleware
         /**
      * @OA\Get(
      *     path="/stores/{slug}",
-     *     summary="Get store details",
+     *     summary="Get store details By Slug",
      *     description="Returns detailed information about a store, including followers count, average rating, and reviews count.  
      *                  Authentication is optional; if a valid bearer token is provided, `is_follow` indicates whether the user follows this store.",
      *     tags={"Stores"},
