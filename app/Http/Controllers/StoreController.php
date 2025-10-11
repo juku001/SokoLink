@@ -121,6 +121,7 @@ class StoreController extends Controller implements HasMiddleware
             return [
                 'id' => $store->id,
                 'name' => $store->name,
+                'slug' => $store->slug,
                 'subtitle' => $store->subtitle,
                 'thumbnail' => $store->thumbnail,
                 'address' => $store->address,
@@ -479,7 +480,7 @@ class StoreController extends Controller implements HasMiddleware
 
         $isBuyer = $user && $user->role === 'buyer';
 
-        $query = Store::with(['category']) 
+        $query = Store::with(['category'])
             ->withCount(['followers', 'reviews']);
 
         if (!$user || $isBuyer) {
@@ -510,6 +511,7 @@ class StoreController extends Controller implements HasMiddleware
         return ResponseHelper::success([
             'id' => $store->id,
             'name' => $store->name,
+            'slug' => $store->slug,
             'description' => $store->description,
             'followers_count' => $store->followers_count,
             'rating_avg' => $store->rating_avg,
@@ -1033,6 +1035,7 @@ class StoreController extends Controller implements HasMiddleware
             return [
                 'id' => $store->id,
                 'name' => $store->name,
+                'slug' => $store->slug,
                 'subtitle' => $store->subtitle,
                 'thumbnail' => $store->thumbnail,
                 'address' => $store->address,
@@ -1047,5 +1050,115 @@ class StoreController extends Controller implements HasMiddleware
         });
 
         return ResponseHelper::success($stores, 'List of all stores.');
+    }
+
+
+        /**
+     * @OA\Get(
+     *     path="/stores/{slug}",
+     *     summary="Get store details",
+     *     description="Returns detailed information about a store, including followers count, average rating, and reviews count.  
+     *                  Authentication is optional; if a valid bearer token is provided, `is_follow` indicates whether the user follows this store.",
+     *     tags={"Stores"},
+     *     @OA\Parameter(
+     *         name="slug",
+     *         in="path",
+     *         required=true,
+     *         description="Slug of the store to retrieve",
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\SecurityScheme(
+     *         securityScheme="optionalBearer",
+     *         type="http",
+     *         scheme="bearer",
+     *         bearerFormat="JWT"
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Store details retrieved successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="status", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Store details"),
+     *             @OA\Property(property="code", type="integer", example=200),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="id", type="integer", example=12),
+     *                 @OA\Property(property="name", type="string", example="City Electronics"),
+     *                 @OA\Property(property="slug", type="string", example="city-electronics"),
+     *                 @OA\Property(property="description", type="string", example="Best gadgets in town"),
+     *                 @OA\Property(property="followers_count", type="integer", example=150),
+     *                 @OA\Property(property="reviews_count", type="integer", example=20),
+     *                 @OA\Property(property="category", type="string", example="Electronics"),
+     *                 @OA\Property(property="rating_avg", type="number", format="float", example=4.5),
+     *                 @OA\Property(property="is_follow", type="boolean", example=false),
+     *                 @OA\Property(property="is_online", type="boolean", example=false)
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Store not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Store not found."),
+     *             @OA\Property(property="code", type="integer", example=404),
+     *         )
+     *     )
+     * )
+     */
+    public function storesBySlug(Request $request, string $slug)
+    {
+        $user = null;
+        if ($token = $request->bearerToken()) {
+            $accessToken = PersonalAccessToken::findToken($token);
+            if ($accessToken) {
+                $user = $accessToken->tokenable;
+            }
+        }
+
+
+        $isBuyer = $user && $user->role === 'buyer';
+
+        $query = Store::with(['category'])
+            ->withCount(['followers', 'reviews']);
+
+        if (!$user || $isBuyer) {
+            $query->where('is_online', true);
+        } elseif ($user->role === 'seller') {
+            $query->where('seller_id', $user->id);
+        }
+
+        $store = $query->where('slug', $slug)->first();
+
+        if (!$store) {
+            return ResponseHelper::error([], 'Store not found.', 404);
+        }
+
+        if ($isBuyer) {
+            StoreVisit::create([
+                'store_id' => $store->id,
+                'user_id' => $user->id,
+                'session_id' => session()->getId(),
+                'ip_address' => $request->ip(),
+            ]);
+        }
+
+        $isFollow = $isBuyer
+            ? $store->followers()->where('buyer_id', $user->id)->exists()
+            : false;
+
+        return ResponseHelper::success([
+            'id' => $store->id,
+            'name' => $store->name,
+            'description' => $store->description,
+            'followers_count' => $store->followers_count,
+            'rating_avg' => $store->rating_avg,
+            'reviews_count' => $store->reviews_count,
+            'category' => optional($store->category)->name,
+            'is_online' => (bool) $store->is_online,
+            'is_follow' => $isFollow,
+        ], 'Store details');
     }
 }

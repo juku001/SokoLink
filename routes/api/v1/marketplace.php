@@ -59,6 +59,8 @@ Route::get('/stores/featured',[FeaturedStoreController::class, 'index']);
 Route::put('/stores/featured',[FeaturedStoreController::class, 'update']);
 
 Route::get('/stores/all',[StoreController::class, 'all']);
+Route::get('/stores/{slug}', [StoreController::class, 'storesByslug'])
+    ->where('slug', '^(?!\d+$)[A-Za-z0-9-]+$');
 Route::resource('/stores', StoreController::class);
 
 Route::middleware('auth:sanctum')->group(function () {
