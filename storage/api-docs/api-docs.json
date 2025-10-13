@@ -2497,7 +2497,7 @@
                 },
                 "security": [
                     {
-                        "sanctum": []
+                        "bearerAuth": []
                     }
                 ]
             }
@@ -2875,7 +2875,7 @@
                 },
                 "security": [
                     {
-                        "sanctum": []
+                        "bearerAuth": []
                     }
                 ]
             }
@@ -18914,6 +18914,123 @@
                                                 },
                                                 "type": "object"
                                             }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/stores/{slug}": {
+            "get": {
+                "tags": [
+                    "Stores"
+                ],
+                "summary": "Get store details By Slug",
+                "description": "Returns detailed information about a store, including followers count, average rating, and reviews count.  \n     *                  Authentication is optional; if a valid bearer token is provided, `is_follow` indicates whether the user follows this store.",
+                "operationId": "8e67bba476bbc6911381eb5bc6c53ea5",
+                "parameters": [
+                    {
+                        "name": "slug",
+                        "in": "path",
+                        "description": "Slug of the store to retrieve",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Store details retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Store details"
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 12
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "City Electronics"
+                                                },
+                                                "slug": {
+                                                    "type": "string",
+                                                    "example": "city-electronics"
+                                                },
+                                                "description": {
+                                                    "type": "string",
+                                                    "example": "Best gadgets in town"
+                                                },
+                                                "followers_count": {
+                                                    "type": "integer",
+                                                    "example": 150
+                                                },
+                                                "reviews_count": {
+                                                    "type": "integer",
+                                                    "example": 20
+                                                },
+                                                "category": {
+                                                    "type": "string",
+                                                    "example": "Electronics"
+                                                },
+                                                "rating_avg": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 4.5
+                                                },
+                                                "is_follow": {
+                                                    "type": "boolean",
+                                                    "example": false
+                                                },
+                                                "is_online": {
+                                                    "type": "boolean",
+                                                    "example": false
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Store not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Store not found."
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 404
                                         }
                                     },
                                     "type": "object"
