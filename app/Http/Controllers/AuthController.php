@@ -70,7 +70,7 @@ class AuthController extends Controller
      *     operationId="logoutUser",
      *     tags={"Authentication"},
      *
-     *     security={{"bearerAuth":{}}},
+     *     security={{"bearerAuth": {}}},
      *
      *     @OA\Response(
      *         response=200,
@@ -399,7 +399,7 @@ class AuthController extends Controller
      *     path="/auth/be/seller",
      *     summary="Update seller payout details",
      *     tags={"Users"},
-     *     security={{"bearerAuth":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
