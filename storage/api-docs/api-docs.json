@@ -20967,10 +20967,12 @@
         },
         "securitySchemes": {
             "bearerAuth": {
-                "type": "apiKey",
-                "description": "Enter token in format (Bearer <token>)",
+                "type": "http",
+                "description": "Use a valid bearer token",
                 "name": "Authorization",
-                "in": "header"
+                "in": "header",
+                "bearerFormat": "JWT",
+                "scheme": "bearer"
             }
         }
     },
@@ -21070,11 +21072,6 @@
         {
             "name": "Success Stories",
             "description": "Endpoints for managing and viewing success stories."
-        }
-    ],
-    "security": [
-        {
-            "bearerAuth": []
         }
     ]
 }
