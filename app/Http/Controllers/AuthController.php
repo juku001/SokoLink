@@ -70,7 +70,7 @@ class AuthController extends Controller
      *     operationId="logoutUser",
      *     tags={"Authentication"},
      *
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth":{}}},
      *
      *     @OA\Response(
      *         response=200,
@@ -316,7 +316,7 @@ class AuthController extends Controller
      *     tags={"Users"},
      *     summary="Convert buyer account to seller",
      *     description="Allows an authenticated user to become a seller by providing payout account details and payout method.",
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth":{}}},
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
