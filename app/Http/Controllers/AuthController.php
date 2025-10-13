@@ -345,6 +345,11 @@ class AuthController extends Controller
      *         response=500,
      *         description="Server error",
      *         ref="#/components/responses/500"
+     *     ),
+     *      @OA\Response(
+     *         response=401,
+     *         description="Unauthorized",
+     *         ref="#/components/responses/401"
      *     )
      * )
      */

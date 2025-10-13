@@ -2871,6 +2871,9 @@
                     },
                     "500": {
                         "$ref": "#/components/responses/500"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/401"
                     }
                 },
                 "security": [
@@ -20964,12 +20967,10 @@
         },
         "securitySchemes": {
             "bearerAuth": {
-                "type": "http",
-                "description": "Use a valid bearer token",
+                "type": "apiKey",
+                "description": "Enter token in format (Bearer <token>)",
                 "name": "Authorization",
-                "in": "header",
-                "bearerFormat": "JWT",
-                "scheme": "bearer"
+                "in": "header"
             }
         }
     },
@@ -21069,6 +21070,11 @@
         {
             "name": "Success Stories",
             "description": "Endpoints for managing and viewing success stories."
+        }
+    ],
+    "security": [
+        {
+            "bearerAuth": []
         }
     ]
 }
