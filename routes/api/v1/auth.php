@@ -12,6 +12,10 @@ use Illuminate\Foundation\Auth\EmailVerificationRequest;
 
 Route::get('/', [AuthController::class, 'unauthorized'])->name('login');
 Route::get('/is_auth', [AuthController::class, 'authorized'])->middleware('auth:sanctum');
+Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
+    $request->fulfill();
+    return redirect('/sokolink.store');
+})->middleware(['auth', 'signed'])->name('verification.verify');
 
 
 Route::prefix('auth')->group(function () {
@@ -23,10 +27,6 @@ Route::prefix('auth')->group(function () {
 
 
 
-    Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
-        $request->fulfill();
-        return redirect('/sokolink.store');
-    })->middleware(['auth', 'signed'])->name('verification.verify');
 
 
     Route::post('/verify/email', [RegistrationController::class, 'verify'])->middleware('auth:sanctum');
