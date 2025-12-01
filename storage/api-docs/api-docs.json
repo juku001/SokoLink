@@ -255,7 +255,12 @@
                     "403": {
                         "$ref": "#/components/responses/403"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/academy/{id}": {
@@ -388,7 +393,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             },
             "put": {
                 "tags": [
@@ -508,7 +518,12 @@
                     "422": {
                         "$ref": "#/components/responses/422"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             },
             "delete": {
                 "tags": [
@@ -578,7 +593,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/academy/{id}/lessons": {
@@ -698,7 +718,12 @@
                     "403": {
                         "$ref": "#/components/responses/403"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/academy/lessons/{id}": {
@@ -773,7 +798,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             },
             "put": {
                 "tags": [
@@ -885,7 +915,12 @@
                     "422": {
                         "$ref": "#/components/responses/422"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             },
             "delete": {
                 "tags": [
@@ -961,7 +996,12 @@
                     "403": {
                         "$ref": "#/components/responses/403"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/admin/merchants": {
@@ -1048,7 +1088,7 @@
                 },
                 "security": [
                     {
-                        "sanctum": []
+                        "bearerAuth": []
                     }
                 ]
             }
@@ -1256,7 +1296,7 @@
                 },
                 "security": [
                     {
-                        "sanctum": []
+                        "bearerAuth": []
                     }
                 ]
             }
@@ -2736,7 +2776,7 @@
                                 "properties": {
                                     "payout_account": {
                                         "type": "string",
-                                        "example": "mpesa-254700123456"
+                                        "example": "2557500123456"
                                     },
                                     "payout_method": {
                                         "type": "integer",
@@ -15860,12 +15900,7 @@
                     "500": {
                         "$ref": "#/components/responses/500"
                     }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
+                }
             },
             "post": {
                 "tags": [
@@ -16007,7 +16042,7 @@
                 },
                 "security": [
                     {
-                        "sanctum": []
+                        "bearerAuth": []
                     }
                 ]
             }
@@ -16093,12 +16128,7 @@
                     "500": {
                         "$ref": "#/components/responses/500"
                     }
-                },
-                "security": [
-                    {
-                        "sanctum": []
-                    }
-                ]
+                }
             },
             "post": {
                 "tags": [
@@ -16240,7 +16270,7 @@
                 },
                 "security": [
                     {
-                        "sanctum": []
+                        "bearerAuth": []
                     }
                 ]
             }
@@ -16329,7 +16359,7 @@
                 },
                 "security": [
                     {
-                        "sanctum": []
+                        "bearerAuth": []
                     }
                 ]
             },
@@ -16473,7 +16503,7 @@
                 },
                 "security": [
                     {
-                        "sanctum": []
+                        "bearerAuth": []
                     }
                 ]
             }
@@ -19042,6 +19072,145 @@
                         }
                     }
                 }
+            }
+        },
+        "/stores/seller": {
+            "get": {
+                "tags": [
+                    "Stores"
+                ],
+                "summary": "Get list of stores belonging to the authenticated seller",
+                "description": "Returns all stores created by the currently authenticated seller.",
+                "operationId": "9069c91ea43f6cf0a4ee2b368e50071f",
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "List of sellers stores"
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "seller_id": {
+                                                        "type": "integer",
+                                                        "example": 2
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Cluster Shop"
+                                                    },
+                                                    "slug": {
+                                                        "type": "string",
+                                                        "example": "cluster-shop"
+                                                    },
+                                                    "category_id": {
+                                                        "type": "integer",
+                                                        "example": 2
+                                                    },
+                                                    "description": {
+                                                        "type": "string",
+                                                        "example": "Hello, welcome to my store, where everything is cheap..."
+                                                    },
+                                                    "subtitle": {
+                                                        "type": "string",
+                                                        "example": null,
+                                                        "nullable": true
+                                                    },
+                                                    "thumbnail": {
+                                                        "type": "string",
+                                                        "example": null,
+                                                        "nullable": true
+                                                    },
+                                                    "is_online": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "contact_mobile": {
+                                                        "type": "string",
+                                                        "example": "+255687181497"
+                                                    },
+                                                    "contact_email": {
+                                                        "type": "string",
+                                                        "example": "someemail@gmail.com"
+                                                    },
+                                                    "whatsapp": {
+                                                        "type": "string",
+                                                        "example": null,
+                                                        "nullable": true
+                                                    },
+                                                    "shipping_origin": {
+                                                        "type": "string",
+                                                        "example": null,
+                                                        "nullable": true
+                                                    },
+                                                    "rating_avg": {
+                                                        "type": "string",
+                                                        "example": "0.00"
+                                                    },
+                                                    "rating_count": {
+                                                        "type": "integer",
+                                                        "example": 0
+                                                    },
+                                                    "region_id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "address": {
+                                                        "type": "string",
+                                                        "example": null,
+                                                        "nullable": true
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2025-10-13T13:37:22.000000Z"
+                                                    },
+                                                    "updated_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2025-10-13T13:42:15.000000Z"
+                                                    },
+                                                    "is_featured": {
+                                                        "type": "integer",
+                                                        "example": 0
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/stores/{id}/follows": {

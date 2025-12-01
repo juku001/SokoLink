@@ -69,7 +69,7 @@ class ExpenseTypeController extends Controller implements HasMiddleware
      *     tags={"Expense Types"},
      *     summary="Create a new expense type",
      *     description="Add a new expense type",
-     *     security={{"bearerAuth":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
@@ -172,7 +172,7 @@ class ExpenseTypeController extends Controller implements HasMiddleware
      *     tags={"Expense Types"},
      *     summary="Update an expense type",
      *     description="Update the name of a specific expense type",
-     *     security={{"bearerAuth":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -256,7 +256,7 @@ class ExpenseTypeController extends Controller implements HasMiddleware
      *     tags={"Expense Types"},
      *     summary="Delete an expense type",
      *     description="Remove a specific expense type from the system",
-     *     security={{"bearerAuth":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",

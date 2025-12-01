@@ -47,7 +47,7 @@ class AdminMerchantController extends Controller
      *     ),
      *     @OA\Response(response=401, description="Unauthenticated", ref="#/components/responses/401"),
      *     @OA\Response(response=500, description="Internal server error", ref="#/components/responses/500"),
-     *     security={{"sanctum": {}}}
+     *     security={{"bearerAuth": {}}},
      * )
      */
     public function index(Request $request)
@@ -165,7 +165,7 @@ class AdminMerchantController extends Controller
      *             
      *         )
      *     ),
-     *     security={{"sanctum": {}}}
+     *     security={{"bearerAuth": {}}},
      * )
      */
     public function show($id)
@@ -195,7 +195,7 @@ class AdminMerchantController extends Controller
      *     description="Retrieve the top performing merchants for the current month with revenue growth compared to last month.",
      *     operationId="topPerformingMerchants",
      *     tags={"Admin"},
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *     
      *     @OA\Response(
      *         response=200,

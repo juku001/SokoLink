@@ -21,7 +21,7 @@ class PayoutController extends Controller
      *     summary="List seller's payouts",
      *     description="Returns all payouts that belong to the authenticated seller.",
      *     tags={"Payouts"},
-     *     security={{"bearerAuth":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
      *         description="List of payouts",
@@ -69,7 +69,7 @@ class PayoutController extends Controller
      *                  On success, the payout is recorded and the seller’s escrow balance is reduced.",
      *     operationId="createPayout",
      *     tags={"Payouts"},
-     *     security={{"bearerAuth":{}}},
+     *     security={{"bearerAuth": {}}},
      *
      *     @OA\RequestBody(
      *         required=true,
@@ -214,7 +214,7 @@ class PayoutController extends Controller
      *     summary="Get payout details",
      *     description="Returns details of a specific payout if it belongs to the authenticated seller.",
      *     tags={"Payouts"},
-     *     security={{"bearerAuth":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -269,7 +269,7 @@ class PayoutController extends Controller
      *     summary="List all payouts (Admin only)",
      *     description="Accessible only by super admins to list every payout.",
      *     tags={"Payouts"},
-     *     security={{"bearerAuth":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
      *         description="List of all payouts",
@@ -314,7 +314,7 @@ class PayoutController extends Controller
      *     path="/payout/settlement-type",
      *     summary="Toggle seller settlement type (manual/auto)",
      *     tags={"Payouts"},
-     *     security={{"bearerAuth":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
      *         description="Settlement type changed successfully",

@@ -20,7 +20,7 @@ class PaymentMethodController extends Controller
      *     tags={"Payments"},
      *     summary="Get list of available payment methods",
      *     description="Retrieve all enabled payment methods such as cards, banks, or MNOs.",
-     *     security={{"bearerAuth":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
      *         description="List of available payment methods",
@@ -67,7 +67,7 @@ class PaymentMethodController extends Controller
      *     tags={"Payments"},
      *     summary="Create a new payment method",
      *     description="Add a new payment method such as card, bank, or mobile network operator (MNO).",
-     *     security={{"bearerAuth":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
@@ -151,7 +151,7 @@ class PaymentMethodController extends Controller
      *     tags={"Payments"},
      *     summary="Get payment method details",
      *     description="Retrieve the details of a specific payment method by its ID.",
-     *     security={{"bearerAuth":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -207,7 +207,7 @@ class PaymentMethodController extends Controller
      *     tags={"Payments"},
      *     summary="Update a payment method",
      *     description="Update the details of an existing payment method by its ID.",
-     *     security={{"bearerAuth":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -301,7 +301,7 @@ class PaymentMethodController extends Controller
      *     tags={"Payments"},
      *     summary="Delete a payment method",
      *     description="Remove a payment method by its ID.",
-     *     security={{"bearerAuth":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -353,7 +353,7 @@ class PaymentMethodController extends Controller
      *     tags={"Payments"},
      *     summary="Get all payment methods",
      *     description="Retrieve a list of all payment methods, including disabled ones.",
-     *     security={{"bearerAuth":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
      *         description="List of all payment methods",
@@ -394,7 +394,7 @@ class PaymentMethodController extends Controller
  *     tags={"Payments"},
  *     summary="Toggle payment method status",
  *     description="Enable or disable a payment method by ID.",
- *     security={{"bearerAuth":{}}},
+ *     security={{"bearerAuth": {}}},
  *     @OA\Parameter(
  *         name="id",
  *         in="path",

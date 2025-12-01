@@ -120,7 +120,7 @@ class InventoryController extends Controller
      *     summary="Show product stock ledger",
      *     description="Returns the full inventory ledger for a specific product, including store and product details.",
      *     tags={"Inventory"},
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -206,7 +206,7 @@ class InventoryController extends Controller
      *     summary="Adjust stock quantity for a product",
      *     description="Allows the authenticated seller to adjust the stock quantity for their product.",
      *     tags={"Inventory"},
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -327,7 +327,7 @@ class InventoryController extends Controller
      *     summary="Get current stock balance of a product",
      *     description="Returns only the latest balance for a specific product.",
      *     tags={"Inventory"},
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -391,7 +391,7 @@ class InventoryController extends Controller
      *     summary="Add stock to a product",
      *     description="Increase the stock quantity of a product. Only the store owner (seller) can perform this action.",
      *     tags={"Inventory"},
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -510,7 +510,7 @@ class InventoryController extends Controller
      *     summary="Deduct stock from a product",
      *     description="Decrease the stock quantity of a product (e.g., for expired or damaged items). Only the store owner (seller) can perform this action.",
      *     tags={"Inventory"},
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",

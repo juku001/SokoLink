@@ -45,7 +45,7 @@ class CustomerManagementController extends Controller
      *             )
      *         )
      *     ),
-     *     security={{"sanctum": {}}}
+     *     security={{"bearerAuth": {}}}
      * )
      */
     public function index(Request $request)
@@ -138,7 +138,7 @@ class CustomerManagementController extends Controller
      *             @OA\Property(property="code", type="integer", example=404),
      *         )
      *     ),
-     *     security={{"sanctum": {}}}
+     *     security={{"bearerAuth": {}}}
      * )
      */
 

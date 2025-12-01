@@ -78,7 +78,7 @@ class AdminPaymentController extends Controller
      *             )
      *         )
      *     ),
-     *     security={{"sanctum": {}}}
+     *     security={{"bearerAuth": {}}}
      * )
      */
 
@@ -191,7 +191,7 @@ class AdminPaymentController extends Controller
      *             @OA\Property(property="message", type="string", example="Payment not found."),
      *             )
      *     ),
-     *     security={{"sanctum": {}}}
+     *     security={{"bearerAuth": {}}}
      * )
      */
 

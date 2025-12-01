@@ -25,7 +25,7 @@ class SellerOverviewController extends Controller
      *     summary="These are statistics on the first overview page on the seller dashboard.",
      *     description="Returns key performance metrics for the authenticated seller (sales, expenses, products, customers) including month-over-month percentage changes.",
      *     operationId="getDashboardOverviewStats",
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *
      *     @OA\Response(
      *         response=200,

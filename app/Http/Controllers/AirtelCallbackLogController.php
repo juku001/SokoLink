@@ -14,7 +14,7 @@ class AirtelCallbackLogController extends Controller
      *     tags={"Admin"},
      *     summary="List and filter Airtel callback logs",
      *     description="Retrieve Airtel callback logs with optional search and filtering options.",
-     *     security={{"bearerAuth":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="reference",
      *         in="query",

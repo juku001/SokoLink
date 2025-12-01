@@ -52,7 +52,7 @@ class AdminUserManagementController extends Controller
      *             )
      *         )
      *     ),
-     *     security={{"sanctum": {}}}
+     *     security={{"bearerAuth": {}}}
      * )
      */
     public function index(Request $request)
@@ -130,7 +130,7 @@ class AdminUserManagementController extends Controller
      *             )
      *         )
      *     ),
-     *     security={{"sanctum": {}}}
+     *     security={{"bearerAuth": {}}}
      * )
      */
 
@@ -231,7 +231,7 @@ class AdminUserManagementController extends Controller
      *             
      *         )
      *     ),
-     *     security={{"sanctum": {}}}
+     *     security={{"bearerAuth": {}}}
      * )
      */
     public function show($id)
@@ -300,7 +300,7 @@ class AdminUserManagementController extends Controller
      *             )
      *         )
      *     ),
-     *     security={{"sanctum": {}}}
+     *     security={{"bearerAuth": {}}}
      * )
      */
     public function update(Request $request, $id)
@@ -393,7 +393,7 @@ class AdminUserManagementController extends Controller
      *             
      *         )
      *     ),
-     *     security={{"sanctum": {}}}
+     *     security={{"bearerAuth": {}}}
      * )
      */
     public function destroy($id)
@@ -451,7 +451,7 @@ class AdminUserManagementController extends Controller
      *             
      *         )
      *     ),
-     *     security={{"sanctum": {}}}
+     *     security={{"bearerAuth": {}}}
      * )
      */
 

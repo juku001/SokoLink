@@ -21,7 +21,7 @@ class GroupController extends Controller
      *     summary="Get all groups",
      *     description="Retrieve a list of all contact groups.",
      *     operationId="getGroups",
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *
      *     @OA\Response(
      *         response=200,
@@ -72,7 +72,7 @@ class GroupController extends Controller
      *     summary="Create a new group",
      *     description="Creates a new contact group for the authenticated user.",
      *     operationId="createGroup",
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *
      *     @OA\RequestBody(
      *         required=true,
@@ -160,7 +160,7 @@ class GroupController extends Controller
      *     summary="Get group details",
      *     description="Retrieve a contact group by its ID.",
      *     operationId="getGroupById",
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *
      *     @OA\Parameter(
      *         name="id",
@@ -236,7 +236,7 @@ class GroupController extends Controller
      *     summary="Update a group",
      *     description="Updates a contact group by ID.",
      *     operationId="updateGroup",
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *
      *     @OA\Parameter(
      *         name="id",
@@ -346,7 +346,7 @@ class GroupController extends Controller
      *     summary="Delete a group",
      *     description="Deletes a contact group by ID.",
      *     operationId="deleteGroup",
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *
      *     @OA\Parameter(
      *         name="id",

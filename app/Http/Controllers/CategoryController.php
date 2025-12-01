@@ -261,7 +261,7 @@ class CategoryController extends Controller implements HasMiddleware
      *     summary="Update a category",
      *     description="Update an existing category by its ID.",
      *     operationId="updateCategory",
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *
      *     @OA\Parameter(
      *         name="id",
@@ -424,7 +424,7 @@ class CategoryController extends Controller implements HasMiddleware
      *     summary="Delete a category",
      *     description="Delete a category by its ID.",
      *     operationId="deleteCategory",
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *
      *     @OA\Parameter(
      *         name="id",

@@ -46,7 +46,7 @@ class AdminReportController extends Controller
      *             )
      *         )
      *     ),
-     *     security={{"sanctum": {}}},
+     *     security={{"bearerAuth": {}}},
      * )
      */
 
@@ -113,7 +113,7 @@ class AdminReportController extends Controller
  *             )
  *         )
  *     ),
- *     security={{"sanctum": {}}}
+ *     security={{"bearerAuth": {}}}
  * )
  */
 

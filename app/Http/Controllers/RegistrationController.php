@@ -157,7 +157,7 @@ class RegistrationController extends Controller
      *     summary="Send email verification link",
      *     description="Sends a verification link to the authenticated user's email address.",
      *     operationId="sendEmailVerification",
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
      *         description="Verification link sent successfully",

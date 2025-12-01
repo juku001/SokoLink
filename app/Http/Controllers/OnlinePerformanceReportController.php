@@ -23,7 +23,7 @@ class OnlinePerformanceReportController extends Controller
      *     including visits, cart additions, conversion rate, and cart-abandonment percentage, plus month-over-month change for visits.",
      *     operationId="onlinePerformanceStats",
      *     tags={"Reports"},
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
      *         description="Store performance metrics for the current month",
@@ -204,7 +204,7 @@ class OnlinePerformanceReportController extends Controller
      *     description="Returns per-week counts of visits, impressions, and engagements for the authenticated seller’s store during the current month.",
      *     operationId="onlinePerformanceStoreActivity",
      *     tags={"Reports"},
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
      *         description="Weekly store activity data",
@@ -306,7 +306,7 @@ class OnlinePerformanceReportController extends Controller
      *     description="Returns month-by-month store visits, completed orders, and conversion rate percentages for the authenticated seller from the start of the current year through the current month.",
      *     operationId="reportsConversionRate",
      *     tags={"Reports"},
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
      *         description="Monthly conversion rate data",
@@ -395,7 +395,7 @@ class OnlinePerformanceReportController extends Controller
      *     description="Returns the top 10 products for the authenticated seller, ranked by combined clicks and completed purchases.",
      *     operationId="getTopPerformingProducts",
      *     tags={"Reports"},
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *
      *     @OA\Response(
      *         response=200,
@@ -503,7 +503,7 @@ class OnlinePerformanceReportController extends Controller
      *     description="Returns per-product performance for the authenticated seller, including clicks, purchases, conversion rate, and total revenue.",
      *     operationId="getProductPerformance",
      *     tags={"Reports"},
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *
      *     @OA\Response(
      *         response=200,

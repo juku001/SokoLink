@@ -59,7 +59,7 @@ class SuccessStoryController extends Controller
      * @OA\Post(
      *     path="/success-stories",
      *     tags={"Success Stories"},
-     *     security={{ "bearerAuth":{} }},
+     *     security={{"bearerAuth": {}}},
      *     summary="Create a new success story",
      *     description="Creates a new success story for a buyer. Has to be logged in.",
      *     @OA\RequestBody(
@@ -130,7 +130,7 @@ class SuccessStoryController extends Controller
      *     path="/success-stories/all",
      *     tags={"Success Stories"},
      *     summary="Get all success stories",
-     *    security={{ "bearerAuth":{} }},
+     *    security={{"bearerAuth": {}}},
      *     description="Fetches a list of all success stories including buyer, category, and store relationships. This is for the Super Admin",
      *     @OA\Response(
      *         response=200,
@@ -210,7 +210,7 @@ class SuccessStoryController extends Controller
      * @OA\Put(
      *     path="/success-stories/{id}",
      *     tags={"Success Stories"},
-     *     security={{ "bearerAuth":{} }},
+     *     security={{"bearerAuth": {}}},
      *     summary="Toggle the shown status of a success story",
      *     description="Toggles the is_shown field of a success story between true and false.This is for the Super Admin",
      *     @OA\Parameter(

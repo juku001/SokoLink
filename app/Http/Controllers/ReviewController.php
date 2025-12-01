@@ -21,7 +21,6 @@ class ReviewController extends Controller
      *     summary="Get reviews for a product",
      *     description="Retrieve all reviews for a specific product, optionally including reviewer info.",
      *     operationId="getProductReviews",
-     *     security={{"sanctum":{}}},
      *
      *     @OA\Parameter(
      *         name="id",
@@ -83,7 +82,7 @@ class ReviewController extends Controller
      *     summary="Add a review to a product",
      *     description="Submit a rating and review for a specific product. Users can only review a product once.",
      *     operationId="storeProductReview",
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *
      *     @OA\Parameter(
      *         name="id",
@@ -189,7 +188,6 @@ class ReviewController extends Controller
      *     summary="Get reviews for a store",
      *     description="Retrieve all reviews for a specific store, optionally including reviewer info.",
      *     operationId="getStoreReviews",
-     *     security={{"sanctum":{}}},
      *
      *     @OA\Parameter(
      *         name="id",
@@ -251,7 +249,7 @@ class ReviewController extends Controller
      *     summary="Add a review to a store",
      *     description="Submit a rating and review for a specific store. Users can only review a store once.",
      *     operationId="storeStoreReview",
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *
      *     @OA\Parameter(
      *         name="id",
@@ -365,7 +363,7 @@ class ReviewController extends Controller
      *     summary="Get reviews for a Academy",
      *     description="Retrieve all reviews for a specific Academy, optionally including reviewer info.",
      *     operationId="getAcademyReviews",
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *
      *     @OA\Parameter(
      *         name="id",
@@ -427,7 +425,7 @@ class ReviewController extends Controller
      *     summary="Add a review to a academy",
      *     description="Submit a rating and review for a specific academy. Users can only review a academy once.",
      *     operationId="storeAcademyReview",
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *
      *     @OA\Parameter(
      *         name="id",

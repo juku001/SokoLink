@@ -7,6 +7,7 @@ use App\Http\Controllers\LogInProviderController;
 use App\Http\Controllers\PasswordController;
 use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\UserController;
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
 
 
 Route::get('/', [AuthController::class, 'unauthorized'])->name('login');
@@ -20,10 +21,18 @@ Route::prefix('auth')->group(function () {
 
     Route::post('/register', [RegistrationController::class, 'index']); // this is for the customer to register and for super admin to register admin
 
+
+
+    Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
+        $request->fulfill();
+        return redirect('/sokolink.store');
+    })->middleware(['auth', 'signed'])->name('verification.verify');
+
+
     Route::post('/verify/email', [RegistrationController::class, 'verify'])->middleware('auth:sanctum');
 
     Route::post('/login', [LogInController::class, 'index']); //login in via mobile
-    
+
     Route::post('/verify/otp', [LogInController::class, 'verify']);//verify mobile number otp
 
 
@@ -39,7 +48,7 @@ Route::prefix('auth')->group(function () {
 
     Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('/be/seller', [AuthController::class, 'seller']);
-        Route::put('/be/seller',[AuthController::class, 'updateSeller']);
+        Route::put('/be/seller', [AuthController::class, 'updateSeller']);
 
         Route::post('/password/update', [PasswordController::class, 'update']); //update existing when logged in.
 

@@ -19,7 +19,7 @@ class LogInProviderController extends Controller
      *     tags={"Authentication"},
      *     summary="Add or enable auth provider",
      *     description="Allows a user to enable an authentication provider such as email, Google, or mobile for login.",
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
@@ -137,7 +137,7 @@ class LogInProviderController extends Controller
      *     tags={"Authentication"},
      *     summary="Remove auth provider",
      *     description="Allows a user to remove an authentication provider such as email, Google, or mobile. Ensures at least one provider remains active.",
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
@@ -227,7 +227,7 @@ class LogInProviderController extends Controller
      *     tags={"Authentication"},
      *     summary="Change auth provider status",
      *     description="Activate or deactivate an authentication provider such as email, Google, or mobile. Ensures at least one provider remains active.",
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(

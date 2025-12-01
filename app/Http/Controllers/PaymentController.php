@@ -33,7 +33,7 @@ class PaymentController extends Controller
      *     description="Retrieve a paginated list of payments with optional filters for payment method, status, and search by order reference or payment reference.",
      *     operationId="listPayments",
      *     tags={"Payments"},
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *
      *     @OA\Parameter(
      *         name="payment_method_id",
@@ -140,7 +140,7 @@ class PaymentController extends Controller
      *     description="Transfers the buyer's cart items into an order with shipping address and payment details.",
      *     operationId="checkout",
      *     tags={"Cart"},
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *
      *     @OA\RequestBody(
      *         required=true,
@@ -325,7 +325,7 @@ class PaymentController extends Controller
      *     description="Initiates a payment process for a specific order using a selected payment option.",
      *     operationId="initiatePayment",
      *     tags={"Payments"},
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *
      *     @OA\RequestBody(
      *         required=true,

@@ -22,7 +22,7 @@ class ReportController extends Controller
      *     description="Retrieve the weekly profit or loss for the authenticated seller's stores. Profit is calculated as total sales minus total expenses per week.",
      *     operationId="profitAnalysisReport",
      *     tags={"Reports"},
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
      *         description="Weekly profit/loss report",
@@ -119,7 +119,7 @@ class ReportController extends Controller
      *     description="Retrieve the total sales and total expenses of the authenticated seller's stores, grouped by week for the current month.",
      *     operationId="salesPerformanceReport",
      *     tags={"Reports"},
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
      *         description="Sales and expenses report",
@@ -238,7 +238,7 @@ class ReportController extends Controller
      *     description="Retrieve the monthly credit score, revenue, orders, refunds, and late shipments for the authenticated seller from January to the current month.",
      *     operationId="creditScoreReport",
      *     tags={"Reports"},
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
      *         description="Monthly credit score trend",
@@ -344,7 +344,7 @@ class ReportController extends Controller
      *     description="Provides a summary of current stock levels and inventory value per product category for the authenticated seller.",
      *     operationId="getInventoryReport",
      *     tags={"Reports"},
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *
      *     @OA\Response(
      *         response=200,

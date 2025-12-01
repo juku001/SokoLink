@@ -24,7 +24,7 @@ class FeedbackController extends Controller
      *     tags={"Feedbacks"},
      *     summary="Submit new feedback",
      *     description="Stores user feedback and sends an email notification to the admin.",
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
@@ -113,7 +113,7 @@ class FeedbackController extends Controller
      *     tags={"Feedbacks"},
      *     summary="List all feedbacks",
      *     description="Retrieves a paginated list of customer feedbacks, ordered by most recent.",
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="page",
      *         in="query",

@@ -153,7 +153,7 @@ class DashboardController extends Controller
      *     tags={"Seller Dashboard"},
      *     summary="Get expense statistics for the dashboard",
      *     description="Retrieve monthly totals, pending expenses, and average daily expenses for the authenticated seller",
-     *     security={{"bearerAuth":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
      *         description="Expenses dashboard stats retrieved successfully",
@@ -260,7 +260,7 @@ class DashboardController extends Controller
      *     description="Returns key buyer statistics for the admin dashboard, including totals, active buyers, and growth trends.",
      *     operationId="adminCustomerManagement",
      *     tags={"Admin Dashboard"},
-     *     security={{"sanctum":{}}},  
+     *     security={{"bearerAuth": {}}},  
      *     @OA\Response(
      *         response=200,
      *         description="Customer dashboard information",
@@ -417,7 +417,7 @@ class DashboardController extends Controller
      *     description="Provides real-time metrics on system uptime, average response time, database connections, and API request load for platform monitoring.",
      *     operationId="platformHealth",
      *     tags={"Admin Dashboard"},
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
      *         description="Platform health statistics",
@@ -550,7 +550,7 @@ class DashboardController extends Controller
      *     description="Provides monthly payment analytics such as total revenue, success rate, failed payments, and revenue growth compared to the previous month.",
      *     operationId="adminPayments",
      *     tags={"Admin Dashboard"},
-     *     security={{"sanctum":{}}},  
+     *     security={{"bearerAuth": {}}},  
      *     @OA\Response(
      *         response=200,
      *         description="Admin payment stats",
@@ -714,7 +714,7 @@ class DashboardController extends Controller
      *     description="Returns monthly merchant (store) metrics including total, active, pending, and suspended stores with growth percentages compared to the previous month.",
      *     operationId="adminMerchants",
      *     tags={"Admin Dashboard"},
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
      *         description="Merchant dashboard stats",
@@ -873,7 +873,7 @@ class DashboardController extends Controller
      *     description="Returns counts of total products, published products, low-stock products, and total inventory value for the seller’s active store.",
      *     operationId="getProductStats",
      *     tags={"Seller Dashboard"},
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *
      *     @OA\Response(
      *         response=200,

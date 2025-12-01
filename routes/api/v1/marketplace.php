@@ -34,10 +34,10 @@ Route::get('/search', [SearchController::class, 'index']);
 Route::prefix('/stores/{id}')->group(function () {
 
     Route::get('/products', [ProductController::class, 'stotores']);
+    Route::get('/reviews', [ReviewController::class, 'stores']);
     Route::middleware('auth:sanctum')->group(function () {
 
         Route::post('/reviews', [ReviewController::class, 'storeStoreReview']);
-        Route::get('/reviews', [ReviewController::class, 'stores']);
         Route::get('/follows', [StoreFollowingController::class, 'index'])->middleware('user.type:seller');
         Route::patch('/follows', [StoreFollowingController::class, 'update'])
             ->middleware('user.type:buyer');
@@ -55,17 +55,17 @@ Route::middleware(['auth:sanctum', 'user.type:seller'])->group(function () {
     Route::patch('/stores/active-store', [StoreController::class, 'updateActive']);
 
 });
-Route::get('/stores/featured',[FeaturedStoreController::class, 'index']);
-Route::put('/stores/featured',[FeaturedStoreController::class, 'update']);
+Route::get('/stores/featured', [FeaturedStoreController::class, 'index']);
+Route::put('/stores/featured', [FeaturedStoreController::class, 'update']);
 
-Route::get('/stores/all',[StoreController::class, 'all']);
+Route::get('/stores/seller', [StoreController::class, 'sellers'])->middleware(['auth:sanctum', 'user.type:seller']);
+Route::get('/stores/all', [StoreController::class, 'all']);
 Route::get('/stores/{slug}', [StoreController::class, 'storesByslug'])
     ->where('slug', '^(?!\d+$)[A-Za-z0-9-]+$');
 Route::resource('/stores', StoreController::class);
-
+Route::get('/products/{id}/reviews', [ReviewController::class, 'products']);
 Route::middleware('auth:sanctum')->group(function () {
 
-    Route::get('/products/{id}/reviews', [ReviewController::class, 'products']);
     Route::post('/products/{id}/reviews', [ReviewController::class, 'storeProductReview']);
 
     Route::middleware('user.type:seller')->group(function () {

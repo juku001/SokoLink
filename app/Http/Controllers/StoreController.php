@@ -1053,7 +1053,7 @@ class StoreController extends Controller implements HasMiddleware
     }
 
 
-        /**
+    /**
      * @OA\Get(
      *     path="/stores/{slug}",
      *     summary="Get store details By Slug",
@@ -1160,5 +1160,64 @@ class StoreController extends Controller implements HasMiddleware
             'is_online' => (bool) $store->is_online,
             'is_follow' => $isFollow,
         ], 'Store details');
+    }
+
+
+    /**
+     * @OA\Get(
+     *     path="/stores/seller",
+     *     tags={"Stores"},
+     *     summary="Get list of stores belonging to the authenticated seller",
+     *     description="Returns all stores created by the currently authenticated seller.",
+     *     security={{"bearerAuth": {}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful response",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="List of sellers stores"),
+     *             @OA\Property(property="code", type="integer", example=200),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="array",
+     *                 @OA\Items(
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="seller_id", type="integer", example=2),
+     *                     @OA\Property(property="name", type="string", example="Cluster Shop"),
+     *                     @OA\Property(property="slug", type="string", example="cluster-shop"),
+     *                     @OA\Property(property="category_id", type="integer", example=2),
+     *                     @OA\Property(property="description", type="string", example="Hello, welcome to my store, where everything is cheap..."),
+     *                     @OA\Property(property="subtitle", type="string", nullable=true, example=null),
+     *                     @OA\Property(property="thumbnail", type="string", nullable=true, example=null),
+     *                     @OA\Property(property="is_online", type="integer", example=1),
+     *                     @OA\Property(property="contact_mobile", type="string", example="+255687181497"),
+     *                     @OA\Property(property="contact_email", type="string", example="someemail@gmail.com"),
+     *                     @OA\Property(property="whatsapp", type="string", nullable=true, example=null),
+     *                     @OA\Property(property="shipping_origin", type="string", nullable=true, example=null),
+     *                     @OA\Property(property="rating_avg", type="string", example="0.00"),
+     *                     @OA\Property(property="rating_count", type="integer", example=0),
+     *                     @OA\Property(property="region_id", type="integer", example=1),
+     *                     @OA\Property(property="address", type="string", nullable=true, example=null),
+     *                     @OA\Property(property="created_at", type="string", format="date-time", example="2025-10-13T13:37:22.000000Z"),
+     *                     @OA\Property(property="updated_at", type="string", format="date-time", example="2025-10-13T13:42:15.000000Z"),
+     *                     @OA\Property(property="is_featured", type="integer", example=0)
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated"
+     *     )
+     * )
+     */
+
+    public function sellers()
+    {
+        $authId = auth()->id();
+        $stores = Store::where('seller_id', $authId)->get();
+
+
+        return ResponseHelper::success($stores, 'List of sellers stores');
     }
 }

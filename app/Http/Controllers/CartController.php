@@ -29,7 +29,7 @@ class CartController extends Controller implements HasMiddleware
      *     tags={"Cart"},
      *     summary="Get cart summary",
      *     description="Returns the authenticated buyer's cart with items, subtotal, shipping and total.",
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
      *         description="Cart summary",
@@ -104,7 +104,7 @@ class CartController extends Controller implements HasMiddleware
      *     path="/carts",
      *     tags={"Cart"},
      *     summary="Add product to cart",
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
@@ -184,7 +184,7 @@ class CartController extends Controller implements HasMiddleware
      *     path="/carts/{itemId}",
      *     tags={"Cart"},
      *     summary="Update quantity of a cart item",
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="itemId",
      *         in="path",
@@ -263,7 +263,7 @@ class CartController extends Controller implements HasMiddleware
      *     path="/carts/{cartId}/add/{productId}/increment",
      *     tags={"Cart"},
      *     summary="Increment quantity of a product in the cart",
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\Parameter(name="cartId", in="path", required=true, @OA\Schema(type="integer")),
      *     @OA\Parameter(name="productId", in="path", required=true, @OA\Schema(type="integer")),
      *     @OA\Response(response=200, description="Product quantity incremented"),
@@ -321,7 +321,7 @@ class CartController extends Controller implements HasMiddleware
      *     path="/carts/{cartId}/remove/{productId}/decrement",
      *     tags={"Cart"},
      *     summary="Decrement quantity or remove product from cart",
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\Parameter(name="cartId", in="path", required=true, @OA\Schema(type="integer")),
      *     @OA\Parameter(name="productId", in="path", required=true, @OA\Schema(type="integer")),
      *     @OA\Response(response=200, description="Product quantity decremented or removed"),

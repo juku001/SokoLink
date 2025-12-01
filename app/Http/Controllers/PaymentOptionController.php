@@ -28,7 +28,7 @@ class PaymentOptionController extends Controller implements HasMiddleware
      *     tags={"Payments"},
      *     summary="List all payment options",
      *     description="Retrieve a list of available payment options.",
-     *     security={{"bearerAuth":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
      *         description="List of payment options retrieved successfully",
@@ -76,7 +76,7 @@ class PaymentOptionController extends Controller implements HasMiddleware
      *     tags={"Payments"},
      *     summary="Create a new payment option",
      *     description="Add a new payment option to the system.",
-     *     security={{"bearerAuth":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
@@ -151,7 +151,7 @@ class PaymentOptionController extends Controller implements HasMiddleware
      *     tags={"Payments"},
      *     summary="Get payment option details",
      *     description="Retrieve details of a specific payment option by ID.",
-     *     security={{"bearerAuth":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -217,7 +217,7 @@ class PaymentOptionController extends Controller implements HasMiddleware
      *     tags={"Payments"},
      *     summary="Update a payment option",
      *     description="Update details of an existing payment option by ID.",
-     *     security={{"bearerAuth":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -315,7 +315,7 @@ class PaymentOptionController extends Controller implements HasMiddleware
      *     tags={"Payments"},
      *     summary="Delete a payment option",
      *     description="Remove a payment option by its ID.",
-     *     security={{"bearerAuth":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",

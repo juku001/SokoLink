@@ -21,6 +21,7 @@ class AcademyLessonController extends Controller
      *     summary="Add a lesson to an academy",
      *     description="Create a new lesson under a specific academy",
      *     operationId="addAcademyLesson",
+     *     security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -126,6 +127,7 @@ class AcademyLessonController extends Controller
      *     summary="Get a single lesson by ID",
      *     description="Retrieve details of a specific lesson in the academy",
      *     operationId="getAcademyLesson",
+     *     security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -180,6 +182,7 @@ class AcademyLessonController extends Controller
      *     summary="Update a lesson by ID",
      *     description="Update details of an existing lesson in the academy",
      *     operationId="updateAcademyLesson",
+     *     security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -271,6 +274,7 @@ class AcademyLessonController extends Controller
      *     summary="Delete a lesson by ID",
      *     description="Deletes a lesson from the academy",
      *     operationId="deleteAcademyLesson",
+     *     security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",

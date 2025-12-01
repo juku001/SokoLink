@@ -17,7 +17,7 @@ class ExpenseController extends Controller
      *     tags={"Expenses"},
      *     summary="Get a list of seller expenses",
      *     description="Retrieve expenses for the authenticated seller with optional filters: date range, expense type, and supplier search",
-     *     security={{"bearerAuth":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="from_date",
      *         in="query",
@@ -116,7 +116,7 @@ class ExpenseController extends Controller
      *     tags={"Expenses"},
      *     summary="Record a new expense",
      *     description="Create a new expense for the authenticated seller",
-     *     security={{"bearerAuth":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
@@ -216,7 +216,7 @@ class ExpenseController extends Controller
      *     tags={"Expenses"},
      *     summary="Update an existing expense",
      *     description="Update the details of an expense for the authenticated seller",
-     *     security={{"bearerAuth":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",

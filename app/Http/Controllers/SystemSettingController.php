@@ -47,7 +47,7 @@ class SystemSettingController extends Controller
      *             )
      *         )
      *     ),
-     *     security={{"sanctum": {}}}
+     *     security={{"bearerAuth": {}}}
      * )
      */
 
@@ -101,7 +101,7 @@ class SystemSettingController extends Controller
      *             @OA\Property(property="data", type="object")
      *         )
      *     ),
-     *     security={{"sanctum": {}}}
+     *     security={{"bearerAuth": {}}}
      * )
      */
 

@@ -199,7 +199,7 @@ class ProductController extends Controller implements HasMiddleware
      *     summary="Create a new product",
      *     description="Create a new product in a store owned by the authenticated seller.",
      *     operationId="createProduct",
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *
      *     @OA\RequestBody(
      *         required=true,
@@ -425,7 +425,7 @@ class ProductController extends Controller implements HasMiddleware
      *     summary="Update a product",
      *     description="Update a product by ID. Only the seller who owns the store can update the product. Categories and images can also be updated.",
      *     operationId="updateProduct",
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *
      *     @OA\Parameter(
      *         name="id",
@@ -577,7 +577,7 @@ class ProductController extends Controller implements HasMiddleware
      *     summary="Delete a product",
      *     description="Delete a product by ID. Only the seller who owns the store can delete the product. Soft delete is applied.",
      *     operationId="deleteProduct",
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *
      *     @OA\Parameter(
      *         name="id",
@@ -699,7 +699,7 @@ class ProductController extends Controller implements HasMiddleware
      *     summary="Toggle product online status",
      *     description="Toggle the `is_online` status of a product. Only the authenticated seller who owns the product can perform this action.",
      *     operationId="toggleProductStatus",
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *
      *     @OA\Parameter(
      *         name="id",
@@ -765,7 +765,7 @@ class ProductController extends Controller implements HasMiddleware
      *     summary="Bulk upload products",
      *     description="Upload multiple products using a CSV or XLSX file. The file must contain valid product data according to the import rules.",
      *     operationId="bulkUploadProducts",
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *
      *     @OA\RequestBody(
      *         required=true,
@@ -830,7 +830,7 @@ class ProductController extends Controller implements HasMiddleware
      *     summary="List products of a store",
      *     description="Retrieve all products for a given store. Optional filters for name and category are available.",
      *     operationId="listStoreProducts",
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *
      *     @OA\Parameter(
      *         name="id",
@@ -981,7 +981,7 @@ class ProductController extends Controller implements HasMiddleware
      *     summary="Toggle product online status",
      *     description="Allows the authenticated **seller** who owns the product to toggle its online/offline status.",
      *     tags={"Products"},
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",

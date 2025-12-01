@@ -188,7 +188,7 @@ class PasswordController extends Controller
      *     tags={"Authentication"},
      *     summary="Update password for authenticated user",
      *     description="Allows an authenticated user to change their password by providing the current password and a new password.",
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(

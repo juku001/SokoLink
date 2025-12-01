@@ -21,7 +21,7 @@ class ContactController extends Controller
      *     summary="Get list of contacts",
      *     description="Retrieve paginated contacts for the authenticated user with optional filters (search, type, group_id).",
      *     operationId="getContacts",
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *
      *     @OA\Parameter(
      *         name="search",
@@ -111,7 +111,7 @@ class ContactController extends Controller
      *     summary="Get a single contact",
      *     description="Retrieve a contact belonging to the authenticated user by its ID.",
      *     operationId="getContactById",
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *
      *     @OA\Parameter(
      *         name="id",
@@ -186,7 +186,7 @@ class ContactController extends Controller
      *     summary="Create a new contact",
      *     description="Creates a new contact for the authenticated user. Optionally links the contact to a group and assigns tags.",
      *     operationId="createContact",
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *
      *     @OA\RequestBody(
      *         required=true,
@@ -298,7 +298,7 @@ class ContactController extends Controller
      *     summary="Update an existing contact",
      *     description="Updates a contact by ID for the authenticated user. Only provided fields will be updated.",
      *     operationId="updateContact",
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *
      *     @OA\Parameter(
      *         name="id",
@@ -420,7 +420,7 @@ class ContactController extends Controller
  *     summary="Delete a contact",
  *     description="Deletes a contact by ID for the authenticated user.",
  *     operationId="deleteContact",
- *     security={{"sanctum":{}}},
+ *     security={{"bearerAuth": {}}},
  *
  *     @OA\Parameter(
  *         name="id",

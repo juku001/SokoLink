@@ -16,7 +16,7 @@ class EscrowController extends Controller
      *     summary="Get escrow balance for a specific store",
      *     description="Returns the escrow balance of a store owned by the authenticated seller.",
      *     tags={"Payouts"},
-     *     security={{"bearerAuth":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -89,7 +89,7 @@ class EscrowController extends Controller
      *     summary="Get total escrow balance for authenticated merchant",
      *     description="Sums all escrow balances across the merchant's stores.",
      *     tags={"Payouts"},
-     *     security={{"bearerAuth":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
      *         description="Total merchant balance retrieved",
@@ -128,7 +128,7 @@ class EscrowController extends Controller
      *     summary="List all escrows for authenticated seller",
      *     description="Returns every escrow record where the current user is the seller.",
      *     tags={"Payouts"},
-     *     security={{"bearerAuth":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
      *         description="List of escrows",

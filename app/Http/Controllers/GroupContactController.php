@@ -21,7 +21,7 @@ class GroupContactController extends Controller
      *     summary="Assign a contact to a group",
      *     description="Assigns a contact to a group for the authenticated user.",
      *     operationId="assignContactToGroup",
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *
      *     @OA\RequestBody(
      *         required=true,
@@ -143,7 +143,7 @@ class GroupContactController extends Controller
      *     summary="Remove a contact from a group",
      *     description="Removes the relationship between a contact and a group for the authenticated user.",
      *     operationId="removeContactFromGroup",
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *
      *     @OA\RequestBody(
      *         required=true,

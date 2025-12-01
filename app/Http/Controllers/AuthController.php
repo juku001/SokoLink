@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\ResponseHelper;
+use App\Models\PaymentMethod;
 use App\Models\Seller;
 use App\Models\User;
 use App\Services\AdminLogService;
@@ -365,6 +366,28 @@ class AuthController extends Controller
         }
 
         try {
+
+            $payoutMethodId = $request->payout_method;
+            $payoutMethod = PaymentMethod::find($payoutMethodId);
+
+
+            $type = $payoutMethod->type;
+            if ($type == 'mno') {
+
+                $validator = Validator::make($request->all(), [
+                    'payout_account' => 'regex:/^\+255\d{9}$/'
+                ], [
+                    'payout_account.regex' => $payoutMethod->display . ' number should start with +255'
+                ]);
+                if ($validator->fails()) {
+                    return ResponseHelper::error(
+                        $validator->errors(),
+                        'Failed to validate fields',
+                        422
+                    );
+                }
+            }
+
             $authId = auth()->id();
             $user = User::findOrFail($authId);
 
@@ -378,7 +401,7 @@ class AuthController extends Controller
                 ['user_id' => $authId],
                 [
                     'payout_account' => $request->payout_account,
-                    'payout_method' => $request->payout_method
+                    'payout_method' => $payoutMethodId
                 ]
             );
 
@@ -404,7 +427,7 @@ class AuthController extends Controller
      *         required=true,
      *         @OA\JsonContent(
      *             required={"payout_account","payout_method"},
-     *             @OA\Property(property="payout_account", type="string", example="mpesa-254700123456"),
+     *             @OA\Property(property="payout_account", type="string", example="2557500123456"),
      *             @OA\Property(property="payout_method", type="integer", example=2)
      *         )
      *     ),
@@ -453,6 +476,27 @@ class AuthController extends Controller
         }
 
         try {
+            $payoutMethodId = $request->payout_method;
+            $payoutMethod = PaymentMethod::find($payoutMethodId);
+
+
+            $type = $payoutMethod->type;
+            if ($type == 'mno') {
+
+                $validator = Validator::make($request->all(), [
+                    'payout_account' => 'regex:/^\+255\d{9}$/'
+                ], [
+                    'payout_account.regex' => $payoutMethod->display . ' number should start with +255'
+                ]);
+                if ($validator->fails()) {
+                    return ResponseHelper::error(
+                        $validator->errors(),
+                        'Failed to validate fields',
+                        422
+                    );
+                }
+            }
+
             $authId = auth()->id();
             $seller = Seller::where('user_id', $authId)->first();
 

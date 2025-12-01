@@ -23,7 +23,7 @@ class DeliveryController extends Controller
     //  *     description="Retrieve all shipments associated with the authenticated seller along with related order information.",
     //  *     operationId="listShipments",
     //  *     tags={"Orders"},
-    //  *     security={{"sanctum":{}}},
+    //  *     security={{"bearerAuth": {}}},
     //  *
     //  *     @OA\Response(
     //  *         response=200,
@@ -81,7 +81,7 @@ class DeliveryController extends Controller
     //  *     description="Update carrier information for a shipment and change the order status to shipped. Only accessible by the seller who owns the shipment.",
     //  *     operationId="updateShipment",
     //  *     tags={"Orders"},
-    //  *     security={{"sanctum":{}}},
+    //  *     security={{"bearerAuth": {}}},
     //  *     @OA\Parameter(
     //  *         name="id",
     //  *         in="path",
@@ -202,7 +202,7 @@ class DeliveryController extends Controller
      *                  If all products for the same seller are delivered, the seller's escrow is released. 
      *                  If all products in the order are delivered, the order status is updated to 'delivered'.",
      *     tags={"Orders"},
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *
      *     @OA\Parameter(
      *         name="id",

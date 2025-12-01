@@ -34,7 +34,7 @@ class AcademyController extends Controller implements HasMiddleware
      *     summary="List all academies with lessons",
      *     description="Retrieve all academies along with their associated lessons.",
      *     operationId="listAcademies",
-     *     security={{ "bearerAuth":{} }},
+     *     security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
      *         description="List of academies retrieved successfully",
@@ -93,6 +93,7 @@ class AcademyController extends Controller implements HasMiddleware
      *     summary="Create a new academy",
      *     description="Allows creation of a new academy with a title and subtitle.",
      *     operationId="storeAcademy",
+     *     security={{"bearerAuth": {}}},
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
@@ -185,6 +186,7 @@ class AcademyController extends Controller implements HasMiddleware
      *     summary="Get details of a specific academy",
      *     description="Retrieve details of a single academy along with its lessons.",
      *     operationId="getAcademy",
+     *     security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -257,6 +259,7 @@ class AcademyController extends Controller implements HasMiddleware
      *     summary="Update an existing academy",
      *     description="Update the title and subtitle of a specific academy.",
      *     operationId="updateAcademy",
+     *     security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -347,6 +350,7 @@ class AcademyController extends Controller implements HasMiddleware
      *     summary="Delete an academy",
      *     description="Delete a specific academy and all its associated lessons.",
      *     operationId="deleteAcademy",
+     *     security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",

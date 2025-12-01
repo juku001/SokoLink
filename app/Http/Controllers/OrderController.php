@@ -18,7 +18,7 @@ class OrderController extends Controller
      *     description="Returns all orders for the authenticated buyer along with items, product, and store details.",
      *     operationId="getOrders",
      *     tags={"Orders"},
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *
      *     @OA\Response(
      *         response=200,
@@ -90,7 +90,7 @@ class OrderController extends Controller
      *     description="Returns details of a specific order for the authenticated buyer including items, products, and store details.",
      *     operationId="getOrderById",
      *     tags={"Orders"},
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *
      *     @OA\Parameter(
      *         name="id",
@@ -186,7 +186,7 @@ class OrderController extends Controller
      *     description="Cancel a specific order for the authenticated buyer if it is not yet shipped, delivered, or already cancelled.",
      *     operationId="cancelOrder",
      *     tags={"Orders"},
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      * 
      *     @OA\Parameter(
      *         name="id",
@@ -316,7 +316,7 @@ class OrderController extends Controller
      *     description="Retrieve the status history of a specific order for the authenticated buyer.",
      *     operationId="getOrderStatusHistory",
      *     tags={"Orders"},
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      * 
      *     @OA\Parameter(
      *         name="id",

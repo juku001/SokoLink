@@ -18,7 +18,7 @@ class LocationController extends Controller
      *     summary="Get list of countries",
      *     description="Retrieve a complete list of countries available in the system.",
      *     operationId="getCountries",
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
      *         description="List of countries retrieved successfully",

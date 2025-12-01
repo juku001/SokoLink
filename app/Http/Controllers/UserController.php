@@ -19,7 +19,7 @@ class UserController extends Controller
      *     tags={"Users"},
      *     summary="List all users",
      *     description="Retrieve a list of all users excluding super admins.",
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
      *         description="Users retrieved successfully",
@@ -60,7 +60,7 @@ class UserController extends Controller
      *     tags={"Users"},
      *     summary="Get authenticated user details",
      *     description="Returns the details of the currently authenticated user based on their API token.",
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
      *         description="User details retrieved successfully",
@@ -106,7 +106,7 @@ class UserController extends Controller
      *     tags={"Users"},
      *     summary="Update user status",
      *     description="This is for the Admin to change the status of a specific user (active, inactive, suspended).",
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -179,7 +179,7 @@ class UserController extends Controller
      *     description="Updates the name, email, phone, and/or profile picture of the logged-in user.",
      *     operationId="profileUpdate",
      *     tags={"Users"},
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\MediaType(
@@ -267,7 +267,7 @@ class UserController extends Controller
      *     description="Allows an administrator to update any user's name, email, phone, or profile picture.",
      *     operationId="profileUpdateByAdmin",
      *     tags={"Admin"},
-     *     security={{"sanctum":{}}},   
+     *     security={{"bearerAuth": {}}},   
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
