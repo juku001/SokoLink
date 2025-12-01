@@ -304,7 +304,11 @@ class SellerOverviewController extends Controller
     public function recentSales()
     {
         $auth = auth()->user()->id;
-        $sales = Sale::with('products')->where('seller_id', $auth)->get()->limit(5);
+        $sales = Sale::with('products')
+            ->where('seller_id', $auth)
+            ->latest()
+            ->limit(5)
+            ->get();
         $salesData = [];
 
 
