@@ -137,17 +137,27 @@ class SellerOverviewController extends Controller
             ->whereBetween('created_at', [$startOfLastMonth, $endOfLastMonth])
             ->count();
 
-        $customersThis = Order::whereIn('store_id', $storeIds)
-            ->whereBetween('created_at', [$startOfThisMonth, $endOfThisMonth])
+            $customersThis = Order::query()
+            ->when(!empty($storeIds), function ($q) use ($storeIds) {
+                $q->whereIn('store_id', $storeIds);
+            })
+            ->when($startOfThisMonth && $endOfThisMonth, function ($q) use ($startOfThisMonth, $endOfThisMonth) {
+                $q->whereBetween('created_at', [$startOfThisMonth, $endOfThisMonth]);
+            })
             ->distinct('buyer_id')
             ->count('buyer_id');
 
-        $customersLast = Order::whereIn('store_id', $storeIds)
-            ->whereBetween('created_at', [$startOfLastMonth, $endOfLastMonth])
+        $customersLast = Order::query()
+            ->when(!empty($storeIds), function ($q) use ($storeIds) {
+                $q->whereIn('store_id', $storeIds);
+            })
+            ->when($startOfLastMonth && $endOfLastMonth, function ($q) use ($startOfLastMonth, $endOfLastMonth) {
+                $q->whereBetween('created_at', [$startOfLastMonth, $endOfLastMonth]);
+            })
             ->distinct('buyer_id')
             ->count('buyer_id');
 
-        // Helper to compute percent + nature
+
         $percentChange = function ($last, $current) {
             if ($last == 0) {
                 return [
