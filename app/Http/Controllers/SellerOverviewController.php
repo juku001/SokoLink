@@ -137,25 +137,26 @@ class SellerOverviewController extends Controller
             ->whereBetween('created_at', [$startOfLastMonth, $endOfLastMonth])
             ->count();
 
-            $customersThis = Order::query()
-            ->when(!empty($storeIds), function ($q) use ($storeIds) {
-                $q->whereIn('store_id', $storeIds);
-            })
-            ->when($startOfThisMonth && $endOfThisMonth, function ($q) use ($startOfThisMonth, $endOfThisMonth) {
-                $q->whereBetween('created_at', [$startOfThisMonth, $endOfThisMonth]);
-            })
-            ->distinct('buyer_id')
-            ->count('buyer_id');
+        $customersThis = Sale::query()
+            ->when(!empty($storeIds), fn($q) => $q->whereIn('store_id', $storeIds))
+            ->when(
+                $startOfThisMonth && $endOfThisMonth,
+                fn($q) =>
+                $q->whereBetween('sales_date', [$startOfThisMonth, $endOfThisMonth])
+            )
+            ->distinct('buyer_name')
+            ->count('buyer_name');
 
-        $customersLast = Order::query()
-            ->when(!empty($storeIds), function ($q) use ($storeIds) {
-                $q->whereIn('store_id', $storeIds);
-            })
-            ->when($startOfLastMonth && $endOfLastMonth, function ($q) use ($startOfLastMonth, $endOfLastMonth) {
-                $q->whereBetween('created_at', [$startOfLastMonth, $endOfLastMonth]);
-            })
-            ->distinct('buyer_id')
-            ->count('buyer_id');
+        $customersLast = Sale::query()
+            ->when(!empty($storeIds), fn($q) => $q->whereIn('store_id', $storeIds))
+            ->when(
+                $startOfLastMonth && $endOfLastMonth,
+                fn($q) =>
+                $q->whereBetween('sales_date', [$startOfLastMonth, $endOfLastMonth])
+            )
+            ->distinct('buyer_name')
+            ->count('buyer_name');
+
 
 
         $percentChange = function ($last, $current) {
