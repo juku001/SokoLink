@@ -315,7 +315,7 @@ class SellerOverviewController extends Controller
     public function recentSales()
     {
         $auth = auth()->user()->id;
-        $sales = Sale::with('products')
+        $sales = Sale::with('saleProducts')
             ->where('seller_id', $auth)
             ->latest()
             ->limit(5)
@@ -329,7 +329,7 @@ class SellerOverviewController extends Controller
                 'name' => $sale->buyer_name,
                 'amount' => $sale->amount,
                 'status' => $sale->status,
-                'products' => $sale->products
+                'products' => $sale->saleProducts
             ];
         });
 
