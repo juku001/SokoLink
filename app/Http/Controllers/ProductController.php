@@ -267,7 +267,6 @@ class ProductController extends Controller implements HasMiddleware
             'images' => 'nullable|array',
             'images.*.path' => 'required|string',
             'images.*.is_cover' => 'boolean',
-            'images.*.position' => 'integer',
         ]);
 
         if ($validator->fails()) {
@@ -301,16 +300,16 @@ class ProductController extends Controller implements HasMiddleware
             // }
 
             if (!empty($data['images'])) {
-                foreach ($data['images'] as $image) {
+                foreach ($data['images'] as $index => $image) {
                     ProductImage::create([
                         'product_id' => $product->id,
                         'path' => $image['path'],
-                        'is_cover' => $image['is_cover'] ?? false,
-                        'position' => $image['position'] ?? 0,
+                        'is_cover' => $image['is_cover'] ?? ($index == 0),
+                        'position' => $index + 1,
                     ]);
                 }
             }
-
+            
             $latestLedger = InventoryLedger::where('store_id', $request->store_id)
                 ->where('product_id', $product->id)
                 ->latest('id')
