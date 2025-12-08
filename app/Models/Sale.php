@@ -45,6 +45,10 @@ class Sale extends Model
         return $this->belongsTo(User::class, 'seller_id');
     }
 
+    public function products()
+    {
+        return $this->hasMany(SaleProduct::class);
+    }
 
     public function saleProducts()
     {
