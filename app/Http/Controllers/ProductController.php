@@ -558,7 +558,7 @@ class ProductController extends Controller implements HasMiddleware
             }
 
             DB::commit();
-            return ResponseHelper::success($product->fresh()->load(['categories', 'images']), 'Product updated successfully');
+            return ResponseHelper::success($product->fresh()->load(['category', 'images']), 'Product updated successfully');
 
         } catch (Exception $e) {
             DB::rollBack();
@@ -890,7 +890,7 @@ class ProductController extends Controller implements HasMiddleware
         }
 
         // Start query for products of this store
-        $query = Product::with(['store', 'reviews', 'categories', 'images'])->where('store_id', $store->id)->where('is_online', true);
+        $query = Product::with(['store', 'reviews', 'category', 'images'])->where('store_id', $store->id)->where('is_online', true);
 
         // Filter by product name
         if ($request->has('name')) {
@@ -900,12 +900,12 @@ class ProductController extends Controller implements HasMiddleware
         // Filter by category
         if ($request->has('category_id')) {
             $categoryId = $request->category_id;
-            $query->whereHas('categories', function ($q) use ($categoryId) {
+            $query->whereHas('category', function ($q) use ($categoryId) {
                 $q->where('category_id', $categoryId);
             });
         }
 
-        $products = $query->with(['categories', 'images'])->get();
+        $products = $query->with(['category', 'images'])->get();
 
         return ResponseHelper::success($products, "Products for store");
     }
@@ -963,7 +963,7 @@ class ProductController extends Controller implements HasMiddleware
     public function detailed($id)
     {
         $product = Product::
-            with(['store', 'reviews', 'categories', 'images'])->
+            with(['store', 'reviews', 'category', 'images'])->
             find($id);
         if (!$product) {
             return ResponseHelper::error([], 'Product not found', 404);
