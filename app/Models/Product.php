@@ -21,6 +21,20 @@ class Product extends Model
         'low_stock_threshold',
     ];
 
+    protected static function booted()
+    {
+        static::deleting(function ($product) {
+
+            $product->images->each(function ($image) {
+                if ($image->path && \Storage::disk('public')->exists($image->path)) {
+                    \Storage::disk('public')->delete($image->path);
+                }
+                $image->delete();
+            });
+            $product->reviews()->delete();
+            $product->sales()->delete();
+        });
+    }
 
     protected $appends = ['stock_status'];
 

@@ -77,7 +77,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::post('/products/{id}/add', [InventoryController::class, 'add']);
         Route::delete('/products/{id}/deduct', [InventoryController::class, 'deduct']);
-
+        Route::patch('/products/{id}/online', [ProductController::class, 'status']);
         Route::patch('/products/{id}/online-status', [ProductController::class, 'online']);
         Route::post('/products/excel', [ProductController::class, 'bulk']);
 
