@@ -399,18 +399,30 @@ class ReportController extends Controller
     {
         $sellerId = auth()->id();
 
+        // $rows = DB::table('products')
+        //     ->join('stores', 'products.store_id', '=', 'stores.id')
+        //     ->join('product_categories', 'products.id', '=', 'product_categories.product_id')
+        //     ->join('categories', 'product_categories.category_id', '=', 'categories.id')
+        //     ->where('stores.seller_id', $sellerId)
+        //     ->groupBy('categories.name')
+        //     ->select(
+        //         'categories.name as category',
+        //         DB::raw('SUM(products.quantity) as stock_level'),
+        //         DB::raw('SUM(products.quantity * products.price) as inventory_value')
+        //     )
+        //     ->get();
         $rows = DB::table('products')
             ->join('stores', 'products.store_id', '=', 'stores.id')
-            ->join('product_categories', 'products.id', '=', 'product_categories.product_id')
-            ->join('categories', 'product_categories.category_id', '=', 'categories.id')
+            ->join('categories', 'products.category_id', '=', 'categories.id')
             ->where('stores.seller_id', $sellerId)
-            ->groupBy('categories.name')
+            ->groupBy('categories.id', 'categories.name')
             ->select(
                 'categories.name as category',
                 DB::raw('SUM(products.quantity) as stock_level'),
                 DB::raw('SUM(products.quantity * products.price) as inventory_value')
             )
             ->get();
+
 
         $stockLevels = [];
         $inventoryValues = [];
