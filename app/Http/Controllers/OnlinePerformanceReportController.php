@@ -504,54 +504,54 @@ class OnlinePerformanceReportController extends Controller
      */
     public function topPerformance()
     {
-        $sellerId = auth()->id();
+        $authId = auth()->id();
+        $seller = Seller::with('store')->where('user_id', $authId)->first();
 
+        if (!$seller) {
+            return ResponseHelper::error([], 'Seller account not found.', 404);
+        }
+
+        $activeStore = $seller->store;
+        if (!$activeStore) {
+            return ResponseHelper::error([], 'Active store not found.', 404);
+        }
+
+        $storeId = $activeStore->id;
+
+        // ---- Clicks per product ----------------------------------------
         $clicks = DB::table('product_clicks')
             ->select('product_id', DB::raw('COUNT(*) as total_clicks'))
-            ->whereIn('product_id', function ($q) use ($sellerId) {
-                $q->select('id')
-                    ->from('products')
-                    ->where('store_id', function ($sub) use ($sellerId) {
-                        $sub->select('id')->from('stores')->where('seller_id', $sellerId);
-                    });
-            })
+            ->join('products', 'product_clicks.product_id', '=', 'products.id')
+            ->where('products.store_id', $storeId)
             ->groupBy('product_id');
 
         // ---- Purchases per product ----------------------------------------
-        // Assuming `order_items` with: product_id, quantity and
-        // related `orders` table to filter by seller_id & completed status.
         $purchases = DB::table('order_items')
             ->join('orders', 'order_items.order_id', '=', 'orders.id')
+            ->join('products', 'order_items.product_id', '=', 'products.id')
             ->select('order_items.product_id', DB::raw('SUM(order_items.quantity) as total_purchases'))
+            ->where('products.store_id', $storeId)
             ->where('orders.status', 'completed')
-            ->whereIn('order_items.product_id', function ($q) use ($sellerId) {
-                $q->select('id')
-                    ->from('products')
-                    ->where('store_id', function ($sub) use ($sellerId) {
-                        $sub->select('id')->from('stores')->where('seller_id', $sellerId);
-                    });
-            })
             ->groupBy('order_items.product_id');
 
-        // ---- Combine clicks and purchases ---------------------------------
+        // ---- Final Merge ----------------------------------------
         $results = DB::table('products')
             ->leftJoinSub($clicks, 'c', 'products.id', '=', 'c.product_id')
             ->leftJoinSub($purchases, 'p', 'products.id', '=', 'p.product_id')
-            ->whereIn('products.store_id', function ($q) use ($sellerId) {
-                $q->select('id')->from('stores')->where('seller_id', $sellerId);
-            })
+            ->where('products.store_id', $storeId)
             ->select(
                 'products.id',
                 'products.name',
                 DB::raw('COALESCE(c.total_clicks, 0) as clicks'),
                 DB::raw('COALESCE(p.total_purchases, 0) as purchases')
             )
-            ->orderByDesc(DB::raw('COALESCE(p.total_purchases, 0) + COALESCE(c.total_clicks, 0)'))
-            ->limit(10)   // top 10 products
+            ->orderByDesc(DB::raw('COALESCE(c.total_clicks, 0) + COALESCE(p.total_purchases, 0)'))
+            ->limit(10)
             ->get();
 
         return ResponseHelper::success($results, 'Top performing products (clicks & purchases)');
     }
+
 
 
 
