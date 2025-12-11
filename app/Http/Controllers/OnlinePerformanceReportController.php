@@ -606,23 +606,35 @@ class OnlinePerformanceReportController extends Controller
 
     public function product()
     {
-        $sellerId = auth()->id();
+        $authId = auth()->id();
 
-        // 1) Total clicks per product
+        $seller = Seller::with('store')
+            ->where('user_id', $authId)
+            ->first();
+
+        if (!$seller) {
+            return ResponseHelper::error([], 'Seller account not found.', 404);
+        }
+
+        $activeStore = $seller->store;
+
+        if (!$activeStore) {
+            return ResponseHelper::error([], 'Active store not found.', 404);
+        }
+
+        $storeId = $activeStore->id;
+
+        // ---- 1) Total clicks per product -----------------------------------
         $clicks = DB::table('product_clicks')
             ->select('product_id', DB::raw('COUNT(*) as total_clicks'))
-            ->whereIn('product_id', function ($q) use ($sellerId) {
+            ->whereIn('product_id', function ($q) use ($storeId) {
                 $q->select('id')
                     ->from('products')
-                    ->where('store_id', function ($sub) use ($sellerId) {
-                        $sub->select('id')
-                            ->from('stores')
-                            ->where('seller_id', $sellerId);
-                    });
+                    ->where('store_id', $storeId);
             })
             ->groupBy('product_id');
 
-        // 2) Purchases + revenue per product
+        // ---- 2) Purchases + revenue ----------------------------------------
         $purchases = DB::table('order_items')
             ->join('orders', 'order_items.order_id', '=', 'orders.id')
             ->select(
@@ -631,24 +643,18 @@ class OnlinePerformanceReportController extends Controller
                 DB::raw('SUM(order_items.quantity * order_items.price) as total_revenue')
             )
             ->where('orders.status', 'completed')
-            ->whereIn('order_items.product_id', function ($q) use ($sellerId) {
+            ->whereIn('order_items.product_id', function ($q) use ($storeId) {
                 $q->select('id')
                     ->from('products')
-                    ->where('store_id', function ($sub) use ($sellerId) {
-                        $sub->select('id')
-                            ->from('stores')
-                            ->where('seller_id', $sellerId);
-                    });
+                    ->where('store_id', $storeId);
             })
             ->groupBy('order_items.product_id');
 
-        // 3) Combine and calculate conversion
+        // ---- 3) Combine -----------------------------------------------------
         $results = DB::table('products')
             ->leftJoinSub($clicks, 'c', 'products.id', '=', 'c.product_id')
             ->leftJoinSub($purchases, 'p', 'products.id', '=', 'p.product_id')
-            ->whereIn('products.store_id', function ($q) use ($sellerId) {
-                $q->select('id')->from('stores')->where('seller_id', $sellerId);
-            })
+            ->where('products.store_id', $storeId) // ACTIVE STORE ONLY
             ->select(
                 'products.id',
                 'products.name',
@@ -661,10 +667,12 @@ class OnlinePerformanceReportController extends Controller
             ) as conversion_rate'),
                 DB::raw('COALESCE(p.total_revenue, 0) as revenue')
             )
-            ->orderByDesc('p.total_revenue')
+            ->orderByDesc('revenue')
             ->get();
 
         return ResponseHelper::success($results, 'Product performance stats');
     }
+
+
 
 }
