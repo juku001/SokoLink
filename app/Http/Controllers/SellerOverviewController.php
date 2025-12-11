@@ -8,6 +8,7 @@ use App\Models\InventoryLedger;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\Sale;
+use App\Models\SaleProduct;
 use App\Models\Seller;
 use App\Models\Store;
 use Carbon\Carbon;
@@ -239,13 +240,14 @@ class SellerOverviewController extends Controller
 
     public function topCategories()
     {
-        $categories = \DB::table('sales_products')
-            ->join('products', 'sales_products.product_id', '=', 'products.id')
+
+        $categories = \DB::table('sale_products')
+            ->join('products', 'sale_products.product_id', '=', 'products.id')
             ->join('categories', 'products.category_id', '=', 'categories.id')
             ->select(
                 'categories.id',
                 'categories.name',
-                \DB::raw('SUM(sales_products.quantity * sales_products.price) as total_amount')
+                \DB::raw('SUM(sale_products.quantity * sale_products.price) as total_amount')
             )
             ->whereNotNull('products.category_id')
             ->groupBy('categories.id', 'categories.name')

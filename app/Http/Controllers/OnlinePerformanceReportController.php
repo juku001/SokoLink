@@ -6,6 +6,7 @@ use App\Helpers\ResponseHelper;
 use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\Order;
+use App\Models\Seller;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
@@ -262,20 +263,45 @@ class OnlinePerformanceReportController extends Controller
 
     public function activity()
     {
-        $sellerId = auth()->id();
+        $authId = auth()->user()->id;
+        $seller = Seller::with('store')->where('user_id', $authId)->first();
+
+        if (!$seller) {
+            return ResponseHelper::error([], 'Seller account not found.', 404);
+        }
+
+        $activeStore = $seller->store;
+        if (!$activeStore) {
+            return ResponseHelper::error([], 'Active store not found.', 404);
+        }
+
+        $storeId = $activeStore->id;
+
         $startOfMonth = Carbon::now()->startOfMonth();
         $endOfMonth = Carbon::now()->endOfMonth();
 
-        $countBetween = function (string $table, $start, $end) use ($sellerId) {
-            return DB::table($table)
-                ->where('seller_id', $sellerId)
+        // Count store visits for THIS store only
+        $countVisits = function ($start, $end) use ($storeId) {
+            return DB::table('store_visits')
+                ->where('store_id', $storeId)
                 ->whereBetween('created_at', [$start, $end])
+                ->count();
+        };
+
+        // Count cart adds → cart_items → products → THIS store only
+        $countCartAdds = function ($start, $end) use ($storeId) {
+            return DB::table('cart_items')
+                ->join('products', 'cart_items.product_id', '=', 'products.id')
+                ->where('products.store_id', $storeId)
+                ->whereBetween('cart_items.created_at', [$start, $end])
                 ->count();
         };
 
         $weeks = [];
         $cursor = $startOfMonth->copy();
+
         for ($i = 1; $i <= 4; $i++) {
+
             $weekStart = $cursor->copy();
             $weekEnd = $cursor->copy()->addWeek()->subSecond();
 
@@ -283,10 +309,13 @@ class OnlinePerformanceReportController extends Controller
                 $weekEnd = $endOfMonth->copy();
             }
 
+            $visits = $countVisits($weekStart, $weekEnd);
+            $cartAdds = $countCartAdds($weekStart, $weekEnd);
+
             $weeks["week_{$i}"] = [
-                'visits' => $countBetween('store_visits', $weekStart, $weekEnd),
-                'impressions' => $countBetween('store_impressions', $weekStart, $weekEnd),
-                'engagements' => $countBetween('store_engagements', $weekStart, $weekEnd),
+                'visits' => $visits,
+                'cart_adds' => $cartAdds,
+                'engagements' => $visits + $cartAdds,
             ];
 
             $cursor = $weekEnd->addSecond();
@@ -296,6 +325,9 @@ class OnlinePerformanceReportController extends Controller
 
         return ResponseHelper::success($weeks, 'Store activity for the current month by week');
     }
+
+
+
 
 
 
@@ -342,10 +374,23 @@ class OnlinePerformanceReportController extends Controller
      * )
      */
 
-
     public function conversion()
     {
-        $sellerId = auth()->id();
+        $authId = auth()->id();
+        $seller = Seller::with('store')->where('user_id', $authId)->first();
+
+        if (!$seller) {
+            return ResponseHelper::error([], 'Seller account not found.', 404);
+        }
+
+        $activeStore = $seller->store;
+
+        if (!$activeStore) {
+            return ResponseHelper::error([], 'Active store not found.', 404);
+        }
+
+        $storeId = $activeStore->id;
+
         $startYear = Carbon::now()->startOfYear();
         $endMonth = Carbon::now()->endOfMonth();
 
@@ -353,26 +398,42 @@ class OnlinePerformanceReportController extends Controller
         $cursor = $startYear->copy();
 
         while ($cursor->lte($endMonth)) {
+
             $monthStart = $cursor->copy()->startOfMonth();
             $monthEnd = $cursor->copy()->endOfMonth();
 
-
+            /** --------------------------
+             * 1. Count visits for THIS store
+             * ---------------------------*/
             $visits = DB::table('store_visits')
-                ->where('seller_id', $sellerId)
+                ->where('store_id', $storeId)
                 ->whereBetween('created_at', [$monthStart, $monthEnd])
                 ->count();
 
+            /** --------------------------
+             * 2. Count completed orders for THIS store
+             *    via order_items → products → store
+             *
+             *    We must count DISTINCT orders,
+             *    not order_items count
+             * ---------------------------*/
             $orders = DB::table('orders')
-                ->where('seller_id', $sellerId)
-                ->where('status', 'completed')
-                ->whereBetween('created_at', [$monthStart, $monthEnd])
-                ->count();
+                ->join('order_items', 'orders.id', '=', 'order_items.order_id')
+                ->join('products', 'order_items.product_id', '=', 'products.id')
+                ->where('products.store_id', $storeId)
+                ->where('orders.status', 'completed')
+                ->whereBetween('orders.created_at', [$monthStart, $monthEnd])
+                ->distinct('orders.id')
+                ->count('orders.id');  // Count unique orders only
 
+            /** --------------------------
+             * 3. Conversion Rate
+             * ---------------------------*/
             $rate = $visits > 0 ? round(($orders / $visits) * 100, 2) : 0;
 
             $months[] = [
                 'month' => $monthStart->format('Y-m'),
-                'month_abbr' => $monthStart->format('M'),   // e.g. Jan
+                'month_abbr' => $monthStart->format('M'),
                 'visits' => $visits,
                 'orders' => $orders,
                 'conversion_rate' => $rate,
@@ -383,6 +444,8 @@ class OnlinePerformanceReportController extends Controller
 
         return ResponseHelper::success($months, 'Monthly conversion rate trends');
     }
+
+
 
 
 
@@ -443,8 +506,6 @@ class OnlinePerformanceReportController extends Controller
     {
         $sellerId = auth()->id();
 
-        // ---- Clicks per product -------------------------------------------
-        // Assuming you have a table `product_clicks` with: product_id, created_at
         $clicks = DB::table('product_clicks')
             ->select('product_id', DB::raw('COUNT(*) as total_clicks'))
             ->whereIn('product_id', function ($q) use ($sellerId) {

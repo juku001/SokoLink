@@ -14,7 +14,7 @@ class Seller extends Model
         'active_store'
     ];
 
-    public function payoutMehod()
+    public function payoutMethod()
     {
         return $this->belongsTo(PaymentMethod::class, 'payout_method', 'id');
     }

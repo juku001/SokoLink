@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Helpers\ResponseHelper;
 use App\Models\InventoryLedger;
+use App\Models\ProductClick;
 use Exception;
 use Illuminate\Http\Request;
 
@@ -309,7 +310,7 @@ class ProductController extends Controller implements HasMiddleware
                     ]);
                 }
             }
-            
+
             $latestLedger = InventoryLedger::where('store_id', $request->store_id)
                 ->where('product_id', $product->id)
                 ->latest('id')
@@ -402,11 +403,9 @@ class ProductController extends Controller implements HasMiddleware
         if (!$product) {
             return ResponseHelper::error([], 'Product not found', 404);
         }
-
-        // // Ensure the authenticated seller owns this product
-        // if ($product->store->seller_id !== auth()->id()) {
-        //     return ResponseHelper::error([], 'Unauthorized: You cannot view this product.', 403);
-        // }
+        if ($product->store->seller_id !== auth()->id()) {
+            ProductClick::create(['product_id' => $product->id]);
+        }
 
         return ResponseHelper::success($product, 'Product details retrieved successfully');
     }

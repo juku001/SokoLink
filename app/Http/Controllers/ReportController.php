@@ -418,8 +418,8 @@ class ReportController extends Controller
             ->groupBy('categories.id', 'categories.name')
             ->select(
                 'categories.name as category',
-                DB::raw('SUM(products.quantity) as stock_level'),
-                DB::raw('SUM(products.quantity * products.price) as inventory_value')
+                DB::raw('SUM(products.stock_qty) as stock_level'),
+                DB::raw('SUM(products.stock_qty * products.price) as inventory_value')
             )
             ->get();
 
