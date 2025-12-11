@@ -21,6 +21,9 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use Carbon\Carbon;
 use PhpOffice\PhpSpreadsheet\Style\Border;
+use Barryvdh\DomPDF\Facade\Pdf;
+
+
 
 
 
@@ -459,25 +462,47 @@ class ExportFileReportController extends Controller
 
 
 
+    // private function downloadPdf($spreadsheet)
+    // {
+    //     // Set the PDF renderer
+    //     $writer = new Dompdf($spreadsheet);
+    //     $fileName = 'sokolink_report_' . now()->format('Ymd_His') . '.pdf';
+
+    //     $response = new StreamedResponse(function () use ($writer) {
+    //         $writer->save('php://output');
+    //     });
+
+    //     $disposition = $response->headers->makeDisposition(
+    //         \Symfony\Component\HttpFoundation\ResponseHeaderBag::DISPOSITION_ATTACHMENT,
+    //         $fileName
+    //     );
+
+    //     $response->headers->set('Content-Type', 'application/pdf');
+    //     $response->headers->set('Content-Disposition', $disposition);
+
+    //     return $response;
+    // }
     private function downloadPdf($spreadsheet)
     {
-        // Set the PDF renderer
-        $writer = new Dompdf($spreadsheet);
+        // Convert spreadsheet to HTML
+        $sheet = $spreadsheet->getActiveSheet();
+        $html = '<table border="1" style="border-collapse: collapse; width: 100%;">';
+        foreach ($sheet->getRowIterator() as $row) {
+            $html .= '<tr>';
+            foreach ($row->getCellIterator() as $cell) {
+                $html .= '<td style="padding: 5px; text-align: left;">' . $cell->getValue() . '</td>';
+            }
+            $html .= '</tr>';
+        }
+        $html .= '</table>';
+
+        // Generate PDF
+        $pdf = Pdf::loadHTML($html);
+
         $fileName = 'sokolink_report_' . now()->format('Ymd_His') . '.pdf';
 
-        $response = new StreamedResponse(function () use ($writer) {
-            $writer->save('php://output');
-        });
-
-        $disposition = $response->headers->makeDisposition(
-            \Symfony\Component\HttpFoundation\ResponseHeaderBag::DISPOSITION_ATTACHMENT,
-            $fileName
-        );
-
-        $response->headers->set('Content-Type', 'application/pdf');
-        $response->headers->set('Content-Disposition', $disposition);
-
-        return $response;
+        return $pdf->download($fileName);
     }
+
 
 }
