@@ -33,7 +33,7 @@ Route::get('/search', [SearchController::class, 'index']);
 
 Route::prefix('/stores/{id}')->group(function () {
 
-    Route::get('/products', [ProductController::class, 'stotores']);
+    Route::get('/products', [ProductController::class, 'stores']);
     Route::get('/reviews', [ReviewController::class, 'stores']);
     Route::middleware('auth:sanctum')->group(function () {
 
