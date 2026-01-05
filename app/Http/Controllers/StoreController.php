@@ -147,7 +147,7 @@ class StoreController extends Controller implements HasMiddleware
      *     description="Allows an authenticated **seller** to create a new store.  
      *                  The authenticated user must have their account name and email set before creating a store.",
      *     tags={"Stores"},
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\MediaType(
@@ -284,7 +284,7 @@ class StoreController extends Controller implements HasMiddleware
      *     description="Allows the **authenticated seller** who owns the store to update its details.  
      *                  Only the fields provided in the request will be updated.",
      *     tags={"Stores"},
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -536,7 +536,7 @@ class StoreController extends Controller implements HasMiddleware
      *     summary="Delete a store",
      *     description="Delete a store by its ID for the authenticated seller.",
      *     operationId="deleteStore",
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *
      *     @OA\Parameter(
      *         name="id",
@@ -658,7 +658,7 @@ class StoreController extends Controller implements HasMiddleware
      *     summary="Toggle store online status",
      *     description="Toggles the store's online/offline status. Only the authenticated seller who owns the store may perform this action.",
      *     tags={"Stores"},
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -837,7 +837,7 @@ class StoreController extends Controller implements HasMiddleware
      *     summary="Get the seller's active store",
      *     description="Returns details of the currently active store for the authenticated seller.",
      *     tags={"Stores"},
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
      *         description="Active store details retrieved successfully",
@@ -899,7 +899,7 @@ class StoreController extends Controller implements HasMiddleware
      *     summary="Update the seller's active store",
      *     description="Sets a different store as the authenticated seller's active store.",
      *     tags={"Stores"},
-     *     security={{"sanctum":{}}},
+     *     security={{"bearerAuth": {}}},
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(

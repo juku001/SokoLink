@@ -47,8 +47,8 @@ Route::prefix('auth')->group(function () {
     Route::post('/password/reset', [PasswordController::class, 'store']); //verfiy otp , new password
 
     Route::middleware(['auth:sanctum'])->group(function () {
-        Route::post('/be/seller', [AuthController::class, 'seller']);
-        Route::put('/be/seller', [AuthController::class, 'updateSeller']);
+        Route::post('/be/seller', [AuthController::class, 'seller'])->middleware('user.type:buyer');
+        Route::put('/be/seller', [AuthController::class, 'updateSeller'])->middleware('user.type:seller');
 
         Route::post('/password/update', [PasswordController::class, 'update']); //update existing when logged in.
 

@@ -18,7 +18,6 @@ class LocationController extends Controller
      *     summary="Get list of countries",
      *     description="Retrieve a complete list of countries available in the system.",
      *     operationId="getCountries",
-     *     security={{"bearerAuth": {}}},
      *     @OA\Response(
      *         response=200,
      *         description="List of countries retrieved successfully",
@@ -249,6 +248,7 @@ class LocationController extends Controller
      *     tags={"Location"},
      *     summary="Add a new country",
      *     description="Creates a new country record with a name and unique abbreviation.",
+     *     security={{"bearerAuth": {}}},
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
@@ -323,6 +323,7 @@ class LocationController extends Controller
      *     tags={"Location"},
      *     summary="Add a new region",
      *     description="Creates a new region associated with a country.",
+     *     security={{"bearerAuth": {}}},
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
@@ -405,6 +406,7 @@ class LocationController extends Controller
      *     tags={"Location"},
      *     summary="Update a country",
      *     description="Updates an existing country by its ID. Only provided fields will be updated.",
+     *     security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -507,6 +509,7 @@ class LocationController extends Controller
      *     tags={"Location"},
      *     summary="Update a region",
      *     description="Updates an existing region by its ID. Only provided fields will be updated.",
+     *     security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -609,6 +612,7 @@ class LocationController extends Controller
      *     tags={"Location"},
      *     summary="Delete a country",
      *     description="Deletes a country by its ID.",
+     *     security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
@@ -674,6 +678,7 @@ class LocationController extends Controller
      *     tags={"Location"},
      *     summary="Delete a region",
      *     description="Deletes a region by its ID.",
+     *     security={{"bearerAuth": {}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
