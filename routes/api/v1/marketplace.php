@@ -29,6 +29,8 @@ Route::get('/categories/{id}/stores', [CategoryController::class, 'stores']);
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/categories/{id}/children', [CategoryController::class, 'children']);
 });
+
+
 Route::get('/search', [SearchController::class, 'index']);
 
 Route::prefix('/stores/{id}')->group(function () {

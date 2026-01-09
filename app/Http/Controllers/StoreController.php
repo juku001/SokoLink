@@ -65,6 +65,7 @@ class StoreController extends Controller implements HasMiddleware
      *                     @OA\Property(property="country", type="string", nullable=true, example="Tanzania"),
      *                     @OA\Property(property="rating", type="number", format="float", example=4.7),
      *                     @OA\Property(property="reviews_count", type="integer", example=23),
+     *                     @OA\Property(property="products_count", type="integer", example=2),
      *                     
      *                 )
      *             )
@@ -87,7 +88,7 @@ class StoreController extends Controller implements HasMiddleware
 
         // Base query with relations
         $query = Store::with('category', 'region.country', 'reviews');
-
+        
         // Apply filtering based on user type
         if ($user) {
             switch ($user->role) {
@@ -111,6 +112,7 @@ class StoreController extends Controller implements HasMiddleware
             $query->where('is_online', true);
         }
 
+
         // Filter featured stores if requested
         if ($request->has('is_featured') && $request->boolean('is_featured')) {
             $query->where('is_featured', true);
@@ -130,6 +132,7 @@ class StoreController extends Controller implements HasMiddleware
                 'country' => optional(optional($store->region)->country)->name,
                 'rating' => $store->rating_avg,
                 'reviews_count' => $store->reviews->count(),
+                'products_count' => $store->products_count
             ];
         });
 
@@ -165,7 +168,9 @@ class StoreController extends Controller implements HasMiddleware
      *                 @OA\Property(property="whatsapp", type="string", maxLength=20, nullable=true, example="+255700000000"),
      *                 @OA\Property(property="shipping_origin", type="string", maxLength=255, nullable=true, example="Dar es Salaam Warehouse"),
      *                 @OA\Property(property="region_id", type="integer", nullable=true, example=5),
-     *                 @OA\Property(property="address", type="string", maxLength=255, nullable=true, example="123 Main Street, Dar es Salaam")
+     *                 @OA\Property(property="address", type="string", maxLength=255, nullable=true, example="123 Main Street, Dar es Salaam"),
+     *                 @OA\Property(property="products_count", type="integer", example=2),
+     *                 
      *             )
      *         )
      *     ),
@@ -308,7 +313,8 @@ class StoreController extends Controller implements HasMiddleware
      *                 @OA\Property(property="whatsapp", type="string", maxLength=20, nullable=true, example="+255711111111"),
      *                 @OA\Property(property="shipping_origin", type="string", maxLength=255, nullable=true, example="Updated warehouse location"),
      *                 @OA\Property(property="region_id", type="integer", nullable=true, example=6),
-     *                 @OA\Property(property="address", type="string", maxLength=255, nullable=true, example="456 New Street, Dodoma")
+     *                 @OA\Property(property="address", type="string", maxLength=255, nullable=true, example="456 New Street, Dodoma"),
+     *                 @OA\Property(property="products_count", type="integer", example=2),
      *             )
      *         )
      *     ),
@@ -452,7 +458,8 @@ class StoreController extends Controller implements HasMiddleware
      *                 @OA\Property(property="category", type="string", example="Electronics"),
      *                 @OA\Property(property="rating_avg", type="number", format="float", example=4.5),
      *                 @OA\Property(property="is_follow", type="boolean", example=false),
-     *                 @OA\Property(property="is_online", type="boolean", example=false)
+     *                 @OA\Property(property="is_online", type="boolean", example=false),
+     *                 @OA\Property(property="products_count", type="integer", example=2),
      *             )
      *         )
      *     ),

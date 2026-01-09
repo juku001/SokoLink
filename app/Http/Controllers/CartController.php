@@ -37,6 +37,7 @@ class CartController extends Controller implements HasMiddleware
      *             @OA\Property(property="status", type="boolean"),
      *             @OA\Property(property="message", type="string"),
      *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="cart_id", type="integer", example=1),
      *                 @OA\Property(property="subtotal", type="number", format="float"),
      *                 @OA\Property(property="total", type="number", format="float"),
      *                 @OA\Property(property="shipping", type="number", format="float"),
@@ -89,6 +90,7 @@ class CartController extends Controller implements HasMiddleware
         $shipping = 0; // flat rate for now
 
         $data = [
+            'cart_id' => $cart->id,
             'subtotal' => $subTotal,
             'total' => $subTotal + $shipping,
             'shipping' => $shipping,

@@ -28,6 +28,7 @@ class Store extends Model
         'address'
     ];
 
+    protected $appends = ['products_count'];
 
     protected static function boot()
     {
@@ -132,4 +133,10 @@ class Store extends Model
     {
         return $this->belongsTo(Region::class);
     }
+
+    public function getProductsCountAttribute()
+    {
+        return $this->products()->count();
+    }
+
 }

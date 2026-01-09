@@ -2946,6 +2946,10 @@
                                         },
                                         "data": {
                                             "properties": {
+                                                "cart_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
                                                 "subtotal": {
                                                     "type": "number",
                                                     "format": "float"
@@ -3211,6 +3215,14 @@
                                                         "type": "string",
                                                         "example": "electronics"
                                                     },
+                                                    "title": {
+                                                        "type": "string",
+                                                        "example": "Explore electronics"
+                                                    },
+                                                    "description": {
+                                                        "type": "string",
+                                                        "example": "Discover amazing products in Vifaa vya Umeme category from trusted Tanzanian sellers."
+                                                    },
                                                     "parent_id": {
                                                         "type": "integer",
                                                         "example": null,
@@ -3275,6 +3287,14 @@
                                         "example": 1,
                                         "nullable": true
                                     },
+                                    "title": {
+                                        "type": "string",
+                                        "example": "Explore electronics"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Discover amazing products in Vifaa vya Umeme category from trusted Tanzanian sellers."
+                                    },
                                     "image": {
                                         "type": "string",
                                         "format": "binary",
@@ -3318,6 +3338,14 @@
                                                 "slug": {
                                                     "type": "string",
                                                     "example": "electronics"
+                                                },
+                                                "title": {
+                                                    "type": "string",
+                                                    "example": "Explore electronics"
+                                                },
+                                                "description": {
+                                                    "type": "string",
+                                                    "example": "Discover amazing products in Vifaa vya Umeme category from trusted Tanzanian sellers."
                                                 },
                                                 "image": {
                                                     "type": "string",
@@ -3415,6 +3443,14 @@
                                                     "type": "string",
                                                     "example": "electronics"
                                                 },
+                                                "title": {
+                                                    "type": "string",
+                                                    "example": "Explore electronics"
+                                                },
+                                                "description": {
+                                                    "type": "string",
+                                                    "example": "Discover amazing products in Vifaa vya Umeme category from trusted Tanzanian sellers."
+                                                },
                                                 "image": {
                                                     "type": "string",
                                                     "example": "https://images/categories/some.png"
@@ -3504,6 +3540,14 @@
                                         "example": "🍽️",
                                         "nullable": true
                                     },
+                                    "title": {
+                                        "type": "string",
+                                        "example": "Explore electronics"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Discover amazing products in Vifaa vya Umeme category from trusted Tanzanian sellers."
+                                    },
                                     "parent_id": {
                                         "type": "integer",
                                         "example": null,
@@ -3556,6 +3600,14 @@
                                                 "slug": {
                                                     "type": "string",
                                                     "example": "updated-electronics"
+                                                },
+                                                "title": {
+                                                    "type": "string",
+                                                    "example": "Updated Explore electronics"
+                                                },
+                                                "description": {
+                                                    "type": "string",
+                                                    "example": "Updated Discover amazing products in Vifaa vya Umeme category from trusted Tanzanian sellers."
                                                 },
                                                 "icon": {
                                                     "type": "string",
@@ -3844,6 +3896,14 @@
                                                     "name": {
                                                         "type": "string",
                                                         "example": "Smartphones"
+                                                    },
+                                                    "title": {
+                                                        "type": "string",
+                                                        "example": "Explore electronics"
+                                                    },
+                                                    "description": {
+                                                        "type": "string",
+                                                        "example": "Discover amazing products in Vifaa vya Umeme category from trusted Tanzanian sellers."
                                                     },
                                                     "slug": {
                                                         "type": "string",
@@ -17826,6 +17886,10 @@
                                                     "reviews_count": {
                                                         "type": "integer",
                                                         "example": 23
+                                                    },
+                                                    "products_count": {
+                                                        "type": "integer",
+                                                        "example": 2
                                                     }
                                                 },
                                                 "type": "object"
@@ -17922,6 +17986,10 @@
                                         "maxLength": 255,
                                         "example": "123 Main Street, Dar es Salaam",
                                         "nullable": true
+                                    },
+                                    "products_count": {
+                                        "type": "integer",
+                                        "example": 2
                                     }
                                 },
                                 "type": "object"
@@ -18090,6 +18158,10 @@
                                                 "is_online": {
                                                     "type": "boolean",
                                                     "example": false
+                                                },
+                                                "products_count": {
+                                                    "type": "integer",
+                                                    "example": 2
                                                 }
                                             },
                                             "type": "object"
@@ -18303,6 +18375,10 @@
                                         "maxLength": 255,
                                         "example": "456 New Street, Dodoma",
                                         "nullable": true
+                                    },
+                                    "products_count": {
+                                        "type": "integer",
+                                        "example": 2
                                     }
                                 },
                                 "type": "object"

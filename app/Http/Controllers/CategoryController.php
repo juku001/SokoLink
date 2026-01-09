@@ -53,6 +53,8 @@ class CategoryController extends Controller implements HasMiddleware
      *                     @OA\Property(property="id", type="integer", example=1),
      *                     @OA\Property(property="name", type="string", example="Electronics"),
      *                     @OA\Property(property="slug", type="string", example="electronics"),
+     *                     @OA\Property(property="title", type="string", example="Explore electronics"),
+     *                     @OA\Property(property="description", type="string", example="Discover amazing products in Vifaa vya Umeme category from trusted Tanzanian sellers."),
      *                     @OA\Property(property="parent_id", type="integer", nullable=true, example=null),
      *                     @OA\Property(property="image", type="string", example="images/link_to/cat.png"),
      *                     @OA\Property(property="icon", type="string", nullable=true, example="🍽️"),
@@ -90,6 +92,8 @@ class CategoryController extends Controller implements HasMiddleware
      *                 @OA\Property(property="name", type="string", example="Electronics"),
      *                 @OA\Property(property="icon", type="string", nullable=true, example="🍽️"),
      *                 @OA\Property(property="parent_id", type="integer", nullable=true, example=1),
+     *                 @OA\Property(property="title", type="string", example="Explore electronics"),
+     *                 @OA\Property(property="description", type="string", example="Discover amazing products in Vifaa vya Umeme category from trusted Tanzanian sellers."),
      *                 @OA\Property(property="image", type="string", format="binary", nullable=true)
      *             )
      *         )
@@ -109,6 +113,8 @@ class CategoryController extends Controller implements HasMiddleware
      *                 @OA\Property(property="id", type="integer", example=10),
      *                 @OA\Property(property="name", type="string", example="Electronics"),
      *                 @OA\Property(property="slug", type="string", example="electronics"),
+     *                 @OA\Property(property="title", type="string", example="Explore electronics"),
+     *                 @OA\Property(property="description", type="string", example="Discover amazing products in Vifaa vya Umeme category from trusted Tanzanian sellers."),
      *                 @OA\Property(property="image", type="string", example="https://images/categories/some.png"),
      *                 @OA\Property(property="parent_id", type="integer", nullable=true, example=null),
      *                 @OA\Property(property="icon", type="string", nullable=true, example="🍽️"),
@@ -150,6 +156,8 @@ class CategoryController extends Controller implements HasMiddleware
             'name' => 'required|string|max:255|unique:categories,name',
             'icon' => 'required|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'title' => 'nullable|string',
+            'description' => 'nullable|string',
             'parent_id' => 'nullable|integer|exists:categories,id'
         ]);
 
@@ -166,6 +174,8 @@ class CategoryController extends Controller implements HasMiddleware
                 'name' => $request->name,
                 'icon' => $request->icon,
                 'slug' => Str::slug($request->name),
+                'title' => $request->title,
+                'description' => $request->description,
                 'parent_id' => $request->parent_id,
                 'is_active' => true
             ];
@@ -221,6 +231,8 @@ class CategoryController extends Controller implements HasMiddleware
      *                 @OA\Property(property="id", type="integer", example=5),
      *                 @OA\Property(property="name", type="string", example="Electronics"),
      *                 @OA\Property(property="slug", type="string", example="electronics"),
+     *                 @OA\Property(property="title", type="string", example="Explore electronics"),
+     *                 @OA\Property(property="description", type="string", example="Discover amazing products in Vifaa vya Umeme category from trusted Tanzanian sellers."),
      *                 @OA\Property(property="image", type="string", example="https://images/categories/some.png"),
      *                 @OA\Property(property="parent_id", type="integer", nullable=true, example=null),
      *                 @OA\Property(property="icon", type="string", example="🍽️"),
@@ -280,6 +292,8 @@ class CategoryController extends Controller implements HasMiddleware
      *             required={"name"},
      *             @OA\Property(property="name", type="string", example="Updated Electronics"),
      *             @OA\Property(property="icon", type="string", nullable=true, example="🍽️"),
+     *             @OA\Property(property="title", type="string", example="Explore electronics"),
+     *             @OA\Property(property="description", type="string", example="Discover amazing products in Vifaa vya Umeme category from trusted Tanzanian sellers."),
      *             @OA\Property(property="parent_id", type="integer", nullable=true, example=null),
      *             @OA\Property(property="is_active", type="boolean", example=true),
      *             @OA\Property(property="image", type="string", format="binary", nullable=true)
@@ -301,6 +315,8 @@ class CategoryController extends Controller implements HasMiddleware
      *                 @OA\Property(property="id", type="integer", example=10),
      *                 @OA\Property(property="name", type="string", example="Updated Electronics"),
      *                 @OA\Property(property="slug", type="string", example="updated-electronics"),
+     *                 @OA\Property(property="title", type="string", example="Updated Explore electronics"),
+     *                 @OA\Property(property="description", type="string", example="Updated Discover amazing products in Vifaa vya Umeme category from trusted Tanzanian sellers."),
      *                 @OA\Property(property="icon", type="string", example="🍽️"),
      *                 @OA\Property(property="image", type="string", example="https://images/categories/some.png"),
      *                 @OA\Property(property="parent_id", type="integer", nullable=true, example=2),
@@ -344,7 +360,7 @@ class CategoryController extends Controller implements HasMiddleware
      */
 
 
-    public function update(Request $request,int $id)
+    public function update(Request $request, int $id)
     {
 
         $category = Category::find($id);
@@ -358,6 +374,8 @@ class CategoryController extends Controller implements HasMiddleware
             'name' => 'sometimes|string|max:255|unique:categories,name,' . $category->id,
             'parent_id' => ['nullable', 'integer', 'exists:categories,id', 'not_in:' . $category->id],
             'icon' => 'nullable|string',
+            'title' => 'sometimes|nullable|string',
+            'description' => 'sometimes|nullable|string',
             'is_active' => 'nullable|boolean',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ]);
@@ -386,6 +404,13 @@ class CategoryController extends Controller implements HasMiddleware
                 $data['icon'] = $request->icon;
             }
 
+            if ($request->has('title')) {
+                $data['title'] = $request->title;
+            }
+            if ($request->has('description')) {
+                $data['description'] = $request->description;
+            }
+
             // Update is_active only if provided
             if ($request->has('is_active')) {
                 $data['is_active'] = $request->is_active;
@@ -395,7 +420,7 @@ class CategoryController extends Controller implements HasMiddleware
             if ($request->hasFile('image')) {
                 if ($category->image && Storage::disk('public')->exists($category->image)) {
                     Storage::disk('public')->delete($category->image);
-                    
+
                 }
 
                 $path = $request->file('image')->store('categories', 'public');
@@ -584,6 +609,8 @@ class CategoryController extends Controller implements HasMiddleware
      *                     type="object",
      *                     @OA\Property(property="id", type="integer", example=5),
      *                     @OA\Property(property="name", type="string", example="Smartphones"),
+     *                     @OA\Property(property="title", type="string", example="Explore electronics"),
+     *                     @OA\Property(property="description", type="string", example="Discover amazing products in Vifaa vya Umeme category from trusted Tanzanian sellers."),
      *                     @OA\Property(property="slug", type="string", example="smartphones"),
      *                     @OA\Property(property="parent_id", type="integer", example=1),
      *                     @OA\Property(property="icon", type="string", example="🍽️"),
