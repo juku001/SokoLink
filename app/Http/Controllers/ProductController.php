@@ -19,6 +19,7 @@ use App\Models\ProductCategory;
 use App\Models\ProductImage;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\ProductsImport;
+use Illuminate\Support\Facades\Storage;
 
 
 
@@ -259,15 +260,14 @@ class ProductController extends Controller implements HasMiddleware
             'is_online' => 'nullable|boolean',
             'stock_qty' => 'required|integer|min:0',
 
-            // categories
             'category_id' => 'required|numeric|exists:categories,id',
-            // 'categories' => 'required|array|min:1',
-            // 'categories.*' => 'exists:categories,id',
 
             // images
+            // 'images' => 'nullable|array',
+            // 'images.*.path' => 'required|string',
+            // 'images.*.is_cover' => 'boolean',
             'images' => 'nullable|array',
-            'images.*.path' => 'required|string',
-            'images.*.is_cover' => 'boolean',
+            'images.*' => 'image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
 
         if ($validator->fails()) {
@@ -291,25 +291,24 @@ class ProductController extends Controller implements HasMiddleware
             $data['slug'] = Str::slug($data['name']);
 
             $product = Product::create($data);
-            // if (isset($data['categories'])) {
-            //     foreach ($data['categories'] as $categoryId) {
-            //         ProductCategory::create([
-            //             'product_id' => $product->id,
-            //             'category_id' => $categoryId,
-            //         ]);
-            //     }
-            // }
 
-            if (!empty($data['images'])) {
-                foreach ($data['images'] as $index => $image) {
+            if ($request->hasFile('images')) {
+                foreach ($request->file('images') as $index => $image) {
+
+                    $path = $image->store(
+                        'products/' . $product->id,
+                        'public'
+                    );
+
                     ProductImage::create([
                         'product_id' => $product->id,
-                        'path' => $image['path'],
-                        'is_cover' => $image['is_cover'] ?? ($index == 0),
+                        'path' => $path,
+                        'is_cover' => $index === 0,
                         'position' => $index + 1,
                     ]);
                 }
             }
+
 
             $latestLedger = InventoryLedger::where('store_id', $request->store_id)
                 ->where('product_id', $product->id)
@@ -507,14 +506,9 @@ class ProductController extends Controller implements HasMiddleware
 
             // categories
             'category_id' => 'sometimes|required|numeric|exists:categories,id',
-            // 'categories' => 'nullable|array',
-            // 'categories.*' => 'exists:categories,id',
-
-            // images
             'images' => 'nullable|array',
-            'images.*.path' => 'required|string',
-            'images.*.is_cover' => 'boolean',
-            'images.*.position' => 'integer',
+            'images.*' => 'image|mimes:jpg,jpeg,png,webp|max:2048',
+
         ]);
 
         if ($validator->fails()) {
@@ -526,32 +520,81 @@ class ProductController extends Controller implements HasMiddleware
             $data = $validator->validated();
 
             // update product fields
-            $updateData = $data;
-            if ($request->has('name')) {
-                $updateData['slug'] = Str::slug($request->name);
-            }
-            $product->update($updateData);
+            $updateData = [];
 
-            // // sync categories if provided
-            // if (isset($data['categories'])) {
-            //     ProductCategory::where('product_id', $product->id)->delete();
-            //     foreach ($data['categories'] as $categoryId) {
-            //         ProductCategory::create([
+            // Name + slug
+            if ($request->has('name')) {
+                $updateData['name'] = $data['name'];
+                $updateData['slug'] = Str::slug($data['name']);
+            }
+
+            // Description
+            if ($request->has('description')) {
+                $updateData['description'] = $data['description'];
+            }
+
+            // Price
+            if ($request->has('price')) {
+                $updateData['price'] = $data['price'];
+            }
+
+            // SKU
+            if ($request->has('sku')) {
+                $updateData['sku'] = $data['sku'];
+            }
+
+            // Barcode
+            if ($request->has('barcode')) {
+                $updateData['barcode'] = $data['barcode'];
+            }
+
+            // Online status
+            if ($request->has('is_online')) {
+                $updateData['is_online'] = $data['is_online'];
+            }
+
+            // Category
+            if ($request->has('category_id')) {
+                $updateData['category_id'] = $data['category_id'];
+            }
+
+            // Only update if there is something to update
+            if (!empty($updateData)) {
+                $product->update($updateData);
+            }
+            // sync images if provided
+            // if (isset($data['images'])) {
+            //     ProductImage::where('product_id', $product->id)->delete();
+            //     foreach ($data['images'] as $image) {
+            //         ProductImage::create([
             //             'product_id' => $product->id,
-            //             'category_id' => $categoryId,
+            //             'path' => $image['path'],
+            //             'is_cover' => $image['is_cover'] ?? false,
+            //             'position' => $image['position'] ?? 0,
             //         ]);
             //     }
             // }
+            if ($request->hasFile('images')) {
 
-            // sync images if provided
-            if (isset($data['images'])) {
+                // 🧹 Delete old images from disk + DB
+                foreach ($product->images as $oldImage) {
+                    if (Storage::disk('public')->exists($oldImage->path)) {
+                        Storage::disk('public')->delete($oldImage->path);
+                    }
+                }
+
                 ProductImage::where('product_id', $product->id)->delete();
-                foreach ($data['images'] as $image) {
+
+                // ⬆ Upload new images
+                foreach ($request->file('images') as $index => $image) {
+
+                    $path = $image->store('products', 'public');
+
                     ProductImage::create([
                         'product_id' => $product->id,
-                        'path' => $image['path'],
-                        'is_cover' => $image['is_cover'] ?? false,
-                        'position' => $image['position'] ?? 0,
+                        'path' => $path, // products/xxxx.jpg
+                        'is_cover' => $index === 0,
+                        'position' => $index + 1,
                     ]);
                 }
             }
