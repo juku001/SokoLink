@@ -7,12 +7,13 @@ use App\Models\InventoryLedger;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\Seller;
+use Carbon\Carbon;
 use DB;
 use Exception;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Maatwebsite\Excel\Facades\Excel;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
 use Illuminate\Support\Facades\Validator;
 
@@ -393,61 +394,60 @@ class SalesController extends Controller
 
 
 
-/**
- * @OA\Post(
- *     path="/api/sales/bulk",
- *     summary="Upload an Excel file to create multiple sales records",
- *     description="Accepts an Excel file (.xlsx or .csv) that contains multiple sales with their products.  
- * Each row represents a single sale line item. The API groups rows with the same `sale_ref` into one sale.",
- *     operationId="storeBulkSales",
- *     tags={"Sales"},
- *     security={{"sanctum":{}}},
- *     @OA\RequestBody(
- *         required=true,
- *         @OA\MediaType(
- *             mediaType="multipart/form-data",
- *             @OA\Schema(
- *                 required={"file"},
- *                 @OA\Property(
- *                     property="file",
- *                     type="string",
- *                     format="binary",
- *                     description="Excel or CSV file containing the sales data"
- *                 )
- *             )
- *         )
- *     ),
- *     @OA\Response(
- *         response=201,
- *         description="Bulk sales stored successfully",
- *         @OA\JsonContent(
- *             @OA\Property(property="message", type="string", example="Bulk sales stored successfully"),
- *             @OA\Property(property="data", type="array",
- *                 @OA\Items(ref="#/components/schemas/Sale")
- *             )
- *         )
- *     ),
- *     @OA\Response(
- *         response=422,
- *         description="Validation error",
- *         @OA\JsonContent(
- *             @OA\Property(property="message", type="string", example="Validation failed"),
- *             @OA\Property(property="errors", type="object")
- *         )
- *     ),
- *     @OA\Response(
- *         response=500,
- *         description="Server error"
- *     )
- * )
- */
-
+    /**
+     * @OA\Post(
+     *     path="/api/sales/bulk",
+     *     summary="Upload an Excel file to create multiple sales records",
+     *     description="Accepts an Excel file (.xlsx or .csv) that contains multiple sales with their products.  
+     * Each row represents a single sale line item. The API groups rows with the same `sale_ref` into one sale.",
+     *     operationId="storeBulkSales",
+     *     tags={"Sales"},
+     *     security={{"sanctum":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\MediaType(
+     *             mediaType="multipart/form-data",
+     *             @OA\Schema(
+     *                 required={"file"},
+     *                 @OA\Property(
+     *                     property="file",
+     *                     type="string",
+     *                     format="binary",
+     *                     description="Excel or CSV file containing the sales data"
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Bulk sales stored successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Bulk sales stored successfully"),
+     *             @OA\Property(property="data", type="array",
+     *                 @OA\Items(ref="#/components/schemas/Sale")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Validation failed"),
+     *             @OA\Property(property="errors", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Server error"
+     *     )
+     * )
+     */
 
 
     public function storeBulk(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'file' => 'required|file|mimes:xlsx,xls'
+            'file' => 'required|file|mimes:xlsx,xls',
         ]);
 
         if ($validator->fails()) {
@@ -459,32 +459,70 @@ class SalesController extends Controller
         $storeId = $seller->active_store;
 
         try {
-            $rows = Excel::toArray([], $request->file('file'))[0]; // first sheet
+            // Load spreadsheet
+            $file = $request->file('file');
+            $spreadsheet = IOFactory::load($file->getPathname());
+            $sheet = $spreadsheet->getActiveSheet();
+
+            // Read rows (indexed arrays)
+            $rows = $sheet->toArray(null, true, true, false);
+
             /**
-             * Expected columns in Excel:
-             * product_id | quantity | price | payment_method_id | payment_type | buyer_name | sales_date | sales_time | status
+             * Expected columns:
+             * product_id | quantity | price | payment_method_id | payment_type
+             * buyer_name | sales_date | sales_time | status
              */
 
-            // Remove header row if present
-            if (!is_numeric($rows[0][0])) {
+            // Remove header row if first column is not numeric
+            if (isset($rows[0]) && !is_numeric($rows[0][0])) {
                 array_shift($rows);
             }
 
             DB::beginTransaction();
 
             foreach ($rows as $index => $row) {
-                // Map row -> fields safely
-                [$productId, $qty, $price, $paymentMethod, $paymentType, $buyerName, $salesDate, $salesTime, $status] = array_pad($row, 9, null);
 
-                // Convert Excel date/time if necessary
-                if (is_numeric($salesDate)) {
-                    $salesDate = ExcelDate::excelToDateTimeObject($salesDate)->format('Y-m-d');
-                }
-                if (is_numeric($salesTime)) {
-                    $salesTime = ExcelDate::excelToDateTimeObject($salesTime)->format('H:i:s');
+                // Map row safely
+                [
+                    $productId,
+                    $qty,
+                    $price,
+                    $paymentMethod,
+                    $paymentType,
+                    $buyerName,
+                    $salesDate,
+                    $salesTime,
+                    $status
+                ] = array_pad($row, 9, null);
+
+
+                if (!empty($salesDate)) {
+
+                    if (is_numeric($salesDate)) {
+                        // Excel numeric date
+                        $salesDate = ExcelDate::excelToDateTimeObject($salesDate)
+                            ->format('Y-m-d');
+
+                    } else {
+                        $salesDate = Carbon::parse($salesDate)
+                            ->format('Y-m-d');
+                    }
                 }
 
-                // Basic validation per row
+
+                if (!empty($salesTime)) {
+
+                    if (is_numeric($salesTime)) {
+
+                        $salesTime = ExcelDate::excelToDateTimeObject($salesTime)
+                            ->format('H:i:s');
+                    } else {
+                        $salesTime = Carbon::parse($salesTime)
+                            ->format('H:i:s');
+                    }
+                }
+
+                // Row-level validation
                 $v = Validator::make([
                     'product_id' => $productId,
                     'quantity' => $qty,
@@ -505,15 +543,24 @@ class SalesController extends Controller
                     'status' => 'required|in:pending,completed',
                 ]);
 
+
                 if ($v->fails()) {
-                    throw new Exception("Row " . ($index + 1) . " validation error: " . json_encode($v->errors()->all()));
+                    throw new Exception(
+                        'Row ' . ($index + 1) . ' validation error: ' .
+                        implode(', ', $v->errors()->all())
+                    );
                 }
 
-                // Lock product for stock check
-                $product = Product::where('id', $productId)->lockForUpdate()->first();
+                // Lock product for stock consistency
+                $product = Product::where('id', $productId)
+                    ->lockForUpdate()
+                    ->first();
 
                 if ($status === 'completed' && $qty > $product->stock_qty) {
-                    throw new Exception("Row " . ($index + 1) . ": insufficient stock for product {$product->name}");
+                    throw new Exception(
+                        "Row " . ($index + 1) .
+                        ": insufficient stock for product {$product->name}"
+                    );
                 }
 
                 // Create sale
@@ -529,28 +576,32 @@ class SalesController extends Controller
                     'status' => $status,
                 ]);
 
-                // Link product to sale
+                // Attach product to sale
                 $sale->saleProducts()->create([
                     'product_id' => $productId,
                     'quantity' => $qty,
                     'price' => $price,
                 ]);
 
-                // Stock + Ledger
+                // Stock + inventory ledger
                 if ($status === 'completed') {
+
                     $latestLedger = InventoryLedger::where('store_id', $product->store_id)
                         ->where('product_id', $product->id)
-                        ->latest('id')->first();
+                        ->latest('id')
+                        ->first();
 
-                    $previousBalance = $latestLedger ? $latestLedger->balance : $product->stock_qty;
+                    $previousBalance = $latestLedger
+                        ? $latestLedger->balance
+                        : $product->stock_qty;
+
                     $product->decrement('stock_qty', $qty);
-                    $newBalance = $previousBalance - $qty;
 
                     InventoryLedger::create([
                         'store_id' => $product->store_id,
                         'product_id' => $product->id,
                         'change' => -1 * $qty,
-                        'balance' => $newBalance,
+                        'balance' => $previousBalance - $qty,
                         'reason' => 'bulk-sale',
                     ]);
                 }
@@ -565,6 +616,129 @@ class SalesController extends Controller
             return ResponseHelper::error([], 'Error: ' . $e->getMessage(), 500);
         }
     }
+
+
+    // public function storeBulk(Request $request)
+    // {
+    //     $validator = Validator::make($request->all(), [
+    //         'file' => 'required|file|mimes:xlsx,xls'
+    //     ]);
+
+    //     if ($validator->fails()) {
+    //         return ResponseHelper::error($validator->errors(), 'Validation failed', 422);
+    //     }
+
+    //     $authId = auth()->id();
+    //     $seller = Seller::where('user_id', $authId)->firstOrFail();
+    //     $storeId = $seller->active_store;
+
+    //     try {
+    //         $rows = Excel::toArray([], $request->file('file'))[0]; // first sheet
+    //         /**
+    //          * Expected columns in Excel:
+    //          * product_id | quantity | price | payment_method_id | payment_type | buyer_name | sales_date | sales_time | status
+    //          */
+
+    //         // Remove header row if present
+    //         if (!is_numeric($rows[0][0])) {
+    //             array_shift($rows);
+    //         }
+
+    //         DB::beginTransaction();
+
+    //         foreach ($rows as $index => $row) {
+    //             // Map row -> fields safely
+    //             [$productId, $qty, $price, $paymentMethod, $paymentType, $buyerName, $salesDate, $salesTime, $status] = array_pad($row, 9, null);
+
+    //             // Convert Excel date/time if necessary
+    //             if (is_numeric($salesDate)) {
+    //                 $salesDate = ExcelDate::excelToDateTimeObject($salesDate)->format('Y-m-d');
+    //             }
+    //             if (is_numeric($salesTime)) {
+    //                 $salesTime = ExcelDate::excelToDateTimeObject($salesTime)->format('H:i:s');
+    //             }
+
+    //             // Basic validation per row
+    //             $v = Validator::make([
+    //                 'product_id' => $productId,
+    //                 'quantity' => $qty,
+    //                 'price' => $price,
+    //                 'payment_method_id' => $paymentMethod,
+    //                 'payment_type' => $paymentType,
+    //                 'sales_date' => $salesDate,
+    //                 'sales_time' => $salesTime,
+    //                 'status' => $status,
+    //             ], [
+    //                 'product_id' => 'required|exists:products,id',
+    //                 'quantity' => 'required|integer|min:1',
+    //                 'price' => 'required|numeric|min:0',
+    //                 'payment_method_id' => 'nullable|exists:payment_methods,id',
+    //                 'payment_type' => 'required|in:cash,mno,bank,card',
+    //                 'sales_date' => 'required|date',
+    //                 'sales_time' => 'required|date_format:H:i:s',
+    //                 'status' => 'required|in:pending,completed',
+    //             ]);
+
+    //             if ($v->fails()) {
+    //                 throw new Exception("Row " . ($index + 1) . " validation error: " . json_encode($v->errors()->all()));
+    //             }
+
+    //             // Lock product for stock check
+    //             $product = Product::where('id', $productId)->lockForUpdate()->first();
+
+    //             if ($status === 'completed' && $qty > $product->stock_qty) {
+    //                 throw new Exception("Row " . ($index + 1) . ": insufficient stock for product {$product->name}");
+    //             }
+
+    //             // Create sale
+    //             $sale = Sale::create([
+    //                 'seller_id' => $authId,
+    //                 'store_id' => $storeId,
+    //                 'payment_method_id' => $paymentMethod,
+    //                 'payment_type' => $paymentType,
+    //                 'buyer_name' => $buyerName,
+    //                 'amount' => $price * $qty,
+    //                 'sales_date' => $salesDate,
+    //                 'sales_time' => $salesTime,
+    //                 'status' => $status,
+    //             ]);
+
+    //             // Link product to sale
+    //             $sale->saleProducts()->create([
+    //                 'product_id' => $productId,
+    //                 'quantity' => $qty,
+    //                 'price' => $price,
+    //             ]);
+
+    //             // Stock + Ledger
+    //             if ($status === 'completed') {
+    //                 $latestLedger = InventoryLedger::where('store_id', $product->store_id)
+    //                     ->where('product_id', $product->id)
+    //                     ->latest('id')->first();
+
+    //                 $previousBalance = $latestLedger ? $latestLedger->balance : $product->stock_qty;
+    //                 $product->decrement('stock_qty', $qty);
+    //                 $newBalance = $previousBalance - $qty;
+
+    //                 InventoryLedger::create([
+    //                     'store_id' => $product->store_id,
+    //                     'product_id' => $product->id,
+    //                     'change' => -1 * $qty,
+    //                     'balance' => $newBalance,
+    //                     'reason' => 'bulk-sale',
+    //                 ]);
+    //             }
+    //         }
+
+    //         DB::commit();
+
+    //         return ResponseHelper::success([], 'Bulk sales imported successfully.', 201);
+
+    //     } catch (\Throwable $e) {
+    //         DB::rollBack();
+    //         return ResponseHelper::error([], 'Error: ' . $e->getMessage(), 500);
+    //     }
+    // }
 
 
 

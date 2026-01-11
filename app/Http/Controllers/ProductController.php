@@ -17,9 +17,9 @@ use App\Models\Product;
 use App\Models\Store;
 use App\Models\ProductCategory;
 use App\Models\ProductImage;
-use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\ProductsImport;
 use Illuminate\Support\Facades\Storage;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 
 
 
@@ -841,10 +841,32 @@ class ProductController extends Controller implements HasMiddleware
      *     @OA\Response(response=500, description="Internal server error", ref="#/components/responses/500"),
      * )
      */
+    // public function bulk(Request $request)
+    // {
+    //     $validator = Validator::make($request->all(), [
+    //         'file' => 'required|file|mimes:xlsx,csv'
+    //     ]);
+
+    //     if ($validator->fails()) {
+    //         return ResponseHelper::error($validator->errors(), 'Invalid file', 422);
+    //     }
+
+    //     try {
+    //         Excel::import(new ProductsImport, $request->file('file'));
+
+    //         return ResponseHelper::success([], 'Products uploaded successfully.');
+    //     } catch (Exception $e) {
+    //         return ResponseHelper::error([], 'Error: ' . $e->getMessage(), 500);
+    //     }
+    // }
+
+
+
+
     public function bulk(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'file' => 'required|file|mimes:xlsx,csv'
+            'file' => 'required|file|mimes:xlsx,csv',
         ]);
 
         if ($validator->fails()) {
@@ -852,13 +874,55 @@ class ProductController extends Controller implements HasMiddleware
         }
 
         try {
-            Excel::import(new ProductsImport, $request->file('file'));
+            $authId = auth()->id();
+            $file = $request->file('file');
+
+            // Load spreadsheet
+            $spreadsheet = IOFactory::load($file->getPathname());
+            $sheet = $spreadsheet->getActiveSheet();
+            $rows = $sheet->toArray(null, true, true, false);
+
+            // Remove header row
+            array_shift($rows);
+
+            foreach ($rows as $row) {
+
+                // Skip empty rows
+                if (empty($row[0]) || empty($row[1])) {
+                    continue;
+                }
+
+                $storeId = $row[0];
+
+                // Ensure store belongs to authenticated seller
+                $storeExists = Store::where('id', $storeId)
+                    ->where('seller_id', $authId)
+                    ->exists();
+
+                if (!$storeExists) {
+                    continue;
+                }
+
+                Product::create([
+                    'store_id' => $storeId,
+                    'name' => $row[1],
+                    'description' => $row[2] ?? null,
+                    'price' => $row[3] ?? 0,
+                    'sku' => $row[4] ?? null,
+                    'barcode' => $row[5] ?? null,
+                    'is_online' => !empty($row[6]) ? 1 : 0,
+                    'stock_qty' => (int) ($row[7] ?? 0),
+                    'category_id' => $row[8] ?? null,
+                ]);
+            }
 
             return ResponseHelper::success([], 'Products uploaded successfully.');
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             return ResponseHelper::error([], 'Error: ' . $e->getMessage(), 500);
         }
     }
+
+
 
 
 

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class Product extends Model
 {
@@ -23,6 +24,22 @@ class Product extends Model
 
     protected static function booted()
     {
+
+        parent::boot();
+
+        static::creating(function ($product) {
+            if (empty($product->slug)) {
+                $product->slug = static::generateSlug($product->name);
+            }
+        });
+
+        static::updating(function ($product) {
+            if ($product->isDirty('name')) {
+                $product->slug = static::generateSlug($product->name);
+            }
+        });
+
+
         static::deleting(function ($product) {
 
             $product->images->each(function ($image) {
@@ -79,4 +96,13 @@ class Product extends Model
 
         return 'in_stock';
     }
+
+    protected static function generateSlug($name)
+    {
+        $slug = Str::slug($name);
+        $count = static::where('slug', 'LIKE', "{$slug}%")->count();
+
+        return $count ? "{$slug}-" . ($count + 1) : $slug;
+    }
+
 }
