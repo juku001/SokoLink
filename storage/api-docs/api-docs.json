@@ -2966,6 +2966,12 @@
                                                     "type": "array",
                                                     "items": {
                                                         "properties": {
+                                                            "cart_item_id": {
+                                                                "type": "number"
+                                                            },
+                                                            "product_id": {
+                                                                "type": "number"
+                                                            },
                                                             "product_name": {
                                                                 "type": "string"
                                                             },

@@ -43,6 +43,8 @@ class CartController extends Controller implements HasMiddleware
      *                 @OA\Property(property="shipping", type="number", format="float"),
      *                 @OA\Property(property="products", type="array",
      *                     @OA\Items(
+     *                       @OA\Property(property="cart_item_id", type="number"),
+     *                       @OA\Property(property="product_id", type="number"),
      *                         @OA\Property(property="product_name", type="string"),
      *                         @OA\Property(property="store_name", type="string"),
      *                         @OA\Property(property="price", type="number", format="float"),
@@ -75,6 +77,8 @@ class CartController extends Controller implements HasMiddleware
         // Transform items
         $products = $cart->items->map(function ($item) {
             return [
+                'cart_item_id'=> $item->id,
+                'product_id'=> $item->product->id,
                 'product_name' => $item->product->name,
                 'store_name' => $item->product->store->name,
                 'price' => $item->price,
