@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\ResponseHelper;
+use App\Models\Category;
 use App\Models\InventoryLedger;
 use App\Models\ProductClick;
+use App\Models\Seller;
 use Exception;
 use Illuminate\Http\Request;
 
@@ -841,25 +843,6 @@ class ProductController extends Controller implements HasMiddleware
      *     @OA\Response(response=500, description="Internal server error", ref="#/components/responses/500"),
      * )
      */
-    // public function bulk(Request $request)
-    // {
-    //     $validator = Validator::make($request->all(), [
-    //         'file' => 'required|file|mimes:xlsx,csv'
-    //     ]);
-
-    //     if ($validator->fails()) {
-    //         return ResponseHelper::error($validator->errors(), 'Invalid file', 422);
-    //     }
-
-    //     try {
-    //         Excel::import(new ProductsImport, $request->file('file'));
-
-    //         return ResponseHelper::success([], 'Products uploaded successfully.');
-    //     } catch (Exception $e) {
-    //         return ResponseHelper::error([], 'Error: ' . $e->getMessage(), 500);
-    //     }
-    // }
-
 
 
 
@@ -892,10 +875,18 @@ class ProductController extends Controller implements HasMiddleware
                     continue;
                 }
 
-                $storeId = $row[0];
+                // $storeId = $row[0];
+                $categorySlug = $row[7];
+                $category = Category::where('slug', $categorySlug)->first();
+
+                $seller = Seller::where('user_id', $authId)->first();
+                if (!$seller) {
+                    return ResponseHelper::error([], 'Seller account not found', 404);
+                }
+                $activeStore = $seller->active_store;
 
                 // Ensure store belongs to authenticated seller
-                $storeExists = Store::where('id', $storeId)
+                $storeExists = Store::where('id', $activeStore)
                     ->where('seller_id', $authId)
                     ->exists();
 
@@ -904,15 +895,15 @@ class ProductController extends Controller implements HasMiddleware
                 }
 
                 Product::create([
-                    'store_id' => $storeId,
-                    'name' => $row[1],
-                    'description' => $row[2] ?? null,
-                    'price' => $row[3] ?? 0,
-                    'sku' => $row[4] ?? null,
-                    'barcode' => $row[5] ?? null,
-                    'is_online' => !empty($row[6]) ? 1 : 0,
-                    'stock_qty' => (int) ($row[7] ?? 0),
-                    'category_id' => $row[8] ?? null,
+                    'store_id' => $activeStore,
+                    'name' => $row[0],
+                    'description' => $row[1] ?? null,
+                    'price' => $row[2] ?? 0,
+                    'sku' => $row[3] ?? null,
+                    'barcode' => $row[4] ?? null,
+                    'is_online' => !empty($row[5]) ? 1 : 0,
+                    'stock_qty' => (int) ($row[6] ?? 0),
+                    'category_id' => optional($category)->id ?? null
                 ]);
             }
 
