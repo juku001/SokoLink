@@ -266,7 +266,7 @@ class CartController extends Controller implements HasMiddleware
 
     /**
      * @OA\Post(
-     *     path="/carts/{cartId}/add/{productId}/increment",
+     *     path="/carts/{cartId}/product/{productId}/increment",
      *     tags={"Cart"},
      *     summary="Increment quantity of a product in the cart",
      *     security={{"bearerAuth": {}}},
@@ -324,7 +324,7 @@ class CartController extends Controller implements HasMiddleware
 
     /**
      * @OA\Delete(
-     *     path="/carts/{cartId}/remove/{productId}/decrement",
+     *     path="/carts/{cartId}/product/{productId}/decrement",
      *     tags={"Cart"},
      *     summary="Decrement quantity or remove product from cart",
      *     security={{"bearerAuth": {}}},
