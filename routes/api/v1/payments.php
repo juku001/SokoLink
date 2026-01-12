@@ -17,6 +17,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     Route::get('/carts', [CartController::class, 'index']); //get all the contents on cart with items and sub total, total
     Route::post('/carts', [CartController::class, 'store']); //this one adds item to cart
+    Route::delete('/carts/{id}', [CartController::class, 'destroy']); //delete add item from cart
     Route::patch('/carts/{id}', [CartController::class, 'update']); //increment or decrement, by taking the quantity field and do the magic.
     Route::post('/carts/{cartId}/product/{productId}/increment', [CartController::class, 'add']);
     Route::delete('/carts/{cartId}/product/{productId}/decrement', [CartController::class, 'remove']);

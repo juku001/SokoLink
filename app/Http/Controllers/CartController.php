@@ -77,8 +77,8 @@ class CartController extends Controller implements HasMiddleware
         // Transform items
         $products = $cart->items->map(function ($item) {
             return [
-                'cart_item_id'=> $item->id,
-                'product_id'=> $item->product->id,
+                'cart_item_id' => $item->id,
+                'product_id' => $item->product->id,
                 'product_name' => $item->product->name,
                 'store_name' => $item->product->store->name,
                 'price' => $item->price,
@@ -382,4 +382,49 @@ class CartController extends Controller implements HasMiddleware
 
 
 
+
+
+    /**
+     * @OA\Delete(
+     *     path="/carts/{itemId}",
+     *     tags={"Cart"},
+     *     summary="Delete item from cart",
+     *     security={{"bearerAuth": {}}},
+     *     @OA\Parameter(
+     *         name="itemId",
+     *         in="path",
+     *         required=true,
+     *         description="ID of the cart item",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"quantity"},
+     *             @OA\Property(property="quantity", type="integer", example=3)
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Cart item deleted"),
+     *     @OA\Response(response=404, description="Cart item not found")
+     * )
+     */
+
+    public function destroy(string $itemId)
+    {
+        $authId = auth()->id();
+
+        $cartItem = CartItem::where('id', $itemId)
+            ->whereHas('cart', function ($q) use ($authId) {
+                $q->where('buyer_id', $authId);
+            })
+            ->first();
+
+        if (!$cartItem) {
+            return ResponseHelper::error([], "Cart item not found", 404);
+        }
+
+        $cartItem->delete();
+        return ResponseHelper::error([], 'Product deleted from cart.');
+
+    }
 }
