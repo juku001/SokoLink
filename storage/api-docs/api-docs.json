@@ -3102,13 +3102,13 @@
                 ]
             }
         },
-        "/carts/{cartId}/add/{productId}/increment": {
+        "/carts/{cartId}/product/{productId}/increment": {
             "post": {
                 "tags": [
                     "Cart"
                 ],
                 "summary": "Increment quantity of a product in the cart",
-                "operationId": "9147453322696344a8ed87bc0df3feee",
+                "operationId": "5c422a30ebb5aec170cb8f0c06d4d519",
                 "parameters": [
                     {
                         "name": "cartId",
@@ -3142,13 +3142,13 @@
                 ]
             }
         },
-        "/carts/{cartId}/remove/{productId}/decrement": {
+        "/carts/{cartId}/product/{productId}/decrement": {
             "delete": {
                 "tags": [
                     "Cart"
                 ],
                 "summary": "Decrement quantity or remove product from cart",
-                "operationId": "152d6e73f85d75abac5cd7ca5f344b93",
+                "operationId": "37fd720389f60f8cc16d38e63790f336",
                 "parameters": [
                     {
                         "name": "cartId",
@@ -16999,7 +16999,7 @@
                     "Sales"
                 ],
                 "summary": "Upload an Excel file to create multiple sales records",
-                "description": "Accepts an Excel file (.xlsx or .csv) that contains multiple sales with their products.  \n * Each row represents a single sale line item. The API groups rows with the same `sale_ref` into one sale.",
+                "description": "Accepts an Excel file (.xlsx or .csv) that contains multiple sales with their products.  \n     * Each row represents a single sale line item. The API groups rows with the same `sale_ref` into one sale.",
                 "operationId": "storeBulkSales",
                 "requestBody": {
                     "required": true,
