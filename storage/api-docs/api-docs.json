@@ -14322,6 +14322,181 @@
                 ]
             }
         },
+        "/admin/platform/overview": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Get platform overview metrics",
+                "description": "Returns high-level platform statistics including merchants, active customers, revenue, and growth rate with month-over-month percentage changes.",
+                "operationId": "getPlatformOverview",
+                "responses": {
+                    "200": {
+                        "description": "Platform overview retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Platform Overview"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "merchants": {
+                                                    "properties": {
+                                                        "value": {
+                                                            "type": "integer",
+                                                            "example": 120
+                                                        },
+                                                        "percent": {
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "example": 1.4
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "active_customers": {
+                                                    "properties": {
+                                                        "value": {
+                                                            "type": "integer",
+                                                            "example": 5400
+                                                        },
+                                                        "percent": {
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "example": 4.5
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "revenue": {
+                                                    "properties": {
+                                                        "value": {
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "example": 18250.75
+                                                        },
+                                                        "percent": {
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "example": 3.5
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "growth_rate": {
+                                                    "properties": {
+                                                        "value": {
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "example": 4.5
+                                                        },
+                                                        "percent": {
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "example": 4.5
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden - Admin access required"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/platform/operational/metrics": {
+            "get": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Get platform operational metrics",
+                "description": "Returns real-time operational metrics such as today's transactions, system uptime, compliance score, and support tickets.",
+                "operationId": "getOperationalMetrics",
+                "responses": {
+                    "200": {
+                        "description": "Operational metrics retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Operational Metrics"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "transaction": {
+                                                    "description": "Number of successful transactions today",
+                                                    "type": "integer",
+                                                    "example": 32
+                                                },
+                                                "system_uptime": {
+                                                    "description": "Estimated system uptime percentage for today",
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 99.7
+                                                },
+                                                "compliance_score": {
+                                                    "description": "Compliance score (reserved for future use)",
+                                                    "type": "integer",
+                                                    "example": 0
+                                                },
+                                                "support_tickets": {
+                                                    "description": "Number of open support tickets",
+                                                    "type": "integer",
+                                                    "example": 0
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden - Admin access required"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/products": {
             "get": {
                 "tags": [

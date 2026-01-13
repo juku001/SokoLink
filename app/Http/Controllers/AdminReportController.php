@@ -191,13 +191,5 @@ class AdminReportController extends Controller
     }
 
 
-    public function operationalMetrics(){
 
-
-        $data = [
-            'transaction'=> 0,
-            'system_uptime' => 0,
-            ''
-        ];
-    }
 }

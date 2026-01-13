@@ -50,13 +50,14 @@ Route::middleware(['auth:sanctum', 'user.type:super_admin'])->group(function () 
 
     //here
     Route::prefix('/admin/platform')->group(function () {
-        Route::get('/overview',[PlatformActivityController::class, 'overview']);
+        Route::get('/overview', [PlatformActivityController::class, 'overview']);
+        Route::get('/operational/metrics', [PlatformActivityController::class, 'operationalMetrics']);
         Route::get('/recent/alerts', [PlatformActivityController::class, 'recentAlerts']);
         Route::get('/service/status', [PlatformActivityController::class, 'serviceStatus']);
         Route::get('/activity', [PlatformActivityController::class, 'index']);
     });
 
-    Route::get('/admin/operational/metrics', [AdminReportController::class, 'operationalMetrics']);
+
     //upto here
 });
 
