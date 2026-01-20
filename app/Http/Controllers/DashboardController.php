@@ -801,6 +801,8 @@ class DashboardController extends Controller
             ->count();
 
         $active = Store::where('status', 'active')->count();
+
+        
         $activeLastMonth = Store::where('status', 'active')
             ->whereMonth('created_at', $lastMonth->month)
             ->whereYear('created_at', $lastMonth->year)

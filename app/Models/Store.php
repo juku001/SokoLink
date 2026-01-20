@@ -13,6 +13,7 @@ class Store extends Model
         'name',
         'slug',
         'category_id',
+        'store_id',
         'description',
         'is_online',
         'thumbnail',
@@ -25,7 +26,8 @@ class Store extends Model
         'rating_count',
         'region_id',
         'is_featured',
-        'address'
+        'address',
+        'status'
     ];
 
     protected $appends = ['products_count'];
@@ -62,6 +64,7 @@ class Store extends Model
     }
 
 
+    
     public function createDefaultStoreLink(): void
     {
         $base = strtoupper(Str::slug($this->slug ?? $this->name, ''));
