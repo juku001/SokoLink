@@ -107,7 +107,7 @@ class AcademyLessonController extends Controller
         }
 
         $lesson = AcademyLesson::create([
-            'category_id' => $academy->id,
+            'academy_id' => $academy->id,
             'title' => $data['title'],
             'subtitle' => $data['subtitle'],
             'instructor' => $data['instructor'] ?? null,
