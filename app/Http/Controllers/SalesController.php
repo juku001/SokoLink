@@ -59,8 +59,13 @@ class SalesController extends Controller
     public function dashboard()
     {
         $authId = Auth::id();
+        $activeStore = self::requireActiveSellerStore();
+        if (!($activeStore instanceof Store)) {
+            return self::requireActiveSellerStore();
+        }
+        $activeStoreId = $activeStore->id;
 
-        $baseQuery = Sale::where('seller_id', $authId);
+        $baseQuery = Sale::where('seller_id', $authId)->where('store_id', $activeStoreId);
 
         $today = now()->toDateString();
         $yesterday = now()->subDay()->toDateString();

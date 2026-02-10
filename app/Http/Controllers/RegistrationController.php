@@ -41,6 +41,7 @@ class RegistrationController extends Controller
      *             @OA\Property(property="name", type="string", example="John Doe"),
      *             @OA\Property(property="email", type="string", format="email", example="johndoe@example.com"),
      *             @OA\Property(property="phone", type="string", example="+255712345678"),
+     *             @OA\Property(property="provider", type="string", example="email"),
      *             @OA\Property(property="password", type="string", example="secret123", description="Required only when registering seller")
      *         )
      *     ),
@@ -97,6 +98,7 @@ class RegistrationController extends Controller
                 'unique:users,phone',
                 'regex:/^\+255\d{9}$/'
             ],
+            'provider' => 'nullable|in:email,mobile,both'
         ];
 
         $messages = [
@@ -130,7 +132,28 @@ class RegistrationController extends Controller
 
             $user = User::create($data);
 
-            CustomFunctions::createProviders($user->id, AuthProviderType::Email);
+            $provider = $request->provider ?? 'email';
+
+            switch ($provider) {
+                case 'both':
+                    CustomFunctions::createProviders($user->id, AuthProviderType::Email);
+                    CustomFunctions::createProviders($user->id, AuthProviderType::Mobile);
+                    break;
+
+                case 'mobile':
+                    CustomFunctions::createProviders($user->id, AuthProviderType::Mobile);
+                    break;
+
+                case 'email':
+                default:
+                    CustomFunctions::createProviders(
+                        $user->id,
+                        $role == 'admin' ?
+                        AuthProviderType::Email : AuthProviderType::Mobile
+                    );
+                    break;
+            }
+
 
             DB::commit();
             return ResponseHelper::success([], ucfirst($role) . " registered successful.");

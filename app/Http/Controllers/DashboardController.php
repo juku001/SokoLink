@@ -68,8 +68,15 @@ class DashboardController extends Controller
 
         $id = auth()->user()->id;
 
+        $activeStore = self::requireActiveSellerStore();
+        if (!($activeStore instanceof Store)) {
+            return self::requireActiveSellerStore();
+        }
+        $activeStoreId = $activeStore->id;
+
         $stats = Contact::selectRaw("type, COUNT(*) as count")
             ->where('user_id', $id)
+            ->where('store_id', $activeStoreId)
             ->groupBy('type')
             ->pluck('count', 'type');
 
@@ -200,7 +207,11 @@ class DashboardController extends Controller
     public function expenses()
     {
         $authId = auth()->id();
-
+        $activeStore = self::requireActiveSellerStore();
+        if (!($activeStore instanceof Store)) {
+            return self::requireActiveSellerStore();
+        }
+        $activeStoreId = $activeStore->id;
         // Current month and last month
         $now = now();
         $startOfMonth = $now->copy()->startOfMonth();
@@ -210,12 +221,12 @@ class DashboardController extends Controller
         $endOfLastMonth = $now->copy()->subMonth()->endOfMonth();
 
         // Total for current month
-        $total = Expense::where('seller_id', $authId)
+        $total = Expense::where('seller_id', $authId)->where('store_id', $activeStoreId)
             ->whereBetween('expense_date', [$startOfMonth, $endOfMonth])
             ->sum('amount');
 
         // Total for last month
-        $lastMonthTotal = Expense::where('seller_id', $authId)
+        $lastMonthTotal = Expense::where('seller_id', $authId)->where('store_id', $activeStoreId)
             ->whereBetween('expense_date', [$startOfLastMonth, $endOfLastMonth])
             ->sum('amount');
 
@@ -225,7 +236,7 @@ class DashboardController extends Controller
             : 100;
 
         // Pending expenses
-        $pendingQuery = Expense::where('seller_id', $authId)->where('status', 'pending');
+        $pendingQuery = Expense::where('seller_id', $authId)->where('store_id', $activeStoreId)->where('status', 'pending');
         $pending = $pendingQuery->sum('amount');
         $pendingCount = $pendingQuery->count();
 
@@ -802,7 +813,7 @@ class DashboardController extends Controller
 
         $active = Store::where('status', 'active')->count();
 
-        
+
         $activeLastMonth = Store::where('status', 'active')
             ->whereMonth('created_at', $lastMonth->month)
             ->whereYear('created_at', $lastMonth->year)

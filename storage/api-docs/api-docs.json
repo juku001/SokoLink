@@ -15650,6 +15650,10 @@
                                         "type": "string",
                                         "example": "+255712345678"
                                     },
+                                    "provider": {
+                                        "type": "string",
+                                        "example": "email"
+                                    },
                                     "password": {
                                         "description": "Required only when registering seller",
                                         "type": "string",

@@ -2,6 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\ResponseHelper;
+use App\Models\Seller;
+use App\Models\Store;
+use Illuminate\Support\Facades\Auth;
+
+
 /**
  * @OA\Info(
  *     title="SokoLink Engine API",
@@ -248,7 +254,7 @@ namespace App\Http\Controllers;
  *     name="Users",
  *     description="User related APIs, specifically designed for the admin to manage its users."
  * ),
-  * @OA\Tag(
+ * @OA\Tag(
  *     name="Search",
  *     description="Its for the buyer to look for the products or stores from the first page by searching for the name or description.."
  * ),
@@ -260,7 +266,7 @@ namespace App\Http\Controllers;
  *     name="Stores",
  *     description="APIs to manage stores, their details, and operational information."
  * ),
-  * @OA\Tag(
+ * @OA\Tag(
  *     name="Inventory",
  *     description="APIs to manage products count in the store. The API's for the Inventory Stock Management for the seller."
  * ),
@@ -341,5 +347,20 @@ namespace App\Http\Controllers;
 
 abstract class Controller
 {
-  //
+
+  protected static function requireActiveSellerStore()
+  {
+    $user = Auth::user();
+
+    if ($user->role !== 'seller') {
+      return ResponseHelper::error([], 'User is not a seller', 403);
+    }
+
+    $seller = Seller::where('user_id', $user->id)->first();
+
+    if (!$seller || !$seller->active_store) {
+      return ResponseHelper::error([], 'Seller has no active store', 403);
+    }
+    return Store::findOrFail($seller->active_store);
+  }
 }

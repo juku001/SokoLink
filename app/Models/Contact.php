@@ -8,6 +8,7 @@ class Contact extends Model
 {
     protected $fillable = [
         'name',
+        'store_id',
         'mobile',
         'email',
         'whatsapp',
@@ -20,5 +21,9 @@ class Contact extends Model
     public function group()
     {
         return $this->belongsTo(Group::class);
+    }
+
+    public function store(){
+        return $this->belongsTo(Store::class);
     }
 }

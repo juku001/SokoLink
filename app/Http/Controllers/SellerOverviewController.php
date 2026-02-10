@@ -241,6 +241,8 @@ class SellerOverviewController extends Controller
     public function topCategories()
     {
 
+  
+
         $categories = \DB::table('sale_products')
             ->join('products', 'sale_products.product_id', '=', 'products.id')
             ->join('categories', 'products.category_id', '=', 'categories.id')
@@ -317,8 +319,14 @@ class SellerOverviewController extends Controller
     public function recentSales()
     {
         $auth = auth()->user()->id;
+
+        $activeStore = self::requireActiveSellerStore();
+        if (!($activeStore instanceof Store)) {
+            return self::requireActiveSellerStore();
+        }
+        $activeStoreId = $activeStore->id;
         $sales = Sale::with('saleProducts')
-            ->where('seller_id', $auth)
+            ->where('seller_id', $auth)->where('store_id', $activeStoreId)
             ->latest()
             ->limit(5)
             ->get();
