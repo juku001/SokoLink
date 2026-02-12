@@ -27,6 +27,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/checkout', [PaymentController::class, 'checkout']); //now transfer the cart to orders,address and payment methods.
     
     Route::get('/payments', [PaymentController::class, 'index']); //get buyers payment history
+    Route::get('/payments/{id}', [PaymentController::class, 'show']); //get payment
 
 
 });

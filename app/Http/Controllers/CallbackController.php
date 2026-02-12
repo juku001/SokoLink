@@ -7,7 +7,10 @@ use App\Helpers\SMSHelper;
 use App\Models\Address;
 use App\Models\AirtelCallbackLog;
 use App\Models\Escrow;
+use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\Payment;
+use App\Models\Region;
 use App\Models\Sale;
 use App\Models\SaleProduct;
 use App\Models\Shipment;
@@ -70,11 +73,55 @@ class CallbackController extends Controller
             $payment->status = 'successful';
             $payment->save();
 
-            $order = $payment->order;
-            if (!$order) {
-                return ResponseHelper::error([], 'Order not found for this payment.', 404);
+            // Get cart from payment
+            $cart = $payment->cart;
+            if (!$cart) {
+                return ResponseHelper::error([], 'Cart not found for this payment.', 404);
             }
 
+            // Get checkout data from session
+            $checkoutData = session('checkout_data_' . $cart->id);
+            if (!$checkoutData) {
+                return ResponseHelper::error([], 'Checkout data not found.', 404);
+            }
+
+            // Create order after successful payment
+            $order = Order::create([
+                'cart_id' => $cart->id,
+                'buyer_id' => $payment->user_id,
+                'total_amount' => $checkoutData['total_amount'],
+                'shipping_cost' => $checkoutData['shipping_cost'],
+                'status' => 'paid',
+                'payment_option_id' => $checkoutData['payment_option_id'],
+                'payment_method_id' => $checkoutData['payment_method_id']
+            ]);
+
+            // Create address
+            $region = Region::findOrFail($checkoutData['region_id']);
+            Address::create([
+                'user_id' => $payment->user_id,
+                'order_id' => $order->id,
+                'type' => 'shipping',
+                'fullname' => $checkoutData['fullname'],
+                'street' => $checkoutData['address'],
+                'region_id' => $region->id,
+                'country_id' => $region->country_id,
+                'phone' => $checkoutData['address_phone'] ?? $checkoutData['phone'],
+            ]);
+
+            // Create order items from cart items
+            foreach ($cart->items as $item) {
+                OrderItem::create([
+                    'order_id' => $order->id,
+                    'product_id' => $item->product_id,
+                    'quantity' => $item->quantity,
+                    'price' => $item->price,
+                ]);
+            }
+
+            // Link payment to order
+            $payment->order_id = $order->id;
+            $payment->save();
 
             AirtelCallbackLog::create([
                 'payload' => json_encode($transaction),
@@ -88,15 +135,11 @@ class CallbackController extends Controller
                 'status' => 'success'
             ]);
 
-
-            $order->status = 'paid';
-            $order->save();
-
             // Delete cart after successful payment
-            $cart = $order->cart;
-            if ($cart) {
-                $cart->delete();
-            }
+            $cart->delete();
+
+            // Clear checkout data from session
+            session()->forget('checkout_data_' . $cart->id);
 
             $order->load('items.product.store', 'address');
 
@@ -176,7 +219,7 @@ class CallbackController extends Controller
 
             DB::commit();
 
-            return ResponseHelper::success([], 'Payment confirmed, escrows and shipments created.');
+            return ResponseHelper::success([], 'Payment confirmed, order created and cart deleted.');
 
         } catch (\Exception $e) {
             DB::rollBack();

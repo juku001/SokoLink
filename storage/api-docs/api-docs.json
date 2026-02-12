@@ -12444,6 +12444,89 @@
                 ]
             }
         },
+        "/payments/{id}": {
+            "get": {
+                "tags": [
+                    "Payments"
+                ],
+                "summary": "Get payment details",
+                "description": "Retrieve a single payment by its ID.",
+                "operationId": "getPaymentById",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Payment ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Payment details retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Payment details"
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 200
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Payment"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Payment not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Payment not found"
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 404
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/payment/methods": {
             "get": {
                 "tags": [
@@ -21297,6 +21380,89 @@
                     "type": "string",
                     "example": "The field is required."
                 }
+            },
+            "Payment": {
+                "title": "Payment",
+                "required": [
+                    "user_id",
+                    "amount",
+                    "status"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "order_id": {
+                        "type": "integer",
+                        "example": 10,
+                        "nullable": true
+                    },
+                    "user_id": {
+                        "type": "integer",
+                        "example": 5
+                    },
+                    "store_id": {
+                        "type": "integer",
+                        "example": 2
+                    },
+                    "amount": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 25000.5
+                    },
+                    "reference": {
+                        "type": "string",
+                        "example": "PAY-2026-0001"
+                    },
+                    "transaction_id": {
+                        "type": "string",
+                        "example": "TXN938475938"
+                    },
+                    "payment_method_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "payment_option_id": {
+                        "type": "integer",
+                        "example": 2
+                    },
+                    "card_number": {
+                        "type": "string",
+                        "example": "**** **** **** 1234"
+                    },
+                    "mm_yr": {
+                        "type": "string",
+                        "example": "12/26"
+                    },
+                    "msisdn": {
+                        "type": "string",
+                        "example": "255712345678"
+                    },
+                    "status": {
+                        "type": "string",
+                        "example": "success"
+                    },
+                    "response_notes": {
+                        "type": "string",
+                        "example": "Payment processed successfully"
+                    },
+                    "notes": {
+                        "type": "string",
+                        "example": "Customer paid via mobile money"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-02-12T08:30:00Z"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-02-12T08:35:00Z"
+                    }
+                },
+                "type": "object"
             }
         },
         "responses": {

@@ -231,109 +231,117 @@ class PaymentController extends Controller
             $shipping = 0;
             $total = $subTotal + $shipping;
 
-            // Check if order already exists for this cart
-            $order = Order::where('cart_id', $cart->id)->first();
-
-            if (!$order) {
-                // Create new order only if it doesn't exist
-                $order = Order::create([
-                    'cart_id' => $cart->id,
-                    'buyer_id' => $authId,
-                    'total_amount' => $total,
-                    'shipping_cost' => $shipping,
-                    'status' => 'pending',
-                    'payment_option_id' => $request->payment_option_id,
-                    'payment_method_id' => $request->payment_method_id
-                ]);
-
-                $region = Region::findOrFail($request->region_id);
-
-                Address::create([
-                    'user_id' => $authId,
-                    'order_id' => $order->id,
-                    'type' => 'shipping',
-                    'fullname' => $request->fullname,
-                    'street' => $request->address,
-                    'region_id' => $region->id,
-                    'country_id' => $region->country_id,
-                    'phone' => $request->address_phone ?? $request->phone,
-                ]);
-
-                foreach ($cart->items as $item) {
-                    OrderItem::create([
-                        'order_id' => $order->id,
-                        'product_id' => $item->product_id,
-                        'quantity' => $item->quantity,
-                        'price' => $item->price,
-                    ]);
-                }
-            } else {
-                // Update existing order with new payment details and sync cart items
-                $order->payment_option_id = $request->payment_option_id;
-                $order->payment_method_id = $request->payment_method_id;
-                $order->total_amount = $total;
-                $order->shipping_cost = $shipping;
-                $order->save();
-
-                // Update address if provided
-                $address = $order->address;
-                if ($address) {
-                    $address->fullname = $request->fullname;
-                    $address->street = $request->address;
-                    $address->phone = $request->address_phone ?? $request->phone;
-                    $region = Region::findOrFail($request->region_id);
-                    $address->region_id = $region->id;
-                    $address->country_id = $region->country_id;
-                    $address->save();
-                }
-
-                // Sync order items with current cart items
-                OrderItem::where('order_id', $order->id)->delete();
-                
-                foreach ($cart->items as $item) {
-                    OrderItem::create([
-                        'order_id' => $order->id,
-                        'product_id' => $item->product_id,
-                        'quantity' => $item->quantity,
-                        'price' => $item->price,
-                    ]);
-                }
-            }
-
-
-            $check = $this->canBePaid($order);
-            if ($check !== true) {
-                return $check;
-            }
-
             $checkOptionAndMethods = $this->optionsAndMethods($request);
             if ($checkOptionAndMethods !== true) {
                 return $checkOptionAndMethods;
             }
 
+            // Store checkout details in session/temp storage for order creation after payment
+            $checkoutData = [
+                'fullname' => $request->fullname,
+                'phone' => $request->phone,
+                'address_phone' => $request->address_phone,
+                'address' => $request->address,
+                'region_id' => $request->region_id,
+                'payment_option_id' => $request->payment_option_id,
+                'payment_method_id' => $request->payment_method_id,
+                'total_amount' => $total,
+                'shipping_cost' => $shipping,
+            ];
+
+            // Store checkout data in session or cache
+            session(['checkout_data_' . $cart->id => $checkoutData]);
+
             $payOption = PaymentOptions::find($request->payment_option_id);
             switch ($payOption->key) {
                 case 'pay-now':
-                    return $this->handlePayNow($order, $request);
+                    return $this->handlePayNowForCart($cart, $request, $total);
                 case 'save-pay-later':
-                    return $this->handleSavePayLater($order, $request);
+                    return $this->handleSavePayLaterForCart($cart, $request, $total);
                 case 'request-payment':
-                    return $this->handleRequestPayment($order, $request);
+                    return $this->handleRequestPaymentForCart($cart, $request, $total);
                 default:
                     return ResponseHelper::error([], "Invalid payment option selected.", 400);
             }
-            DB::commit();
 
+            DB::commit();
 
         } catch (QueryException $e) {
             return ResponseHelper::error([], "Error : " . $e->getMessage(), 400);
         } catch (Exception $e) {
-
             DB::rollBack();
             return ResponseHelper::error([], "Error: " . $e->getMessage(), 500);
-
         }
     }
+
+
+
+
+
+
+    /**
+     * @OA\Get(
+     *     path="/payments/{id}",
+     *     tags={"Payments"},
+     *     summary="Get payment details",
+     *     description="Retrieve a single payment by its ID.",
+     *     operationId="getPaymentById",
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="Payment ID",
+     *         @OA\Schema(
+     *             type="integer",
+     *             example=1
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Payment details retrieved successfully",
+     *         @OA\JsonContent(
+     *              @OA\Property(property="status", type="boolean", example=true),
+     *              @OA\Property(property="message", type="string", example="Payment details"),
+     *              @OA\Property(property="code", type="integer", example=200),
+     *              @OA\Property(property="data", ref="#/components/schemas/Payment")
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=404,
+     *         description="Payment not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Payment not found"),
+     *             @OA\Property(property="code", type="integer", example=404)
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated"
+     *     )
+     * )
+     */
+    public function show(string $id)
+    {
+        $payment = Payment::find($id);
+
+        if (!$payment) {
+            return ResponseHelper::error([], 'Payment not found', 404);
+        }
+
+        return ResponseHelper::success($payment, 'Payment details', 200);
+    }
+
+
+
+
+
+
 
 
     /**
@@ -413,15 +421,14 @@ class PaymentController extends Controller
 
 
 
-    private function handlePayNow(Order $order, Request $request)
+    private function handlePayNowForCart(Cart $cart, Request $request, $amount)
     {
         $phoneNumber = $request->phone;
-        $amount = $order->total_amount;
 
         $data = [
             'phone' => $phoneNumber,
             'amount' => $amount,
-            'order_id' => $order->id,
+            'cart_id' => $cart->id,
         ];
 
         $payHelper = new PaymentHelper();
@@ -429,12 +436,12 @@ class PaymentController extends Controller
 
         $response = $payHelper->initiatePayment($payMethod, $data);
 
-        // Create payment record
+        // Create payment record linked to cart
         $payment = new Payment();
         $payment->payment_option_id = $request->payment_option_id;
         $payment->payment_method_id = $request->payment_method_id;
         $payment->amount = $amount;
-        $payment->order_id = $order->id;
+        $payment->cart_id = $cart->id;
         $payment->user_id = $request->user()->id;
         $payment->msisdn = $phoneNumber;
         $payment->reference = $response['reference'] ?? null;
@@ -460,17 +467,18 @@ class PaymentController extends Controller
                 'message' => $response['message'] ?? 'Payment initiation failed.',
             ], 'Payment initiation failed', 400);
         }
-
     }
 
-    private function handleSavePayLater(Order $order, Request $request)
+    private function handleSavePayLaterForCart(Cart $cart, Request $request, $amount)
     {
-
+        // Implementation for save pay later
+        return ResponseHelper::error([], 'Save pay later not implemented yet.', 501);
     }
 
-    private function handleRequestPayment(Order $order, Request $request)
+    private function handleRequestPaymentForCart(Cart $cart, Request $request, $amount)
     {
-
+        // Implementation for request payment
+        return ResponseHelper::error([], 'Request payment not implemented yet.', 501);
     }
 
 
