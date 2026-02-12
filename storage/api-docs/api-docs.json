@@ -3050,6 +3050,95 @@
                 ]
             }
         },
+        "/carts/clear": {
+            "post": {
+                "tags": [
+                    "Cart"
+                ],
+                "summary": "Clear user cart",
+                "description": "Deletes the authenticated user's cart and all its items.",
+                "operationId": "clearCart",
+                "responses": {
+                    "204": {
+                        "description": "Cart cleared successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Cart cleared successful"
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 204
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Cart is empty",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Please add items to cart first."
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 400
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated"
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "example": 401
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/carts/{itemId}": {
             "delete": {
                 "tags": [
@@ -12266,6 +12355,10 @@
                                         "type": "string",
                                         "example": "+255712345678"
                                     },
+                                    "address_phone": {
+                                        "type": "string",
+                                        "example": "+255712345678"
+                                    },
                                     "address": {
                                         "type": "string",
                                         "example": "123 Main Street"
@@ -12279,162 +12372,6 @@
                                         "example": 2
                                     },
                                     "payment_option_id": {
-                                        "type": "integer",
-                                        "example": 1
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "201": {
-                        "description": "Order placed successfully",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "boolean",
-                                            "example": true
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Order placed successfully"
-                                        },
-                                        "code": {
-                                            "type": "integer",
-                                            "example": 200
-                                        },
-                                        "data": {
-                                            "properties": {
-                                                "order_id": {
-                                                    "type": "integer",
-                                                    "example": 101
-                                                },
-                                                "total": {
-                                                    "type": "number",
-                                                    "format": "float",
-                                                    "example": 50000
-                                                },
-                                                "subtotal": {
-                                                    "type": "number",
-                                                    "format": "float",
-                                                    "example": 45000
-                                                },
-                                                "shipping": {
-                                                    "type": "number",
-                                                    "format": "float",
-                                                    "example": 5000
-                                                },
-                                                "items": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "properties": {
-                                                            "product_id": {
-                                                                "type": "integer",
-                                                                "example": 10
-                                                            },
-                                                            "quantity": {
-                                                                "type": "integer",
-                                                                "example": 2
-                                                            },
-                                                            "price": {
-                                                                "type": "number",
-                                                                "format": "float",
-                                                                "example": 15000
-                                                            },
-                                                            "product": {
-                                                                "properties": {
-                                                                    "name": {
-                                                                        "type": "string",
-                                                                        "example": "Smartphone Case"
-                                                                    },
-                                                                    "store": {
-                                                                        "properties": {
-                                                                            "name": {
-                                                                                "type": "string",
-                                                                                "example": "Tech Store"
-                                                                            }
-                                                                        },
-                                                                        "type": "object"
-                                                                    }
-                                                                },
-                                                                "type": "object"
-                                                            }
-                                                        },
-                                                        "type": "object"
-                                                    }
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Cart empty or query error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "boolean",
-                                            "example": false
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Please add items to cart first."
-                                        },
-                                        "code": {
-                                            "type": "integer",
-                                            "example": 400
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/422"
-                    },
-                    "500": {
-                        "$ref": "#/components/responses/500"
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/payment/process": {
-            "post": {
-                "tags": [
-                    "Payments"
-                ],
-                "summary": "Initiate payment for an order",
-                "description": "Initiates a payment process for a specific order using a selected payment option.",
-                "operationId": "initiatePayment",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "properties": {
-                                    "order_id": {
-                                        "description": "ID of the order to pay for",
-                                        "type": "integer",
-                                        "example": 101
-                                    },
-                                    "payment_option_id": {
-                                        "description": "ID of the selected payment option",
                                         "type": "integer",
                                         "example": 1
                                     }
@@ -12486,30 +12423,6 @@
                                         "code": {
                                             "type": "integer",
                                             "example": 400
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Order not found",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "boolean",
-                                            "example": false
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Order not found"
-                                        },
-                                        "code": {
-                                            "type": "integer",
-                                            "example": 404
                                         }
                                     },
                                     "type": "object"

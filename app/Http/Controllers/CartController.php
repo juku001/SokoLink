@@ -85,8 +85,8 @@ class CartController extends Controller implements HasMiddleware
                 'quantity' => $item->quantity,
             ];
         });
-
-        // Calculate subtotal
+        
+        // // Calculate subtotal
         $subTotal = $cart->items->sum(function ($item) {
             return $item->price * $item->quantity;
         });
@@ -183,6 +183,69 @@ class CartController extends Controller implements HasMiddleware
             return ResponseHelper::error([], "Error: " . $e->getMessage(), 500);
         }
     }
+
+
+
+
+
+
+
+    /**
+     * @OA\Post(
+     *     path="/carts/clear",
+     *     tags={"Cart"},
+     *     summary="Clear user cart",
+     *     description="Deletes the authenticated user's cart and all its items.",
+     *     operationId="clearCart",
+     *     security={{"bearerAuth": {}}},
+     * 
+     *     @OA\Response(
+     *         response=204,
+     *         description="Cart cleared successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Cart cleared successful"),
+     *             @OA\Property(property="code", type="integer", example=204)
+     *         )
+     *     ),
+     * 
+     *     @OA\Response(
+     *         response=400,
+     *         description="Cart is empty",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Please add items to cart first."),
+     *             @OA\Property(property="code", type="integer", example=400)
+     *         )
+     *     ),
+     * 
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated",
+     *          @OA\JsonContent(
+     *             @OA\Property(property="status", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Unauthenticated"),
+     *             @OA\Property(property="code", type="integer", example=401)
+     *         )
+     *     )
+     * )
+     */
+    public function clear(Request $request)
+    {
+        $authId = auth()->id();
+        $cart = Cart::with('items.product.store')
+            ->where('buyer_id', $authId)
+            ->first();
+
+        if (!$cart || $cart->items->count() == 0) {
+            return ResponseHelper::error([], 'Please add items to cart first.', 400);
+        }
+
+        $cart->delete();
+
+        return ResponseHelper::success([], 'Cart cleared successful', 204);
+    }
+
 
 
     /**

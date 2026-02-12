@@ -92,6 +92,12 @@ class CallbackController extends Controller
             $order->status = 'paid';
             $order->save();
 
+            // Delete cart after successful payment
+            $cart = $order->cart;
+            if ($cart) {
+                $cart->delete();
+            }
+
             $order->load('items.product.store', 'address');
 
             $itemsBySeller = [];

@@ -16,8 +16,8 @@ class Cart extends Model
     }
 
 
-    public function payments()
+    public function order()
     {
-        return $this->hasMany(Payment::class);
+        return $this->hasOne(Order::class);
     }
 }

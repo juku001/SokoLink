@@ -8,6 +8,7 @@ use Illuminate\Support\Str;
 class Order extends Model
 {
     protected $fillable = [
+        'cart_id',
         'buyer_id',
         'total_amount',
         'shipping_cost',
@@ -58,6 +59,12 @@ class Order extends Model
     public function buyer()
     {
         return $this->belongsTo(User::class, 'buyer_id');
+    }
+
+
+    public function cart()
+    {
+        return $this->belongsTo(Cart::class);
     }
 
     public function items()

@@ -151,6 +151,7 @@ class PaymentController extends Controller
      *                 required={"fullname","phone","address","region_id","payment_method_id","payment_option_id"},
      *                 @OA\Property(property="fullname", type="string", example="John Doe"),
      *                 @OA\Property(property="phone", type="string", example="+255712345678"),
+     *                 @OA\Property(property="address_phone", type="string", example="+255712345678"),
      *                 @OA\Property(property="address", type="string", example="123 Main Street"),
      *                 @OA\Property(property="region_id", type="integer", example=1),
      *                 @OA\Property(property="payment_method_id", type="integer", example=2),
@@ -160,54 +161,27 @@ class PaymentController extends Controller
      *     ),
      *
      *     @OA\Response(
-     *         response=201,
-     *         description="Order placed successfully",
+     *         response=200,
+     *         description="Payment process initiated successfully",
      *         @OA\JsonContent(
      *             type="object",
      *             @OA\Property(property="status", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="Order placed successfully"),
+     *             @OA\Property(property="message", type="string", example="Payment initiated successfully"),
      *             @OA\Property(property="code", type="integer", example=200),
-     *             @OA\Property(
-     *                 property="data",
-     *                 type="object",
-     *                 @OA\Property(property="order_id", type="integer", example=101),
-     *                 @OA\Property(property="total", type="number", format="float", example=50000),
-     *                 @OA\Property(property="subtotal", type="number", format="float", example=45000),
-     *                 @OA\Property(property="shipping", type="number", format="float", example=5000),
-     *                 @OA\Property(
-     *                     property="items",
-     *                     type="array",
-     *                     @OA\Items(
-     *                         type="object",
-     *                         @OA\Property(property="product_id", type="integer", example=10),
-     *                         @OA\Property(property="quantity", type="integer", example=2),
-     *                         @OA\Property(property="price", type="number", format="float", example=15000),
-     *                         @OA\Property(
-     *                             property="product",
-     *                             type="object",
-     *                             @OA\Property(property="name", type="string", example="Smartphone Case"),
-     *                             @OA\Property(
-     *                                 property="store",
-     *                                 type="object",
-     *                                 @OA\Property(property="name", type="string", example="Tech Store")
-     *                             )
-     *                         )
-     *                     )
-     *                 )
-     *             )
      *         )
      *     ),
      *
      *     @OA\Response(
      *         response=400,
-     *         description="Cart empty or query error",
+     *         description="Invalid payment option or cannot pay order",
      *         @OA\JsonContent(
      *             type="object",
      *             @OA\Property(property="status", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string", example="Please add items to cart first."),
+     *             @OA\Property(property="message", type="string", example="Invalid payment option selected."),
      *             @OA\Property(property="code", type="integer", example=400),
      *         )
      *     ),
+     *
      *
      *     @OA\Response(
      *         response=422,
@@ -228,6 +202,7 @@ class PaymentController extends Controller
         $validator = Validator::make($request->all(), [
             'fullname' => 'required|string',
             'phone' => 'required|string|regex:/^\+255\d{9}$/',
+            'address_phone' => 'nullable|string|regex:/^\+255\d{9}$/',
             'address' => 'required|string',
             'region_id' => 'required|numeric|exists:regions,id',
             'payment_method_id' => 'required|numeric|exists:payment_methods,id',
@@ -256,165 +231,86 @@ class PaymentController extends Controller
             $shipping = 0;
             $total = $subTotal + $shipping;
 
+            // Check if order already exists for this cart
+            $order = Order::where('cart_id', $cart->id)->first();
 
-            $order = Order::create([
-                'buyer_id' => $authId,
-                'total_amount' => $total,
-                'shipping_cost' => $shipping,
-                'status' => 'pending',
-                'payment_option_id' => $request->payment_option_id,
-                'payment_method_id' => $request->payment_method_id
-            ]);
-
-
-            $region = Region::findOrFail($request->region_id);
-
-            Address::create([
-                'user_id' => $authId,
-                'order_id' => $order->id,
-                'type' => 'shipping',
-                'fullname' => $request->fullname,
-                'street' => $request->address,
-                'region_id' => $region->id,
-                'country_id' => $region->country_id,
-                'phone' => $request->phone,
-            ]);
-
-
-            foreach ($cart->items as $item) {
-                OrderItem::create([
-                    'order_id' => $order->id,
-                    'product_id' => $item->product_id,
-                    'quantity' => $item->quantity,
-                    'price' => $item->price,
+            if (!$order) {
+                // Create new order only if it doesn't exist
+                $order = Order::create([
+                    'cart_id' => $cart->id,
+                    'buyer_id' => $authId,
+                    'total_amount' => $total,
+                    'shipping_cost' => $shipping,
+                    'status' => 'pending',
+                    'payment_option_id' => $request->payment_option_id,
+                    'payment_method_id' => $request->payment_method_id
                 ]);
+
+                $region = Region::findOrFail($request->region_id);
+
+                Address::create([
+                    'user_id' => $authId,
+                    'order_id' => $order->id,
+                    'type' => 'shipping',
+                    'fullname' => $request->fullname,
+                    'street' => $request->address,
+                    'region_id' => $region->id,
+                    'country_id' => $region->country_id,
+                    'phone' => $request->address_phone ?? $request->phone,
+                ]);
+
+                foreach ($cart->items as $item) {
+                    OrderItem::create([
+                        'order_id' => $order->id,
+                        'product_id' => $item->product_id,
+                        'quantity' => $item->quantity,
+                        'price' => $item->price,
+                    ]);
+                }
+            } else {
+                // Update existing order with new payment details and sync cart items
+                $order->payment_option_id = $request->payment_option_id;
+                $order->payment_method_id = $request->payment_method_id;
+                $order->total_amount = $total;
+                $order->shipping_cost = $shipping;
+                $order->save();
+
+                // Update address if provided
+                $address = $order->address;
+                if ($address) {
+                    $address->fullname = $request->fullname;
+                    $address->street = $request->address;
+                    $address->phone = $request->address_phone ?? $request->phone;
+                    $region = Region::findOrFail($request->region_id);
+                    $address->region_id = $region->id;
+                    $address->country_id = $region->country_id;
+                    $address->save();
+                }
+
+                // Sync order items with current cart items
+                OrderItem::where('order_id', $order->id)->delete();
+                
+                foreach ($cart->items as $item) {
+                    OrderItem::create([
+                        'order_id' => $order->id,
+                        'product_id' => $item->product_id,
+                        'quantity' => $item->quantity,
+                        'price' => $item->price,
+                    ]);
+                }
             }
 
 
-            $cart->items()->delete();
-            $cart->delete();
+            $check = $this->canBePaid($order);
+            if ($check !== true) {
+                return $check;
+            }
 
-            DB::commit();
+            $checkOptionAndMethods = $this->optionsAndMethods($request);
+            if ($checkOptionAndMethods !== true) {
+                return $checkOptionAndMethods;
+            }
 
-            return ResponseHelper::success([
-                'order_id' => $order->id,
-                'total' => $total,
-                'subtotal' => $subTotal,
-                'shipping' => $shipping,
-                'items' => $order->items()->with('product.store')->get(),
-            ], "Order placed successfully", 201);
-
-        } catch (QueryException $e) {
-            return ResponseHelper::error([], "Error : " . $e->getMessage(), 400);
-        } catch (Exception $e) {
-
-            DB::rollBack();
-            return ResponseHelper::error([], "Error: " . $e->getMessage(), 500);
-
-        }
-    }
-
-
-
-
-
-    /**
-     * @OA\Post(
-     *     path="/payment/process",
-     *     summary="Initiate payment for an order",
-     *     description="Initiates a payment process for a specific order using a selected payment option.",
-     *     operationId="initiatePayment",
-     *     tags={"Payments"},
-     *     security={{"bearerAuth": {}}},
-     *
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             type="object",
-     *             @OA\Property(property="order_id", type="integer", example=101, description="ID of the order to pay for"),
-     *             @OA\Property(property="payment_option_id", type="integer", example=1, description="ID of the selected payment option")
-     *         )
-     *     ),
-     *
-     *     @OA\Response(
-     *         response=200,
-     *         description="Payment process initiated successfully",
-     *         @OA\JsonContent(
-     *             type="object",
-     *             @OA\Property(property="status", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="Payment initiated successfully"),
-     *             @OA\Property(property="code", type="integer", example=200),
-     *         )
-     *     ),
-     *
-     *     @OA\Response(
-     *         response=400,
-     *         description="Invalid payment option or cannot pay order",
-     *         @OA\JsonContent(
-     *             type="object",
-     *             @OA\Property(property="status", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string", example="Invalid payment option selected."),
-     *             @OA\Property(property="code", type="integer", example=400),
-     *         )
-     *     ),
-     *
-     *     @OA\Response(
-     *         response=404,
-     *         description="Order not found",
-     *         @OA\JsonContent(
-     *             type="object",
-     *             @OA\Property(property="status", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string", example="Order not found"),
-     *             @OA\Property(property="code", type="integer", example=404),
-     *         )
-     *     ),
-     *
-     *     @OA\Response(
-     *         response=422,
-     *         description="Validation errors",
-     *         ref="#/components/responses/422"
-     *     ),
-     *
-     *     @OA\Response(
-     *         response=500,
-     *         description="Server error",
-     *         ref="#/components/responses/500"
-     *     )
-     * )
-     */
-    public function initiate(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'order_id' => 'required|numeric|exists:orders,id',
-            'payment_option_id' => 'required|numeric|exists:payment_options,id'
-        ], [
-            'order_id.exists' => 'Order does not exist.'
-        ]);
-
-        if ($validator->fails()) {
-            return ResponseHelper::error(
-                $validator->errors(),
-                'Failed to validate fields.',
-                422
-            );
-        }
-
-        $order = Order::find($request->order_id);
-        if (!$order) {
-            return ResponseHelper::error([], "Order not found.", 404);
-        }
-
-        $check = $this->canBePaid($order);
-        if ($check !== true) {
-            return $check;
-        }
-
-        $checkOptionAndMethods = $this->optionsAndMethods($request);
-        if ($checkOptionAndMethods !== true) {
-            return $checkOptionAndMethods;
-        }
-
-        try {
             $payOption = PaymentOptions::find($request->payment_option_id);
             switch ($payOption->key) {
                 case 'pay-now':
@@ -426,12 +322,18 @@ class PaymentController extends Controller
                 default:
                     return ResponseHelper::error([], "Invalid payment option selected.", 400);
             }
+            DB::commit();
+
+
+        } catch (QueryException $e) {
+            return ResponseHelper::error([], "Error : " . $e->getMessage(), 400);
         } catch (Exception $e) {
-            return ResponseHelper::error([], "Error : " . $e->getMessage());
+
+            DB::rollBack();
+            return ResponseHelper::error([], "Error: " . $e->getMessage(), 500);
+
         }
     }
-
-
 
 
     /**
@@ -608,7 +510,7 @@ class PaymentController extends Controller
         $token = $authData['access_token'];
 
         // Step 2: Payment request
-         $reference = 'REF' . now()->format('YmdHis') . rand(1000, 9999);
+        $reference = 'REF' . now()->format('YmdHis') . rand(1000, 9999);
         $paymentUrl = env('AIRTEL_BASE_URL') . 'merchant/v1/payments/';
 
         $paymentBody = [
