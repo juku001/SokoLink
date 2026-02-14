@@ -3,6 +3,7 @@ namespace App\Helpers;
 
 use App\Models\PaymentMethod;
 use App\Services\AirtelAPI;
+use Log;
 
 class PaymentHelper
 {
@@ -78,6 +79,7 @@ class PaymentHelper
      */
     private static function simulateAirtelPayment(array $data)
     {
+        Log::info('simulate airedl');
         if (empty($data['phone']) || empty($data['amount'])) {
             return [
                 'status' => false,
@@ -90,6 +92,7 @@ class PaymentHelper
             $data['phone']
         );
         $data = $airtelAPIService->charge();
+        Log::info('airtel data' . json_encode($data));
         $success = isset($data['dt']['data']['status']) && $data['dt']['data']['status'] === 'SUCCESS';
         if ($success) {
             return [

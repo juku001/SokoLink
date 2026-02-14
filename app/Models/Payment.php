@@ -40,7 +40,6 @@ use Illuminate\Database\Eloquent\Model;
 class Payment extends Model
 {
     protected $fillable = [
-        'order_id',
         'cart_id',
         'user_id',
         'store_id',

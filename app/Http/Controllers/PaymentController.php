@@ -219,7 +219,7 @@ class PaymentController extends Controller
 
 
 
-        DB::beginTransaction();
+        // DB::beginTransaction();
         try {
             $authId = auth()->id();
 
@@ -268,12 +268,12 @@ class PaymentController extends Controller
                     return ResponseHelper::error([], "Invalid payment option selected.", 400);
             }
 
-            DB::commit();
 
-        } catch (QueryException $e) {
-            return ResponseHelper::error([], "Error : " . $e->getMessage(), 400);
-        } catch (Exception $e) {
-            DB::rollBack();
+        }
+        // catch (QueryException $e) {
+        //     return ResponseHelper::error([], "Error : " . $e->getMessage(), 400);
+        // } 
+        catch (Exception $e) {
             return ResponseHelper::error([], "Error: " . $e->getMessage(), 500);
         }
     }
@@ -514,12 +514,12 @@ class PaymentController extends Controller
             $payment->msisdn = $phoneNumber;
             $payment->reference = $response['reference'] ?? null;
 
+
             if (($response['status'] ?? false) === true) {
 
                 $payment->status = 'pending';
                 $payment->notes = $response['message'] ?? 'Payment initiated successfully.';
                 $payment->save();
-
                 DB::commit();
 
                 return ResponseHelper::success([
@@ -529,6 +529,7 @@ class PaymentController extends Controller
                 ], 'Charge initiated.');
 
             } else {
+
 
                 $payment->status = 'failed';
                 $payment->notes = $response['message'] ?? 'Payment initiation failed';
@@ -544,7 +545,6 @@ class PaymentController extends Controller
             }
 
         } catch (Throwable $e) {
-
             DB::rollBack();
 
             Log::error('Payment initiation crashed', [
