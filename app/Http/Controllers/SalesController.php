@@ -6,6 +6,7 @@ use App\Helpers\ResponseHelper;
 use App\Models\InventoryLedger;
 use App\Models\Product;
 use App\Models\Sale;
+use App\Models\Store;
 use App\Models\Seller;
 use Carbon\Carbon;
 use DB;
@@ -58,7 +59,9 @@ class SalesController extends Controller
 
     public function dashboard()
     {
-        $authId = Auth::id();
+
+        $authId = auth()->user()->id;
+
         $activeStore = self::requireActiveSellerStore();
         if (!($activeStore instanceof Store)) {
             return self::requireActiveSellerStore();

@@ -90,9 +90,7 @@ class PaymentHelper
             $data['phone']
         );
         $data = $airtelAPIService->charge();
-        // $success = isset($data['dt']['data']['status']) && $data['dt']['data']['status'] === 'SUCCESS';
-
-        $success = true;
+        $success = isset($data['dt']['data']['status']) && $data['dt']['data']['status'] === 'SUCCESS';
         if ($success) {
             return [
                 'status' => true,

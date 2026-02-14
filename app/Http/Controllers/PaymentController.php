@@ -15,7 +15,9 @@ use App\Models\Payment;
 use App\Models\PaymentMethod;
 use App\Models\PaymentOptions;
 use App\Models\Region;
-use DB;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 use Exception;
 use Http;
 use Illuminate\Database\QueryException;
@@ -214,6 +216,8 @@ class PaymentController extends Controller
         if ($validator->fails()) {
             return ResponseHelper::error($validator->errors(), "Failed to validate fields", 422);
         }
+
+
 
         DB::beginTransaction();
         try {
@@ -421,51 +425,140 @@ class PaymentController extends Controller
 
 
 
+    // private function handlePayNowForCart(Cart $cart, Request $request, $amount)
+    // {
+    //     $phoneNumber = $request->phone;
+    //     Log::info('started pay now for ' . $phoneNumber);
+    //     $data = [
+    //         'phone' => $phoneNumber,
+    //         'amount' => $amount,
+    //         'cart_id' => $cart->id,
+    //     ];
+
+    //     $payHelper = new PaymentHelper();
+    //     $payMethod = PaymentMethod::find($request->payment_method_id);
+
+    //     $response = $payHelper->initiatePayment($payMethod, $data);
+
+
+    //     // Create payment record linked to cart
+    //     $payment = new Payment();
+    //     $payment->payment_option_id = $request->payment_option_id;
+    //     $payment->payment_method_id = $request->payment_method_id;
+    //     $payment->amount = $amount;
+    //     $payment->cart_id = $cart->id;
+    //     $payment->user_id = $request->user()->id;
+    //     $payment->msisdn = $phoneNumber;
+    //     $payment->reference = $response['reference'] ?? null;
+
+    //     if ($response['status'] === true) {
+    //         $payment->status = 'pending'; // waiting for confirmation from Airtel or another provider
+    //         $payment->notes = $response['message'] ?? 'Payment initiated successfully.';
+    //         $payment->save();
+
+    //         return ResponseHelper::success([
+    //             'payment_id' => $payment->id,
+    //             'reference' => $payment->reference,
+    //             'message' => $response['message'] ?? 'Payment initiated successfully.',
+    //         ], 'Charge initiated.');
+    //     } else {
+    //         $payment->status = 'failed';
+    //         $payment->notes = $response['message'] ?? 'Payment initiation failed';
+    //         $payment->save();
+
+    //         return ResponseHelper::error([
+    //             'payment_id' => $payment->id,
+    //             'reference' => $payment->reference,
+    //             'message' => $response['message'] ?? 'Payment initiation failed.',
+    //         ], 'Payment initiation failed', 400);
+    //     }
+    // }
+
+
+
+
     private function handlePayNowForCart(Cart $cart, Request $request, $amount)
     {
-        $phoneNumber = $request->phone;
+        DB::beginTransaction();
 
-        $data = [
-            'phone' => $phoneNumber,
-            'amount' => $amount,
-            'cart_id' => $cart->id,
-        ];
+        try {
+            $phoneNumber = $request->phone;
 
-        $payHelper = new PaymentHelper();
-        $payMethod = PaymentMethod::find($request->payment_method_id);
+            Log::info('Started pay now for ' . $phoneNumber, [
+                'cart_id' => $cart->id,
+                'user_id' => $request->user()->id,
+            ]);
 
-        $response = $payHelper->initiatePayment($payMethod, $data);
+            $data = [
+                'phone' => $phoneNumber,
+                'amount' => $amount,
+                'cart_id' => $cart->id,
+            ];
 
-        // Create payment record linked to cart
-        $payment = new Payment();
-        $payment->payment_option_id = $request->payment_option_id;
-        $payment->payment_method_id = $request->payment_method_id;
-        $payment->amount = $amount;
-        $payment->cart_id = $cart->id;
-        $payment->user_id = $request->user()->id;
-        $payment->msisdn = $phoneNumber;
-        $payment->reference = $response['reference'] ?? null;
+            $payMethod = PaymentMethod::findOrFail($request->payment_method_id);
 
-        if ($response['status'] === true) {
-            $payment->status = 'pending'; // waiting for confirmation from Airtel or another provider
-            $payment->notes = $response['message'] ?? 'Payment initiated successfully.';
-            $payment->save();
+            $payHelper = new PaymentHelper();
+            $response = $payHelper->initiatePayment($payMethod, $data);
 
-            return ResponseHelper::success([
-                'payment_id' => $payment->id,
-                'reference' => $payment->reference,
-                'message' => $response['message'] ?? 'Payment initiated successfully.',
-            ], 'Charge initiated.');
-        } else {
-            $payment->status = 'failed';
-            $payment->notes = $response['message'] ?? 'Payment initiation failed';
-            $payment->save();
+            if (!is_array($response)) {
+                throw new Exception('Invalid payment gateway response');
+            }
 
-            return ResponseHelper::error([
-                'payment_id' => $payment->id,
-                'reference' => $payment->reference,
-                'message' => $response['message'] ?? 'Payment initiation failed.',
-            ], 'Payment initiation failed', 400);
+            // Create payment record
+            $payment = new Payment();
+            $payment->payment_option_id = $request->payment_option_id;
+            $payment->payment_method_id = $request->payment_method_id;
+            $payment->amount = $amount;
+            $payment->cart_id = $cart->id;
+            $payment->user_id = $request->user()->id;
+            $payment->msisdn = $phoneNumber;
+            $payment->reference = $response['reference'] ?? null;
+
+            if (($response['status'] ?? false) === true) {
+
+                $payment->status = 'pending';
+                $payment->notes = $response['message'] ?? 'Payment initiated successfully.';
+                $payment->save();
+
+                DB::commit();
+
+                return ResponseHelper::success([
+                    'payment_id' => $payment->id,
+                    'reference' => $payment->reference,
+                    'message' => $payment->notes,
+                ], 'Charge initiated.');
+
+            } else {
+
+                $payment->status = 'failed';
+                $payment->notes = $response['message'] ?? 'Payment initiation failed';
+                $payment->save();
+
+                DB::commit();
+
+                return ResponseHelper::error([
+                    'payment_id' => $payment->id,
+                    'reference' => $payment->reference,
+                    'message' => $payment->notes,
+                ], 'Payment initiation failed', 400);
+            }
+
+        } catch (Throwable $e) {
+
+            DB::rollBack();
+
+            Log::error('Payment initiation crashed', [
+                'error' => $e->getMessage(),
+                'cart_id' => $cart->id ?? null,
+                'user_id' => $request->user()->id ?? null,
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return ResponseHelper::error(
+                [],
+                'Something went wrong while initiating payment. Please try again.',
+                500
+            );
         }
     }
 
