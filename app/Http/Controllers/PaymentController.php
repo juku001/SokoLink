@@ -600,6 +600,8 @@ class PaymentController extends Controller
 
         $authData = $authResponse->json();
 
+        return $authData;
+
         if (!$authResponse->ok() || !isset($authData['access_token'])) {
             return response()->json([
                 'status' => false,
