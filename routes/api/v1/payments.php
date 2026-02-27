@@ -26,7 +26,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::delete('/carts/{cartId}/product/{productId}/decrement', [CartController::class, 'remove']);
 
     Route::post('/checkout', [PaymentController::class, 'checkout']); //now transfer the cart to orders,address and payment methods.
-    
+
     Route::get('/payments', [PaymentController::class, 'index']); //get buyers payment history
     Route::get('/payments/{id}', [PaymentController::class, 'show']); //get payment
 
@@ -39,11 +39,10 @@ Route::middleware(['auth:sanctum', 'user.type:super_admin'])->group(function () 
 
     Route::get('/payment/methods/all', [PaymentMethodController::class, 'all']);
     Route::post('/payment/methods/{id}/status', [PaymentMethodController::class, 'status']);
-
 });
 Route::resource('/payment/methods', PaymentMethodController::class);
 Route::resource('/payment/options', PaymentOptionController::class);
 
 
 
-Route::post('/testing/payment',[PaymentController::class, 'testing']);
+Route::post('/testing/payment', [PaymentController::class, 'testing']);
