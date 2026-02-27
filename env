@@ -92,4 +92,4 @@ SELCOM_ORDER_ENDPOINT=/v1/checkout/create-order
 SELCOM_PUSH_ENDPOINT=/v1/wallet/pushussd
 SELCOM_WALLET_PAYMENT_ENDPOINT=/v1/checkout/wallet-payment
 SELCOM_ORDER_STATUS_ENDPOINT=/v1/checkout/order-status
-SELCOM_WEBHOOK_URL=https://api.sokolink.store/v1/api/payments/callback/selcom
+SELCOM_WEBHOOK_URL=https://api.sokolink.store/api/v1/payments/callback/selcom

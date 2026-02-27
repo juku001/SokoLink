@@ -12527,6 +12527,135 @@
                 ]
             }
         },
+        "/payments/callback/selcom": {
+            "post": {
+                "tags": [
+                    "Payments"
+                ],
+                "summary": "Selcom payment callback handler",
+                "description": "Receives payment status updates from Selcom payment gateway",
+                "operationId": "selcomCallback",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "result",
+                                    "resultcode",
+                                    "order_id",
+                                    "transid",
+                                    "reference",
+                                    "amount",
+                                    "payment_status"
+                                ],
+                                "properties": {
+                                    "result": {
+                                        "type": "string",
+                                        "example": "SUCCESS"
+                                    },
+                                    "resultcode": {
+                                        "type": "string",
+                                        "example": "000"
+                                    },
+                                    "order_id": {
+                                        "type": "string",
+                                        "example": "602021152"
+                                    },
+                                    "transid": {
+                                        "type": "string",
+                                        "example": "7945454515"
+                                    },
+                                    "reference": {
+                                        "type": "string",
+                                        "example": "856266164161"
+                                    },
+                                    "channel": {
+                                        "type": "string",
+                                        "example": "TIGOPESATZ"
+                                    },
+                                    "amount": {
+                                        "type": "string",
+                                        "example": "10000"
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "example": "255000000001"
+                                    },
+                                    "payment_status": {
+                                        "type": "string",
+                                        "example": "COMPLETED"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Callback processed successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Callback processed successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Payment not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Payment not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Invalid callback data",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Invalid callback data"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/payment/methods": {
             "get": {
                 "tags": [
