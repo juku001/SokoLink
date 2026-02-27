@@ -11,6 +11,7 @@ use App\Http\Controllers\PaymentOptionController;
 
 
 Route::post('payments/airtel/callback', [CallbackController::class, 'airtel']);
+Route::post('payments/callback/selcom', [PaymentController::class, 'selcomCallback']);
 
 
 Route::middleware(['auth:sanctum'])->group(function () {

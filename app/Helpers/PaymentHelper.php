@@ -1,9 +1,13 @@
 <?php
+
 namespace App\Helpers;
 
 use App\Models\PaymentMethod;
 use App\Services\AirtelAPI;
-use Log;
+use Illuminate\Support\Str;
+use Selcom\ApigwClient\Client;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 
 class PaymentHelper
 {
@@ -47,30 +51,102 @@ class PaymentHelper
     }
 
     /**
-     * Handle MNO payments.
-     * For now, only Airtel is supported.
+     * Handle MNO payments via Selcom.
+     * Supports all Tanzanian mobile networks through Selcom's MOBILEMONEYPULL.
      */
     private static function handleMno(PaymentMethod $paymentMethod, array $data)
     {
+        return self::initiateSelcomPayment($data);
+    }
 
-        switch ($paymentMethod->code) {
-            case env('PAY_METHOD_AIRTEL'):
-                return self::simulateAirtelPayment($data);
-
-            case env('PAY_METHOD_VODA'):
-            case env('PAY_METHOD_TIGO'):
-            case env('PAY_METHOD_HALOTEL'):
-            case env('PAY_METHOD_TTCL'):
-                return [
-                    'status' => false,
-                    'message' => ucfirst($paymentMethod->display) . ' not configured yet.'
-                ];
-            default:
-                return [
-                    'status' => false,
-                    'message' => 'Mobile network not recognized.'
-                ];
+    /**
+     * Initiate a Selcom mobile money push (USSD pull) payment.
+     *
+     * Flow:
+     *  1. Create a checkout order on Selcom to obtain a transaction reference.
+     *  2. Push the USSD prompt to the buyer's handset via the wallet-payment endpoint.
+     *  3. Selcom calls the webhook once the buyer approves or rejects.
+     */
+    private static function initiateSelcomPayment(array $data)
+    {
+        if (empty($data['phone']) || empty($data['amount'])) {
+            return [
+                'status'  => false,
+                'message' => 'Phone number and amount are required for mobile money payment.',
+            ];
         }
+
+        $user = Auth::user();
+
+        // Selcom expects format 255XXXXXXXXX (no leading +)
+        $phone = ltrim($data['phone'], '+');
+
+        // A UUID that ties this transaction together across both Selcom calls
+        $orderId = (string) Str::uuid();
+
+        // Selcom requires the webhook URL Base64-encoded
+        $webhook = base64_encode(env('SELCOM_WEBHOOK_URL'));
+
+        $client = new Client(
+            env('SELCOM_API_BASE_URL'),
+            env('SELCOM_API_KEY'),
+            env('SELCOM_API_SECRET')
+        );
+
+        $orderPayload = [
+            'vendor'                    => env('SELCOM_VENDOR_TILL'),
+            'order_id'                  => $orderId,
+            'buyer_email'               => $user->email ?? 'noemail@sokolink.co.tz',
+            'buyer_name'                => $user->name ?? 'Customer',
+            'buyer_phone'               => $phone,
+            'amount'                    => $data['amount'],
+            'currency'                  => 'TZS',
+            'no_of_items'               => 1,
+            'payment_methods'           => 'MOBILEMONEYPULL',
+            'webhook'                   => $webhook,
+            'billing.firstname'         => $user->name ?? 'Customer',
+            'billing.lastname'          => $user->name ?? 'Customer',
+            'billing.address_1'         => 'Dar es Salaam',
+            'billing.address_2'         => '',
+            'billing.city'              => 'Dar es Salaam',
+            'billing.state_or_region'   => 'Tanzania',
+            'billing.postcode_or_pobox' => '0000',
+            'billing.country'           => 'TZ',
+            'billing.phone'             => $phone,
+        ];
+
+        Log::info('Selcom create-order payload', $orderPayload);
+
+        $orderResponse = $client->postFunc(env('SELCOM_ORDER_ENDPOINT'), $orderPayload);
+
+        Log::info('Selcom create-order response', (array) $orderResponse);
+
+        if (empty($orderResponse['reference'])) {
+            return [
+                'status'  => false,
+                'message' => $orderResponse['resultdesc'] ?? 'Failed to create Selcom order.',
+                'data'    => $orderResponse,
+            ];
+        }
+
+        $pushPayload = [
+            'transid'  => $orderResponse['reference'],
+            'order_id' => $orderId,
+            'msisdn'   => $phone,
+        ];
+
+        Log::info('Selcom wallet-payment payload', $pushPayload);
+
+        $pushResponse = $client->postFunc(env('SELCOM_WALLET_PAYMENT_ENDPOINT'), $pushPayload);
+
+        Log::info('Selcom wallet-payment response', (array) $pushResponse);
+
+        return [
+            'status'    => true,
+            'reference' => $orderId,
+            'data'      => $pushResponse,
+            'message'   => 'Payment push initiated. Please complete the payment on your phone.',
+        ];
     }
 
     /**
@@ -108,7 +184,6 @@ class PaymentHelper
             'data' => $data,
             'message' => 'Failed to initiate payment.'
         ];
-
     }
 }
 

@@ -19,10 +19,11 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 use Exception;
-use Http;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
-use Validator;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
 
 class PaymentController extends Controller
 {
@@ -104,7 +105,7 @@ class PaymentController extends Controller
      */
     public function index(Request $request)
     {
-        $authId = auth()->user()->id;
+        $authId = Auth::id();
 
         $query = Payment::with(['order', 'paymentMethod'])
             ->where("user_id", $authId);
@@ -221,7 +222,7 @@ class PaymentController extends Controller
 
         // DB::beginTransaction();
         try {
-            $authId = auth()->id();
+            $authId = Auth::id();
 
             $cart = Cart::with('items.product.store')
                 ->where('buyer_id', $authId)
@@ -231,7 +232,9 @@ class PaymentController extends Controller
                 return ResponseHelper::error([], 'Please add items to cart first.', 400);
             }
 
-            $subTotal = $cart->items->sum(fn($i) => $i->price * $i->quantity);
+            $subTotal = $cart->items->reduce(function ($carry, $item) {
+                return $carry + ($item->price * $item->quantity);
+            }, 0);
             $shipping = 0;
             $total = $subTotal + $shipping;
 
@@ -267,12 +270,10 @@ class PaymentController extends Controller
                 default:
                     return ResponseHelper::error([], "Invalid payment option selected.", 400);
             }
-
-
         }
         // catch (QueryException $e) {
         //     return ResponseHelper::error([], "Error : " . $e->getMessage(), 400);
-        // } 
+        // }
         catch (Exception $e) {
             return ResponseHelper::error([], "Error: " . $e->getMessage(), 500);
         }
@@ -379,6 +380,10 @@ class PaymentController extends Controller
     {
         $payOption = PaymentOptions::find($request->payment_option_id);
 
+        if (!$payOption) {
+            return ResponseHelper::error([], 'Invalid payment option selected.', 400);
+        }
+
         if (in_array($payOption->key, ['pay-now', 'save-pay-later'])) {
             $validator = Validator::make($request->all(), [
                 'payment_method_id' => 'required|numeric|exists:payment_methods,id',
@@ -390,8 +395,12 @@ class PaymentController extends Controller
 
             $paymentMethod = PaymentMethod::find($request->payment_method_id);
 
-            if (!$paymentMethod || !$paymentMethod->enabled) {
-                return ResponseHelper::error([], ($paymentMethod->display ?? 'This method') . ' is disabled for payment.', 400);
+            if (!$paymentMethod) {
+                return ResponseHelper::error([], 'Payment method not found.', 400);
+            }
+
+            if (!$paymentMethod->enabled) {
+                return ResponseHelper::error([], $paymentMethod->display . ' is disabled for payment.', 400);
             }
 
             if ($paymentMethod->type === 'mno') {
@@ -527,7 +536,6 @@ class PaymentController extends Controller
                     'reference' => $payment->reference,
                     'message' => $payment->notes,
                 ], 'Charge initiated.');
-
             } else {
 
 
@@ -543,7 +551,6 @@ class PaymentController extends Controller
                     'message' => $payment->notes,
                 ], 'Payment initiation failed', 400);
             }
-
         } catch (Throwable $e) {
             DB::rollBack();
 
@@ -598,11 +605,17 @@ class PaymentController extends Controller
             ->withHeaders($headers)
             ->post($authUrl, $authBody);
 
+        if (!$authResponse->successful()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to get token',
+                'data' => $authResponse->json()
+            ]);
+        }
+
         $authData = $authResponse->json();
 
-        return $authData;
-
-        if (!$authResponse->ok() || !isset($authData['access_token'])) {
+        if (!isset($authData['access_token'])) {
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to get token',
@@ -637,9 +650,284 @@ class PaymentController extends Controller
             ]))
             ->post($paymentUrl, $paymentBody);
 
-        return response()->json($paymentResponse->json());
+        return $paymentResponse->json();
     }
 
+    /**
+     * Handle Selcom payment callback/webhook
+     *
+     * @OA\Post(
+     *     path="/payments/callback/selcom",
+     *     summary="Selcom payment callback handler",
+     *     description="Receives payment status updates from Selcom payment gateway",
+     *     operationId="selcomCallback",
+     *     tags={"Payments"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"result","resultcode","order_id","transid","reference","amount","payment_status"},
+     *             @OA\Property(property="result", type="string", example="SUCCESS"),
+     *             @OA\Property(property="resultcode", type="string", example="000"),
+     *             @OA\Property(property="order_id", type="string", example="602021152"),
+     *             @OA\Property(property="transid", type="string", example="7945454515"),
+     *             @OA\Property(property="reference", type="string", example="856266164161"),
+     *             @OA\Property(property="channel", type="string", example="TIGOPESATZ"),
+     *             @OA\Property(property="amount", type="string", example="10000"),
+     *             @OA\Property(property="phone", type="string", example="255000000001"),
+     *             @OA\Property(property="payment_status", type="string", example="COMPLETED")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Callback processed successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Callback processed successfully")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Payment not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Payment not found")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Invalid callback data",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Invalid callback data")
+     *         )
+     *     )
+     * )
+     */
+    public function selcomCallback(Request $request)
+    {
+        try {
+            // Log the incoming callback for debugging
+            Log::info('Selcom callback received', [
+                'payload' => $request->all(),
+                'headers' => $request->headers->all()
+            ]);
 
+            // Validate required fields
+            $validator = Validator::make($request->all(), [
+                'result' => 'required|string',
+                'resultcode' => 'required|string',
+                'order_id' => 'required|string',
+                'transid' => 'required|string',
+                'reference' => 'required|string',
+                'amount' => 'required|numeric',
+                'payment_status' => 'required|string'
+            ]);
 
+            if ($validator->fails()) {
+                Log::warning('Selcom callback validation failed', [
+                    'errors' => $validator->errors(),
+                    'payload' => $request->all()
+                ]);
+                return ResponseHelper::error($validator->errors(), 'Invalid callback data', 422);
+            }
+
+            // Find payment by reference
+            $payment = Payment::where('reference', $request->reference)->first();
+
+            if (!$payment) {
+                Log::warning('Selcom callback: Payment not found', [
+                    'reference' => $request->reference,
+                    'payload' => $request->all()
+                ]);
+                return ResponseHelper::error([], 'Payment not found', 404);
+            }
+
+            // Update payment status based on Selcom response
+            $newStatus = $this->mapSelcomStatusToPaymentStatus($request->payment_status, $request->result);
+            $oldStatus = $payment->status;
+
+            DB::beginTransaction();
+
+            try {
+                $payment->status = $newStatus;
+                $payment->transaction_id = $request->transid;
+                $payment->notes = "Selcom callback: {$request->result} - {$request->payment_status}";
+
+                // Add callback metadata
+                $callbackData = [
+                    'selcom_order_id' => $request->order_id,
+                    'selcom_transid' => $request->transid,
+                    'selcom_channel' => $request->input('channel'),
+                    'selcom_result' => $request->result,
+                    'selcom_resultcode' => $request->resultcode,
+                    'callback_received_at' => now()->toISOString()
+                ];
+
+                $payment->callback_data = json_encode($callbackData);
+                $payment->save();
+
+                // If payment is successful, process order creation or update
+                if ($newStatus === 'successful' && $payment->cart_id) {
+                    $this->processSuccessfulCartPayment($payment);
+                }
+
+                DB::commit();
+
+                Log::info('Selcom callback processed successfully', [
+                    'payment_id' => $payment->id,
+                    'reference' => $request->reference,
+                    'old_status' => $oldStatus,
+                    'new_status' => $newStatus,
+                    'transid' => $request->transid
+                ]);
+
+                return ResponseHelper::success([
+                    'payment_id' => $payment->id,
+                    'status' => $newStatus
+                ], 'Callback processed successfully');
+            } catch (Exception $e) {
+                DB::rollBack();
+                Log::error('Error processing Selcom callback', [
+                    'error' => $e->getMessage(),
+                    'payment_id' => $payment->id ?? null,
+                    'reference' => $request->reference,
+                    'trace' => $e->getTraceAsString()
+                ]);
+                throw $e;
+            }
+        } catch (Throwable $e) {
+            Log::error('Selcom callback processing failed', [
+                'error' => $e->getMessage(),
+                'payload' => $request->all(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return ResponseHelper::error(
+                [],
+                'Callback processing failed',
+                500
+            );
+        }
+    }
+
+    /**
+     * Map Selcom payment status to internal payment status
+     */
+    private function mapSelcomStatusToPaymentStatus(string $paymentStatus, string $result): string
+    {
+        // Map Selcom statuses to internal payment statuses
+        if ($result === 'SUCCESS' && $paymentStatus === 'COMPLETED') {
+            return 'successful';
+        }
+
+        if ($result === 'FAILED' || $paymentStatus === 'FAILED') {
+            return 'failed';
+        }
+
+        if ($paymentStatus === 'PENDING' || $paymentStatus === 'PROCESSING') {
+            return 'pending';
+        }
+
+        if ($paymentStatus === 'CANCELLED') {
+            return 'cancelled';
+        }
+
+        // Default to failed for unknown statuses
+        Log::warning('Unknown Selcom payment status', [
+            'payment_status' => $paymentStatus,
+            'result' => $result
+        ]);
+
+        return 'failed';
+    }
+
+    /**
+     * Process successful cart payment - create order from cart
+     */
+    private function processSuccessfulCartPayment(Payment $payment)
+    {
+        try {
+            $cart = Cart::with('items.product.store')->find($payment->cart_id);
+
+            if (!$cart) {
+                Log::warning('Cart not found for successful payment', ['payment_id' => $payment->id]);
+                return;
+            }
+
+            // Get checkout data from session
+            $checkoutData = session('checkout_data_' . $cart->id);
+
+            if (!$checkoutData) {
+                Log::warning('Checkout data not found for successful payment', [
+                    'payment_id' => $payment->id,
+                    'cart_id' => $cart->id
+                ]);
+                return;
+            }
+
+            // Create order from cart
+            $order = new Order();
+            $order->order_ref = 'ORD-' . now()->format('Ymd') . '-' . strtoupper(substr(uniqid(), -6));
+            $order->buyer_id = $cart->buyer_id;
+            $order->total_amount = $payment->amount;
+            $order->shipping_cost = $checkoutData['shipping_cost'] ?? 0;
+            $order->status = 'paid';
+            $order->payment_id = $payment->id;
+
+            // Shipping address
+            $address = new Address();
+            $address->fullname = $checkoutData['fullname'];
+            $address->phone = $checkoutData['phone'];
+            $address->address_phone = $checkoutData['address_phone'] ?? null;
+            $address->address = $checkoutData['address'];
+            $address->region_id = $checkoutData['region_id'];
+            $address->save();
+
+            $order->shipping_address_id = $address->id;
+            $order->save();
+
+            // Create order items from cart items
+            foreach ($cart->items as $cartItem) {
+                $orderItem = new OrderItem();
+                $orderItem->order_id = $order->id;
+                $orderItem->product_id = $cartItem->product_id;
+                $orderItem->quantity = $cartItem->quantity;
+                $orderItem->price = $cartItem->price;
+                $orderItem->total = $cartItem->price * $cartItem->quantity;
+                $orderItem->save();
+            }
+
+            // Create order status history
+            OrderStatusHistory::create([
+                'order_id' => $order->id,
+                'status' => 'paid',
+                'notes' => 'Order created and paid via Selcom callback',
+                'changed_by' => null
+            ]);
+
+            // Update payment with order reference
+            $payment->order_id = $order->id;
+            $payment->save();
+
+            // Clear cart
+            $cart->items()->delete();
+            $cart->delete();
+
+            // Clear checkout session data
+            session()->forget('checkout_data_' . $cart->id);
+
+            Log::info('Order created successfully from Selcom payment', [
+                'payment_id' => $payment->id,
+                'order_id' => $order->id,
+                'order_ref' => $order->order_ref
+            ]);
+        } catch (Exception $e) {
+            Log::error('Failed to create order from successful Selcom payment', [
+                'payment_id' => $payment->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            // Don't rethrow - payment was successful, order creation failure shouldn't fail the callback
+        }
+    }
 }

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6a21c1f3cacbf969cd1309444a8da27a",
+    "content-hash": "5c2d182d613bee0f57c8d84072b696fd",
     "packages": [
         {
             "name": "barryvdh/laravel-dompdf",
@@ -4792,6 +4792,40 @@
                 "source": "https://github.com/MyIntervals/PHP-CSS-Parser/tree/v9.1.0"
             },
             "time": "2025-09-14T07:37:21+00:00"
+        },
+        {
+            "name": "selcom/selcom-apigw-client",
+            "version": "v1.0.5",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/selcompaytechltd/selcom-apigw-client-php.git",
+                "reference": "3192f3691c388034b91873867266f7adfcb98dc0"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/selcompaytechltd/selcom-apigw-client-php/zipball/3192f3691c388034b91873867266f7adfcb98dc0",
+                "reference": "3192f3691c388034b91873867266f7adfcb98dc0",
+                "shasum": ""
+            },
+            "type": "library",
+            "autoload": {
+                "files": [
+                    "src/apigwClient.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "authors": [
+                {
+                    "name": "dev",
+                    "email": "dev@selcom.net"
+                }
+            ],
+            "description": "Client library to help access selcom apis",
+            "support": {
+                "issues": "https://github.com/selcompaytechltd/selcom-apigw-client-php/issues",
+                "source": "https://github.com/selcompaytechltd/selcom-apigw-client-php/tree/v1.0.5"
+            },
+            "time": "2023-02-27T06:25:09+00:00"
         },
         {
             "name": "swagger-api/swagger-ui",
@@ -10175,5 +10209,5 @@
         "php": "^8.2"
     },
     "platform-dev": {},
-    "plugin-api-version": "2.9.0"
+    "plugin-api-version": "2.6.0"
 }
