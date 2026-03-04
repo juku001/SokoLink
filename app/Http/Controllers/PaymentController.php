@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\Log;
 use Throwable;
 use Exception;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Http\Client\Response as HttpResponse;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -594,6 +595,7 @@ class PaymentController extends Controller
             'X-Currency' => 'TZS',
         ];
 
+        /** @var HttpResponse $authResponse */
         $authResponse = Http::withOptions(['verify' => false])
             ->withHeaders($headers)
             ->post($authUrl, $authBody);
@@ -637,6 +639,7 @@ class PaymentController extends Controller
             ]
         ];
 
+        /** @var HttpResponse $paymentResponse */
         $paymentResponse = Http::withOptions(['verify' => false])
             ->withHeaders(array_merge($headers, [
                 'Authorization' => 'Bearer ' . $token,
