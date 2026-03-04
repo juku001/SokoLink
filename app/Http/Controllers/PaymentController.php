@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\PaymentStatusUpdated;
 use App\Helpers\MobileNetworkHelper;
 use App\Helpers\PaymentHelper;
 use App\Helpers\ResponseHelper;
@@ -399,11 +400,11 @@ class PaymentController extends Controller
                 return ResponseHelper::error([], 'Payment method not found.', 400);
             }
 
-            if (!$paymentMethod->enabled) {
-                return ResponseHelper::error([], $paymentMethod->display . ' is disabled for payment.', 400);
-            }
+            // Network validation removed - Selcom MOBILEMONEYPULL supports all Tanzanian networks
+            // (M-Pesa, Tigo Pesa, Airtel Money, Halopesa) automatically
 
             if ($paymentMethod->type === 'mno') {
+                // Only validate phone format
                 $validator = Validator::make($request->all(), [
                     'phone' => 'required|string|regex:/^\+255\d{9}$/',
                 ], [
@@ -412,19 +413,6 @@ class PaymentController extends Controller
 
                 if ($validator->fails()) {
                     return ResponseHelper::error($validator->errors(), 'All mobile payments require a valid phone number.', 422);
-                }
-
-                $mobNetHelper = new MobileNetworkHelper();
-                $network = $mobNetHelper->getNetworkByPrefix($request->phone);
-
-                $userPayMethod = PaymentMethod::where('code', $network)->first();
-
-                if (!$userPayMethod || !$userPayMethod->enabled) {
-                    return ResponseHelper::error([], ($userPayMethod->display ?? 'This network') . ' is disabled for payment.', 400);
-                }
-
-                if ($userPayMethod->id !== $paymentMethod->id) {
-                    return ResponseHelper::error([], "Phone number does not match the selected payment method ({$paymentMethod->display}).", 400);
                 }
             }
         }
@@ -535,6 +523,11 @@ class PaymentController extends Controller
                     'payment_id' => $payment->id,
                     'reference' => $payment->reference,
                     'message' => $payment->notes,
+                    'websocket' => [
+                        'channel' => 'private-payment.' . $payment->reference,
+                        'event' => 'payment.status.updated',
+                        'auth_endpoint' => url('/api/broadcasting/auth'),
+                    ],
                 ], 'Charge initiated.');
             } else {
 
@@ -765,6 +758,14 @@ class PaymentController extends Controller
 
                 $payment->callback_data = json_encode($callbackData);
                 $payment->save();
+
+                // Broadcast payment status update via WebSocket
+                broadcast(new PaymentStatusUpdated(
+                    $payment,
+                    $oldStatus,
+                    $newStatus,
+                    $callbackData
+                ));
 
                 // If payment is successful, process order creation or update
                 if ($newStatus === 'successful' && $payment->cart_id) {

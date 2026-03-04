@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Sokolink Payment WebSocket Test</title>
+        <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
+        <style>
+            body {
+                font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+                max-width: 800px;
+                margin: 50px auto;
+                padding: 20px;
+                background: #f5f5f5;
+            }
+            .container {
+                background: white;
+                padding: 30px;
+                border-radius: 10px;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            }
+            h1 {
+                color: #333;
+                margin-bottom: 10px;
+            }
+            .subtitle {
+                color: #666;
+                margin-bottom: 30px;
+            }
+            .config-section {
+                background: #f9f9f9;
+                padding: 20px;
+                border-radius: 5px;
+                margin-bottom: 20px;
+            }
+            label {
+                display: block;
+                margin-bottom: 5px;
+                color: #555;
+                font-weight: 600;
+            }
+            input[type="text"] {
+                width: 100%;
+                padding: 10px;
+                border: 1px solid #ddd;
+                border-radius: 5px;
+                box-sizing: border-box;
+                margin-bottom: 15px;
+                font-size: 14px;
+            }
+            button {
+                background: #4caf50;
+                color: white;
+                padding: 12px 30px;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                font-size: 16px;
+                margin-right: 10px;
+            }
+            button:hover {
+                background: #45a049;
+            }
+            button:disabled {
+                background: #ccc;
+                cursor: not-allowed;
+            }
+            .disconnect-btn {
+                background: #f44336;
+            }
+            .disconnect-btn:hover {
+                background: #da190b;
+            }
+            #status {
+                padding: 15px;
+                border-radius: 5px;
+                margin: 20px 0;
+                font-weight: bold;
+            }
+            .status-disconnected {
+                background: #ffebee;
+                color: #c62828;
+                border: 1px solid #ef5350;
+            }
+            .status-connecting {
+                background: #fff3e0;
+                color: #ef6c00;
+                border: 1px solid #fb8c00;
+            }
+            .status-connected {
+                background: #e8f5e9;
+                color: #2e7d32;
+                border: 1px solid #4caf50;
+            }
+            #events {
+                background: #263238;
+                color: #aed581;
+                padding: 20px;
+                border-radius: 5px;
+                max-height: 400px;
+                overflow-y: auto;
+                font-family: "Courier New", monospace;
+                font-size: 13px;
+                line-height: 1.6;
+            }
+            .event {
+                margin-bottom: 10px;
+                padding: 5px;
+                border-left: 3px solid #4caf50;
+                padding-left: 10px;
+            }
+            .event-error {
+                border-left-color: #f44336;
+                color: #ff8a80;
+            }
+            .event-warning {
+                border-left-color: #ff9800;
+                color: #ffd54f;
+            }
+            .timestamp {
+                color: #78909c;
+                font-size: 11px;
+            }
+            .clear-btn {
+                background: #607d8b;
+                padding: 8px 15px;
+                font-size: 14px;
+            }
+            .clear-btn:hover {
+                background: #546e7a;
+            }
+            .info-box {
+                background: #e3f2fd;
+                padding: 15px;
+                border-radius: 5px;
+                margin-bottom: 20px;
+                border-left: 4px solid #2196f3;
+            }
+            .info-box h3 {
+                margin-top: 0;
+                color: #1976d2;
+            }
+            .info-box code {
+                background: #fff;
+                padding: 2px 6px;
+                border-radius: 3px;
+                color: #c62828;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>🔌 Sokolink Payment WebSocket Test</h1>
+            <p class="subtitle">
+                Test real-time payment status updates via WebSocket
+            </p>
+
+            <div class="info-box">
+                <h3>Setup Instructions:</h3>
+                <ol>
+                    <li>Run: <code>php artisan websockets:serve</code></li>
+                    <li>Run: <code>php artisan queue:work</code></li>
+                    <li>Make a payment checkout to get a payment reference</li>
+                    <li>Enter your configuration below and click Connect</li>
+                    <li>Simulate a Selcom callback to see real-time updates</li>
+                </ol>
+            </div>
+
+            <div class="config-section">
+                <h3>Configuration</h3>
+
+                <label>API Base URL:</label>
+                <input
+                    type="text"
+                    id="apiUrl"
+                    value="http://localhost:8000"
+                    placeholder="http://localhost:8000"
+                />
+
+                <label>WebSocket Host:</label>
+                <input
+                    type="text"
+                    id="wsHost"
+                    value="127.0.0.1"
+                    placeholder="127.0.0.1"
+                />
+
+                <label>WebSocket Port:</label>
+                <input
+                    type="text"
+                    id="wsPort"
+                    value="6001"
+                    placeholder="6001"
+                />
+
+                <label>Pusher App Key:</label>
+                <input
+                    type="text"
+                    id="appKey"
+                    value="local"
+                    placeholder="local"
+                />
+
+                <label>Pusher Cluster:</label>
+                <input type="text" id="cluster" value="mt1" placeholder="mt1" />
+
+                <label>Bearer Token:</label>
+                <input
+                    type="text"
+                    id="bearerToken"
+                    placeholder="Your authentication token"
+                />
+
+                <label>Payment Reference:</label>
+                <input
+                    type="text"
+                    id="paymentRef"
+                    placeholder="Payment reference from checkout"
+                />
+            </div>
+
+            <div>
+                <button id="connectBtn" onclick="connect()">
+                    Connect to WebSocket
+                </button>
+                <button
+                    id="disconnectBtn"
+                    onclick="disconnect()"
+                    disabled
+                    class="disconnect-btn"
+                >
+                    Disconnect
+                </button>
+                <button onclick="clearEvents()" class="clear-btn">
+                    Clear Events
+                </button>
+            </div>
+
+            <div id="status" class="status-disconnected">⚫ Disconnected</div>
+
+            <h3>Events Log:</h3>
+            <div id="events"></div>
+        </div>
+
+        <script>
+            let pusher = null;
+            let channel = null;
+
+            function getTimestamp() {
+                return new Date().toLocaleTimeString("en-US", {
+                    hour12: false,
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    second: "2-digit",
+                });
+            }
+
+            function logEvent(message, type = "info") {
+                const eventsDiv = document.getElementById("events");
+                const eventEl = document.createElement("div");
+                eventEl.className = `event ${type === "error" ? "event-error" : type === "warning" ? "event-warning" : ""}`;
+                eventEl.innerHTML = `<span class="timestamp">[${getTimestamp()}]</span> ${message}`;
+                eventsDiv.appendChild(eventEl);
+                eventsDiv.scrollTop = eventsDiv.scrollHeight;
+            }
+
+            function updateStatus(message, className) {
+                const statusDiv = document.getElementById("status");
+                statusDiv.textContent = message;
+                statusDiv.className = className;
+            }
+
+            function connect() {
+                const apiUrl = document.getElementById("apiUrl").value;
+                const wsHost = document.getElementById("wsHost").value;
+                const wsPort = document.getElementById("wsPort").value;
+                const appKey = document.getElementById("appKey").value;
+                const cluster = document.getElementById("cluster").value;
+                const bearerToken =
+                    document.getElementById("bearerToken").value;
+                const paymentRef = document.getElementById("paymentRef").value;
+
+                if (!bearerToken) {
+                    alert("Please enter a Bearer Token");
+                    return;
+                }
+
+                if (!paymentRef) {
+                    alert("Please enter a Payment Reference");
+                    return;
+                }
+
+                updateStatus("🔄 Connecting...", "status-connecting");
+                logEvent("Initializing Pusher client...");
+
+                try {
+                    pusher = new Pusher(appKey, {
+                        cluster: cluster,
+                        wsHost: wsHost,
+                        wsPort: parseInt(wsPort),
+                        forceTLS: false,
+                        encrypted: true,
+                        disableStats: true,
+                        enabledTransports: ["ws", "wss"],
+                        authEndpoint: `${apiUrl}/api/broadcasting/auth`,
+                        auth: {
+                            headers: {
+                                Authorization: `Bearer ${bearerToken}`,
+                                Accept: "application/json",
+                            },
+                        },
+                    });
+
+                    // Connection state logging
+                    pusher.connection.bind("connecting", () => {
+                        logEvent(
+                            "Connecting to WebSocket server...",
+                            "warning",
+                        );
+                    });
+
+                    pusher.connection.bind("connected", () => {
+                        logEvent("✅ Connected to WebSocket server!");
+                    });
+
+                    pusher.connection.bind("unavailable", () => {
+                        logEvent(
+                            "❌ WebSocket connection unavailable",
+                            "error",
+                        );
+                    });
+
+                    pusher.connection.bind("failed", () => {
+                        logEvent("❌ WebSocket connection failed", "error");
+                        updateStatus(
+                            "❌ Connection Failed",
+                            "status-disconnected",
+                        );
+                    });
+
+                    pusher.connection.bind("disconnected", () => {
+                        logEvent(
+                            "Disconnected from WebSocket server",
+                            "warning",
+                        );
+                    });
+
+                    pusher.connection.bind("error", (err) => {
+                        logEvent(
+                            `❌ Connection error: ${JSON.stringify(err)}`,
+                            "error",
+                        );
+                    });
+
+                    // Subscribe to payment channel
+                    const channelName = `private-payment.${paymentRef}`;
+                    logEvent(`Subscribing to channel: ${channelName}...`);
+                    channel = pusher.subscribe(channelName);
+
+                    channel.bind("pusher:subscription_succeeded", () => {
+                        logEvent(
+                            `✅ Successfully subscribed to ${channelName}`,
+                        );
+                        updateStatus(
+                            "🟢 Connected & Subscribed",
+                            "status-connected",
+                        );
+                        document.getElementById("connectBtn").disabled = true;
+                        document.getElementById("disconnectBtn").disabled =
+                            false;
+                    });
+
+                    channel.bind("pusher:subscription_error", (error) => {
+                        logEvent(
+                            `❌ Subscription error: ${JSON.stringify(error)}`,
+                            "error",
+                        );
+                        updateStatus(
+                            "❌ Subscription Failed",
+                            "status-disconnected",
+                        );
+                    });
+
+                    // Listen for payment status updates
+                    channel.bind("payment.status.updated", (data) => {
+                        logEvent(
+                            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+                            "warning",
+                        );
+                        logEvent(
+                            `🎉 PAYMENT STATUS UPDATE RECEIVED!`,
+                            "warning",
+                        );
+                        logEvent(`Payment ID: ${data.payment_id}`);
+                        logEvent(`Reference: ${data.reference}`);
+                        logEvent(
+                            `Status: ${data.old_status} → ${data.new_status}`,
+                        );
+                        logEvent(`Amount: TZS ${data.amount.toLocaleString()}`);
+                        logEvent(
+                            `Transaction ID: ${data.transaction_id || "N/A"}`,
+                        );
+                        logEvent(`Message: ${data.message}`);
+
+                        if (data.callback_data) {
+                            logEvent(
+                                `Channel: ${data.callback_data.selcom_channel || "N/A"}`,
+                            );
+                            logEvent(
+                                `Selcom Order ID: ${data.callback_data.selcom_order_id || "N/A"}`,
+                            );
+                        }
+
+                        logEvent(`Updated At: ${data.updated_at}`);
+                        logEvent(
+                            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+                            "warning",
+                        );
+
+                        // Show alert for final statuses
+                        if (
+                            ["successful", "failed", "cancelled"].includes(
+                                data.new_status,
+                            )
+                        ) {
+                            setTimeout(() => {
+                                alert(
+                                    `Payment ${data.new_status.toUpperCase()}!\n\n${data.message}`,
+                                );
+                            }, 100);
+                        }
+                    });
+                } catch (error) {
+                    logEvent(
+                        `❌ Error initializing Pusher: ${error.message}`,
+                        "error",
+                    );
+                    updateStatus("❌ Connection Error", "status-disconnected");
+                }
+            }
+
+            function disconnect() {
+                if (channel) {
+                    channel.unbind_all();
+                    pusher.unsubscribe(channel.name);
+                    logEvent("Unsubscribed from channel", "warning");
+                }
+                if (pusher) {
+                    pusher.disconnect();
+                    logEvent("Disconnected from WebSocket server", "warning");
+                }
+                updateStatus("⚫ Disconnected", "status-disconnected");
+                document.getElementById("connectBtn").disabled = false;
+                document.getElementById("disconnectBtn").disabled = true;
+            }
+
+            function clearEvents() {
+                document.getElementById("events").innerHTML = "";
+            }
+
+            // Cleanup on page unload
+            window.addEventListener("beforeunload", () => {
+                if (pusher) {
+                    disconnect();
+                }
+            });
+
+            // Initial log
+            logEvent(
+                "WebSocket Test Tool Ready. Configure and click Connect.",
+                "warning",
+            );
+        </script>
+    </body>
+</html>

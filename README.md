@@ -1,52 +1,324 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Sokolink Backend API
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Sokolink is a comprehensive e-commerce marketplace platform built with Laravel, featuring real-time payment processing via Selcom and WebSocket-based status updates.
 
-## About Laravel
+## 🚀 Features
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- **E-commerce Marketplace**: Complete marketplace with products, orders, and payments
+- **Selcom Payment Integration**: Mobile money payments (M-Pesa, Tigo Pesa, Airtel Money, Halopesa)
+- **Real-time WebSocket Updates**: Instant payment status notifications
+- **Multi-vendor Support**: Sellers can manage stores and products
+- **Academy Module**: Educational content for sellers
+- **Contact Management**: CRM features for sellers
+- **Comprehensive Reports**: Sales, expenses, and performance analytics
+- **Admin Dashboard**: Platform management and monitoring
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 📋 Requirements
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- PHP 8.1 or higher
+- Composer
+- MySQL/PostgreSQL/SQLite
+- Node.js & NPM (for frontend assets)
+- Redis (recommended for queues and caching)
 
-## Learning Laravel
+## 🔧 Installation
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+### 1. Clone Repository
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+```bash
+git clone <repository-url>
+cd sokolink-backend
+```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### 2. Install Dependencies
 
-## Laravel Sponsors
+```bash
+composer install
+npm install
+```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### 3. Environment Setup
 
-### Premium Partners
+```bash
+cp .env.example .env
+php artisan key:generate
+```
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+### 4. Database Setup
 
-## Contributing
+```bash
+php artisan migrate
+php artisan db:seed  # Optional: seed with sample data
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### 5. WebSocket Setup (Real-time Payment Updates)
+
+#### Quick Setup
+
+```bash
+./setup-websockets.sh
+```
+
+#### Manual Setup
+
+```bash
+composer require beyondcode/laravel-websockets
+composer require pusher/pusher-php-server
+php artisan vendor:publish --provider="BeyondCode\LaravelWebSockets\WebSocketsServiceProvider"
+php artisan migrate
+```
+
+See [WEBSOCKET_SETUP.md](WEBSOCKET_SETUP.md) for detailed instructions.
+
+## 🎯 Running the Application
+
+### Development
+
+```bash
+# Start Laravel server
+php artisan serve
+
+# Start WebSocket server (for real-time updates)
+php artisan websockets:serve
+
+# Start queue worker (in another terminal)
+php artisan queue:work
+```
+
+### Production
+
+Use Supervisor or systemd to manage the WebSocket server and queue workers. See [WEBSOCKET_SETUP.md](WEBSOCKET_SETUP.md) for production deployment instructions.
+
+## 📚 Documentation
+
+### Payment System
+
+- **[Postman Collection](postman/Selcom_Payments_API.postman_collection.json)** - API documentation
+- **[Payment API Guide](postman/README.md)** - Complete payment flow documentation
+- **[WebSocket Setup](WEBSOCKET_SETUP.md)** - Quick WebSocket setup guide
+- **[WebSocket Documentation](docs/WEBSOCKET_PAYMENT_STATUS.md)** - Comprehensive WebSocket guide
+- **[Implementation Summary](WEBSOCKET_IMPLEMENTATION_SUMMARY.md)** - WebSocket feature overview
+
+### Testing
+
+- **[WebSocket Test Tool](public/websocket-test.html)** - Browser-based WebSocket testing
+    - Access at: `http://localhost:8000/websocket-test.html`
+
+## 🔌 Real-Time Payment Updates
+
+### How It Works
+
+1. User initiates checkout → receives payment reference
+2. Client subscribes to WebSocket channel: `private-payment.{reference}`
+3. User approves payment on mobile device
+4. Selcom sends callback to API
+5. API broadcasts `PaymentStatusUpdated` event
+6. Client receives real-time update instantly!
+
+### Quick Implementation
+
+```javascript
+import Pusher from "pusher-js";
+
+const pusher = new Pusher("local", {
+    cluster: "mt1",
+    wsHost: "localhost",
+    wsPort: 6001,
+    authEndpoint: "http://localhost:8000/api/broadcasting/auth",
+    auth: {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    },
+});
+
+const channel = pusher.subscribe(`private-payment.${reference}`);
+
+channel.bind("payment.status.updated", (data) => {
+    if (data.new_status === "successful") {
+        alert("Payment successful!");
+    }
+});
+```
+
+## 🧪 Testing
+
+### Run Tests
+
+```bash
+php artisan test
+```
+
+### Test WebSocket Connection
+
+1. Open: `http://localhost:8000/websocket-test.html`
+2. Enter your Bearer token and payment reference
+3. Click Connect
+4. Simulate a payment callback using Postman
+5. Watch real-time updates!
+
+## 📡 API Endpoints
+
+### Base URL
+
+```
+http://localhost:8000/api/v1
+```
+
+### Main Endpoints
+
+#### Authentication
+
+- `POST /auth/register` - Register user
+- `POST /auth/login` - Login
+- `POST /auth/logout` - Logout
+- `GET /auth/me` - Get authenticated user
+
+#### Payments
+
+- `POST /checkout` - Initiate payment
+- `GET /payments` - List payments
+- `GET /payments/{id}` - Get payment details
+- `POST /payments/callback/selcom` - Selcom webhook (no auth)
+
+#### Products & Marketplace
+
+- `GET /products` - List products
+- `POST /products` - Create product (seller)
+- `GET /stores` - List stores
+- `POST /orders` - Create order
+
+See [postman/README.md](postman/README.md) for complete API documentation.
+
+## 🔐 Environment Variables
+
+### Essential Variables
+
+```env
+APP_NAME=Sokolink
+APP_ENV=local
+APP_DEBUG=true
+APP_URL=http://localhost:8000
+
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=sokolink
+DB_USERNAME=root
+DB_PASSWORD=
+
+BROADCAST_DRIVER=pusher
+QUEUE_CONNECTION=database
+
+# WebSocket Configuration
+PUSHER_APP_ID=local
+PUSHER_APP_KEY=local
+PUSHER_APP_SECRET=local
+PUSHER_APP_CLUSTER=mt1
+PUSHER_HOST=127.0.0.1
+PUSHER_PORT=6001
+PUSHER_SCHEME=http
+
+# Selcom Payment Gateway
+SELCOM_API_BASE_URL=https://apigw.selcommobile.com
+SELCOM_API_KEY=your_api_key
+SELCOM_API_SECRET=your_api_secret
+SELCOM_VENDOR_TILL=your_vendor_till
+SELCOM_ORDER_ENDPOINT=/v1/checkout/create-order
+SELCOM_WALLET_PAYMENT_ENDPOINT=/v1/checkout/wallet-payment
+SELCOM_WEBHOOK_URL=https://your-domain.com/api/v1/payments/callback/selcom
+```
+
+## 🏗️ Project Structure
+
+```
+sokolink-backend/
+├── app/
+│   ├── Events/
+│   │   └── PaymentStatusUpdated.php    # WebSocket event
+│   ├── Helpers/
+│   │   ├── PaymentHelper.php           # Payment processing
+│   │   └── ResponseHelper.php          # API responses
+│   ├── Http/Controllers/
+│   │   ├── PaymentController.php       # Payment endpoints
+│   │   ├── OrderController.php         # Order management
+│   │   └── ProductController.php       # Product management
+│   ├── Models/
+│   └── Providers/
+│       └── BroadcastServiceProvider.php # WebSocket provider
+├── config/
+│   └── broadcasting.php                 # Broadcasting config
+├── routes/
+│   ├── api.php                         # Main API routes
+│   ├── channels.php                    # WebSocket channels
+│   └── api/v1/                         # Versioned routes
+├── docs/
+│   └── WEBSOCKET_PAYMENT_STATUS.md     # WebSocket docs
+├── postman/
+│   ├── Selcom_Payments_API.postman_collection.json
+│   └── README.md
+├── public/
+│   └── websocket-test.html             # Test tool
+├── WEBSOCKET_SETUP.md                  # Setup guide
+├── WEBSOCKET_IMPLEMENTATION_SUMMARY.md # Feature summary
+└── setup-websockets.sh                 # Setup script
+```
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Commit your changes: `git commit -m 'Add amazing feature'`
+4. Push to the branch: `git push origin feature/amazing-feature`
+5. Open a Pull Request
+
+## 📄 License
+
+This project is proprietary software. All rights reserved.
+
+## 🆘 Support
+
+### Documentation
+
+- [WebSocket Setup Guide](WEBSOCKET_SETUP.md)
+- [WebSocket Full Documentation](docs/WEBSOCKET_PAYMENT_STATUS.md)
+- [Payment API Documentation](postman/README.md)
+
+### Tools
+
+- [WebSocket Test Tool](http://localhost:8000/websocket-test.html)
+- [Laravel WebSockets Dashboard](http://localhost:8000/laravel-websockets)
+
+### Logs
+
+```bash
+# Application logs
+tail -f storage/logs/laravel.log
+
+# WebSocket logs
+tail -f storage/logs/websockets.log
+
+# Queue jobs
+php artisan queue:failed
+```
+
+## 🎉 What's New
+
+### v1.1.0 - Real-Time Payment Updates (March 4, 2026)
+
+- ✅ WebSocket integration for real-time payment status updates
+- ✅ Private channel authentication for secure updates
+- ✅ Event broadcasting on payment status changes
+- ✅ Browser-based WebSocket test tool
+- ✅ Comprehensive documentation and guides
+- ✅ Automated setup script
+- ✅ Production deployment instructions
+
+See [WEBSOCKET_IMPLEMENTATION_SUMMARY.md](WEBSOCKET_IMPLEMENTATION_SUMMARY.md) for details.
+
+---
+
+**Built with ❤️ using Laravel**
 
 ## Code of Conduct
 
