@@ -345,10 +345,156 @@ class PaymentController extends Controller
     }
 
 
+    /**
+     * Get Selcom payment status by reference
+     *
+     * @OA\Get(
+     *     path="/payments/{reference}/selcom-status",
+     *     tags={"Payments"},
+     *     summary="Get Selcom payment status",
+     *     description="Query Selcom API to get the current status of a payment by its reference/order_id",
+     *     operationId="getSelcomPaymentStatus",
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\Parameter(
+     *         name="reference",
+     *         in="path",
+     *         required=true,
+     *         description="Payment reference (order_id used in Selcom)",
+     *         @OA\Schema(
+     *             type="string",
+     *             example="a1b2c3d4-e5f6-g7h8-i9j0-k1l2m3n4o5p6"
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Payment status retrieved successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Payment status retrieved successfully"),
+     *             @OA\Property(property="code", type="integer", example=200),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="order_id", type="string", example="a1b2c3d4-e5f6-g7h8-i9j0-k1l2m3n4o5p6"),
+     *                 @OA\Property(property="payment_status", type="string", example="COMPLETED"),
+     *                 @OA\Property(property="amount", type="number", example=50000),
+     *                 @OA\Property(property="channel", type="string", example="MPESATZ"),
+     *                 @OA\Property(property="transid", type="string", example="7945454515"),
+     *                 @OA\Property(property="result", type="string", example="SUCCESS"),
+     *                 @OA\Property(property="resultcode", type="string", example="000"),
+     *                 @OA\Property(property="local_status", type="string", example="successful", description="Mapped status from our database"),
+     *                 @OA\Property(property="local_payment", type="object", description="Local payment record from our database")
+     *             )
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=404,
+     *         description="Payment not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Payment not found"),
+     *             @OA\Property(property="code", type="integer", example=404)
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=500,
+     *         description="Error querying Selcom API",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Failed to query Selcom status"),
+     *             @OA\Property(property="code", type="integer", example=500)
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated"
+     *     )
+     * )
+     */
+    public function getSelcomStatus(string $reference)
+    {
+        try {
+            // First check if payment exists in our database
+            $payment = Payment::where('reference', $reference)->first();
 
+            if (!$payment) {
+                return ResponseHelper::error([], 'Payment not found in our records', 404);
+            }
 
+            // Initialize Selcom client
+            $client = new \Selcom\ApigwClient\Client(
+                env('SELCOM_API_BASE_URL'),
+                env('SELCOM_API_KEY'),
+                env('SELCOM_API_SECRET')
+            );
 
+            // Query Selcom for order status
+            $statusPayload = [
+                'order_id' => $reference
+            ];
 
+            Log::info('Querying Selcom order status', [
+                'order_id' => $reference
+            ]);
+
+            $statusResponse = $client->getFunc(
+                env('SELCOM_ORDER_STATUS_ENDPOINT'),
+                $statusPayload
+            );
+
+            Log::info('Selcom order status response', [
+                'response' => $statusResponse
+            ]);
+
+            // Check if Selcom returned an error
+            if (isset($statusResponse['resultcode']) && $statusResponse['resultcode'] !== '000') {
+                return ResponseHelper::error(
+                    $statusResponse,
+                    $statusResponse['resultdesc'] ?? 'Failed to query Selcom status',
+                    500
+                );
+            }
+
+            // Map Selcom status to our internal status
+            $selcomStatus = $statusResponse['payment_status'] ?? 'UNKNOWN';
+            $selcomResult = $statusResponse['result'] ?? 'UNKNOWN';
+            $mappedStatus = $this->mapSelcomStatusToPaymentStatus($selcomStatus, $selcomResult);
+
+            // Include local payment data
+            $responseData = array_merge($statusResponse, [
+                'local_status' => $mappedStatus,
+                'local_payment' => [
+                    'id' => $payment->id,
+                    'status' => $payment->status,
+                    'amount' => $payment->amount,
+                    'transaction_id' => $payment->transaction_id,
+                    'created_at' => $payment->created_at,
+                    'updated_at' => $payment->updated_at,
+                ]
+            ]);
+
+            return ResponseHelper::success(
+                $responseData,
+                'Payment status retrieved successfully',
+                200
+            );
+        } catch (Exception $e) {
+            Log::error('Error querying Selcom status', [
+                'reference' => $reference,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return ResponseHelper::error(
+                [],
+                'Failed to query Selcom status: ' . $e->getMessage(),
+                500
+            );
+        }
+    }
 
 
     /**

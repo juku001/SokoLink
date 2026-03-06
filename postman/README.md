@@ -145,6 +145,53 @@ Get detailed information about a specific payment.
 
 - `id`: Payment ID
 
+#### GET `/api/v1/payments/{reference}/selcom-status`
+
+Query Selcom API directly to get the current payment status for a given payment reference.
+
+**Authentication**: Required
+
+**Path Parameters**:
+
+- `reference`: Payment reference (order_id used in Selcom)
+
+**Response Example**:
+
+```json
+{
+    "status": true,
+    "message": "Payment status retrieved successfully",
+    "code": 200,
+    "data": {
+        "order_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+        "payment_status": "COMPLETED",
+        "amount": 50000,
+        "channel": "MPESATZ",
+        "transid": "7945454515",
+        "result": "SUCCESS",
+        "resultcode": "000",
+        "resultdesc": "Transaction successful",
+        "phone": "255712345678",
+        "local_status": "successful",
+        "local_payment": {
+            "id": 101,
+            "status": "successful",
+            "amount": "50000.00",
+            "transaction_id": "7945454515",
+            "created_at": "2026-03-04T10:30:00.000000Z",
+            "updated_at": "2026-03-04T10:32:15.000000Z"
+        }
+    }
+}
+```
+
+**Use Cases**:
+
+- Check real-time payment status from Selcom
+- Reconcile payment discrepancies
+- Debug payment issues
+- Verify payment completion status
+
 ### Webhooks
 
 #### POST `/api/v1/payments/callback/selcom`

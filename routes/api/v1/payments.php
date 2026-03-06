@@ -29,6 +29,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     Route::get('/payments', [PaymentController::class, 'index']); //get buyers payment history
     Route::get('/payments/{id}', [PaymentController::class, 'show']); //get payment
+    Route::get('/payments/{reference}/selcom-status', [PaymentController::class, 'getSelcomStatus']); //get Selcom payment status
 
 
 });

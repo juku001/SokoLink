@@ -296,6 +296,149 @@
                             "body": "{\n    \"status\": false,\n    \"message\": \"Payment not found\",\n    \"code\": 404,\n    \"data\": []\n}"
                         }
                     ]
+                },
+                {
+                    "name": "Get Selcom Payment Status",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/payments/{{payment_reference}}/selcom-status",
+                            "host": ["{{base_url}}"],
+                            "path": [
+                                "api",
+                                "v1",
+                                "payments",
+                                "{{payment_reference}}",
+                                "selcom-status"
+                            ]
+                        },
+                        "description": "Queries Selcom API directly to get the current payment status for a given payment reference.\n\n### Path Parameters\n\n| Parameter | Type | Required | Description | Example |\n|-----------|------|----------|-------------|---------|\n| reference | string | Yes | Payment reference (order_id used in Selcom) | a1b2c3d4-e5f6-7890-abcd-ef1234567890 |\n\n### Response\nReturns both Selcom's live status and local payment record:\n- **order_id**: Selcom order identifier\n- **payment_status**: Current Selcom payment status (COMPLETED, FAILED, PENDING, CANCELLED)\n- **amount**: Transaction amount\n- **channel**: Mobile money operator used (MPESATZ, TIGOPESATZ, etc.)\n- **transid**: Selcom transaction ID\n- **result**: Selcom result (SUCCESS, FAILED)\n- **resultcode**: Selcom result code (000 = success)\n- **local_status**: Mapped status from our database (successful, failed, pending, cancelled)\n- **local_payment**: Local payment record details\n\n### Use Cases\n- Check real-time payment status from Selcom\n- Reconcile payment discrepancies\n- Debug payment issues\n- Verify payment completion status\n\n### Error Responses\n- **404**: Payment not found in local database\n- **500**: Error querying Selcom API\n- **401**: Unauthorized (missing or invalid token)"
+                    },
+                    "response": [
+                        {
+                            "name": "Successful - Payment Completed",
+                            "originalRequest": {
+                                "method": "GET",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{base_url}}/api/v1/payments/{{payment_reference}}/selcom-status",
+                                    "host": ["{{base_url}}"],
+                                    "path": [
+                                        "api",
+                                        "v1",
+                                        "payments",
+                                        "{{payment_reference}}",
+                                        "selcom-status"
+                                    ]
+                                }
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": true,\n    \"message\": \"Payment status retrieved successfully\",\n    \"code\": 200,\n    \"data\": {\n        \"order_id\": \"a1b2c3d4-e5f6-7890-abcd-ef1234567890\",\n        \"payment_status\": \"COMPLETED\",\n        \"amount\": 50000,\n        \"channel\": \"MPESATZ\",\n        \"transid\": \"7945454515\",\n        \"result\": \"SUCCESS\",\n        \"resultcode\": \"000\",\n        \"resultdesc\": \"Transaction successful\",\n        \"phone\": \"255712345678\",\n        \"local_status\": \"successful\",\n        \"local_payment\": {\n            \"id\": 101,\n            \"status\": \"successful\",\n            \"amount\": \"50000.00\",\n            \"transaction_id\": \"7945454515\",\n            \"created_at\": \"2026-03-04T10:30:00.000000Z\",\n            \"updated_at\": \"2026-03-04T10:32:15.000000Z\"\n        }\n    }\n}"
+                        },
+                        {
+                            "name": "Successful - Payment Pending",
+                            "originalRequest": {
+                                "method": "GET",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{base_url}}/api/v1/payments/b2c3d4e5-f6g7-8901-bcde-fg2345678901/selcom-status",
+                                    "host": ["{{base_url}}"],
+                                    "path": [
+                                        "api",
+                                        "v1",
+                                        "payments",
+                                        "b2c3d4e5-f6g7-8901-bcde-fg2345678901",
+                                        "selcom-status"
+                                    ]
+                                }
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": true,\n    \"message\": \"Payment status retrieved successfully\",\n    \"code\": 200,\n    \"data\": {\n        \"order_id\": \"b2c3d4e5-f6g7-8901-bcde-fg2345678901\",\n        \"payment_status\": \"PENDING\",\n        \"amount\": 25000,\n        \"channel\": \"TIGOPESATZ\",\n        \"transid\": null,\n        \"result\": \"PENDING\",\n        \"resultcode\": \"888\",\n        \"resultdesc\": \"Transaction pending\",\n        \"phone\": \"255623456789\",\n        \"local_status\": \"pending\",\n        \"local_payment\": {\n            \"id\": 100,\n            \"status\": \"pending\",\n            \"amount\": \"25000.00\",\n            \"transaction_id\": null,\n            \"created_at\": \"2026-03-03T15:20:00.000000Z\",\n            \"updated_at\": \"2026-03-03T15:20:00.000000Z\"\n        }\n    }\n}"
+                        },
+                        {
+                            "name": "Payment Not Found",
+                            "originalRequest": {
+                                "method": "GET",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{base_url}}/api/v1/payments/invalid-reference-id/selcom-status",
+                                    "host": ["{{base_url}}"],
+                                    "path": [
+                                        "api",
+                                        "v1",
+                                        "payments",
+                                        "invalid-reference-id",
+                                        "selcom-status"
+                                    ]
+                                }
+                            },
+                            "status": "Not Found",
+                            "code": 404,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": false,\n    \"message\": \"Payment not found in our records\",\n    \"code\": 404,\n    \"data\": []\n}"
+                        },
+                        {
+                            "name": "Selcom API Error",
+                            "originalRequest": {
+                                "method": "GET",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{base_url}}/api/v1/payments/{{payment_reference}}/selcom-status",
+                                    "host": ["{{base_url}}"],
+                                    "path": [
+                                        "api",
+                                        "v1",
+                                        "payments",
+                                        "{{payment_reference}}",
+                                        "selcom-status"
+                                    ]
+                                }
+                            },
+                            "status": "Internal Server Error",
+                            "code": 500,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": false,\n    \"message\": \"Failed to query Selcom status: Connection timeout\",\n    \"code\": 500,\n    \"data\": []\n}"
+                        }
+                    ]
                 }
             ],
             "description": "Endpoints for managing and viewing payment records",
