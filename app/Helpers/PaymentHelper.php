@@ -18,7 +18,7 @@ class PaymentHelper
      * Initiates a payment based on method and type.
      *
      * @param PaymentMethod $paymentMethod
-     * @param array $data (e.g., phone, amount, order_id, etc.)
+     * @param array $data (e.g., phone, amount, order_id, payment_methods, etc.)
      * @return array
      */
     public static function initiatePayment(PaymentMethod $paymentMethod, array $data)
@@ -31,10 +31,9 @@ class PaymentHelper
                 return self::handleMno($paymentMethod, $data);
 
             case 'card':
-                return [
-                    'status' => false,
-                    'message' => 'Card payments are not configured yet.'
-                ];
+                // For card payments, use CARD payment method
+                $data['payment_methods'] = 'CARD';
+                return self::handleCard($data);
 
             case 'bank':
                 return [
@@ -56,23 +55,49 @@ class PaymentHelper
      */
     private static function handleMno(PaymentMethod $paymentMethod, array $data)
     {
+        // For mobile money, always use MOBILEMONEYPULL and push to wallet
+        $data['payment_methods'] = 'MOBILEMONEYPULL';
+        $data['push_to_wallet'] = true;
         return self::initiateSelcomPayment($data);
     }
 
     /**
-     * Initiate a Selcom mobile money push (USSD pull) payment.
+     * Handle card payments via Selcom.
+     */
+    private static function handleCard(array $data)
+    {
+        // For card payments, use CARD and return payment link (no wallet push)
+        $data['payment_methods'] = 'CARD';
+        $data['push_to_wallet'] = false;
+        return self::initiateSelcomPayment($data);
+    }
+
+    /**
+     * Generate payment link for all payment methods.
+     */
+    public static function generatePaymentLink(array $data)
+    {
+        // For payment links, use ALL payment methods (no wallet push)
+        $data['payment_methods'] = 'ALL';
+        $data['push_to_wallet'] = false;
+        return self::initiateSelcomPayment($data);
+    }
+
+    /**
+     * Initiate a Selcom payment.
      *
      * Flow:
      *  1. Create a checkout order on Selcom to obtain a transaction reference.
-     *  2. Push the USSD prompt to the buyer's handset via the wallet-payment endpoint.
-     *  3. Selcom calls the webhook once the buyer approves or rejects.
+     *  2. For mobile money: Push the USSD prompt to the buyer's handset via the wallet-payment endpoint.
+     *  3. For card/all: Return the payment link for user to complete payment.
+     *  4. Selcom calls the webhook once the buyer approves or rejects.
      */
     private static function initiateSelcomPayment(array $data)
     {
         if (empty($data['phone']) || empty($data['amount'])) {
             return [
                 'status'  => false,
-                'message' => 'Phone number and amount are required for mobile money payment.',
+                'message' => 'Phone number and amount are required for payment.',
             ];
         }
 
@@ -86,6 +111,10 @@ class PaymentHelper
 
         // Selcom requires the webhook URL Base64-encoded
         $webhook = base64_encode(env('SELCOM_WEBHOOK_URL'));
+
+        // Determine payment method type (default to MOBILEMONEYPULL)
+        $paymentMethods = $data['payment_methods'] ?? 'MOBILEMONEYPULL';
+        $pushToWallet = $data['push_to_wallet'] ?? true;
 
         $client = new Client(
             env('SELCOM_API_BASE_URL'),
@@ -102,7 +131,7 @@ class PaymentHelper
             'amount'                    => $data['amount'],
             'currency'                  => 'TZS',
             'no_of_items'               => 1,
-            'payment_methods'           => 'MOBILEMONEYPULL',
+            'payment_methods'           => $paymentMethods,
             'webhook'                   => $webhook,
             'billing.firstname'         => $user->name ?? 'Customer',
             'billing.lastname'          => $user->name ?? 'Customer',
@@ -129,23 +158,47 @@ class PaymentHelper
             ];
         }
 
-        $pushPayload = [
-            'transid'  => $orderResponse['reference'],
-            'order_id' => $orderId,
-            'msisdn'   => $phone,
-        ];
+        $selcomOrderId = $orderResponse['reference'];
 
-        Log::info('Selcom wallet-payment payload', $pushPayload);
+        // Extract payment gateway URL if available
+        $paymentLink = null;
+        if (!empty($orderResponse['data'][0]['payment_gateway_url'])) {
+            $paymentLink = base64_decode($orderResponse['data'][0]['payment_gateway_url']);
+        }
 
-        $pushResponse = $client->postFunc(env('SELCOM_WALLET_PAYMENT_ENDPOINT'), $pushPayload);
+        // For mobile money, push to wallet
+        if ($pushToWallet) {
+            $pushPayload = [
+                'transid'  => $selcomOrderId,
+                'order_id' => $orderId,
+                'msisdn'   => $phone,
+            ];
 
-        Log::info('Selcom wallet-payment response', (array) $pushResponse);
+            Log::info('Selcom wallet-payment payload', $pushPayload);
 
+            $pushResponse = $client->postFunc(env('SELCOM_WALLET_PAYMENT_ENDPOINT'), $pushPayload);
+
+            Log::info('Selcom wallet-payment response', (array) $pushResponse);
+
+            return [
+                'status'           => true,
+                'reference'        => $orderId,
+                'selcom_order_id'  => $selcomOrderId,
+                'data'             => $pushResponse,
+                'gateway_data'     => $orderResponse['data'][0] ?? null,
+                'message'          => 'Payment push initiated. Please complete the payment on your phone.',
+            ];
+        }
+
+        // For card/all payment methods, return the payment link
         return [
-            'status'    => true,
-            'reference' => $orderId,
-            'data'      => $pushResponse,
-            'message'   => 'Payment push initiated. Please complete the payment on your phone.',
+            'status'           => true,
+            'reference'        => $orderId,
+            'selcom_order_id'  => $selcomOrderId,
+            'payment_link'     => $paymentLink,
+            'data'             => $orderResponse,
+            'gateway_data'     => $orderResponse['data'][0] ?? null,
+            'message'          => 'Payment link generated successfully. Please complete the payment.',
         ];
     }
 

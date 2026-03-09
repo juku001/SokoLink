@@ -265,8 +265,6 @@ class PaymentController extends Controller
             switch ($payOption->key) {
                 case 'pay-now':
                     return $this->handlePayNowForCart($cart, $request, $total);
-                case 'save-pay-later':
-                    return $this->handleSavePayLaterForCart($cart, $request, $total);
                 case 'request-payment':
                     return $this->handleRequestPaymentForCart($cart, $request, $total);
                 default:
@@ -657,6 +655,8 @@ class PaymentController extends Controller
             $payment->user_id = $request->user()->id;
             $payment->msisdn = $phoneNumber;
             $payment->reference = $response['reference'] ?? null;
+            $payment->selcom_order_id = $response['selcom_order_id'] ?? null;
+            $payment->gateway_data = isset($response['gateway_data']) ? json_encode($response['gateway_data']) : null;
 
 
             if (($response['status'] ?? false) === true) {
@@ -666,7 +666,7 @@ class PaymentController extends Controller
                 $payment->save();
                 DB::commit();
 
-                return ResponseHelper::success([
+                $responseData = [
                     'payment_id' => $payment->id,
                     'reference' => $payment->reference,
                     'message' => $payment->notes,
@@ -675,7 +675,14 @@ class PaymentController extends Controller
                         'event' => 'payment.status.updated',
                         'auth_endpoint' => url('/api/broadcasting/auth'),
                     ],
-                ], 'Charge initiated.');
+                ];
+
+                // Include payment link if available (e.g., for card payments)
+                if (!empty($response['payment_link'])) {
+                    $responseData['payment_link'] = $response['payment_link'];
+                }
+
+                return ResponseHelper::success($responseData, 'Charge initiated.');
             } else {
 
 
@@ -717,8 +724,88 @@ class PaymentController extends Controller
 
     private function handleRequestPaymentForCart(Cart $cart, Request $request, $amount)
     {
-        // Implementation for request payment
-        return ResponseHelper::error([], 'Request payment not implemented yet.', 501);
+        DB::beginTransaction();
+
+        try {
+            $phoneNumber = $request->phone;
+
+            Log::info('Started request payment for ' . $phoneNumber, [
+                'cart_id' => $cart->id,
+                'user_id' => $request->user()->id,
+            ]);
+
+            $data = [
+                'phone' => $phoneNumber,
+                'amount' => $amount,
+                'cart_id' => $cart->id,
+            ];
+
+            // Generate payment link with ALL payment methods
+            $payHelper = new PaymentHelper();
+            $response = $payHelper->generatePaymentLink($data);
+
+            if (!is_array($response)) {
+                throw new Exception('Invalid payment gateway response');
+            }
+
+            // Create payment record
+            $payment = new Payment();
+            $payment->payment_option_id = $request->payment_option_id;
+            $payment->payment_method_id = $request->payment_method_id;
+            $payment->amount = $amount;
+            $payment->cart_id = $cart->id;
+            $payment->user_id = $request->user()->id;
+            $payment->msisdn = $phoneNumber;
+            $payment->reference = $response['reference'] ?? null;
+            $payment->selcom_order_id = $response['selcom_order_id'] ?? null;
+            $payment->gateway_data = isset($response['gateway_data']) ? json_encode($response['gateway_data']) : null;
+
+            if (($response['status'] ?? false) === true) {
+                $payment->status = 'pending';
+                $payment->notes = $response['message'] ?? 'Payment link generated successfully.';
+                $payment->save();
+                DB::commit();
+
+                return ResponseHelper::success([
+                    'payment_id' => $payment->id,
+                    'reference' => $payment->reference,
+                    'payment_link' => $response['payment_link'] ?? null,
+                    'message' => $payment->notes,
+                    'websocket' => [
+                        'channel' => 'private-payment.' . $payment->reference,
+                        'event' => 'payment.status.updated',
+                        'auth_endpoint' => url('/api/broadcasting/auth'),
+                    ],
+                ], 'Payment link generated successfully.');
+            } else {
+                $payment->status = 'failed';
+                $payment->notes = $response['message'] ?? 'Payment link generation failed';
+                $payment->save();
+
+                DB::commit();
+
+                return ResponseHelper::error([
+                    'payment_id' => $payment->id,
+                    'reference' => $payment->reference,
+                    'message' => $payment->notes,
+                ], 'Payment link generation failed', 400);
+            }
+        } catch (Throwable $e) {
+            DB::rollBack();
+
+            Log::error('Payment link generation crashed', [
+                'error' => $e->getMessage(),
+                'cart_id' => $cart->id ?? null,
+                'user_id' => $request->user()->id ?? null,
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return ResponseHelper::error(
+                [],
+                'Something went wrong while generating payment link. Please try again.',
+                500
+            );
+        }
     }
 
 
@@ -873,11 +960,12 @@ class PaymentController extends Controller
                 return ResponseHelper::error($validator->errors(), 'Invalid callback data', 422);
             }
 
-            // Find payment by reference
-            $payment = Payment::where('reference', $request->reference)->first();
+            // Find payment by order_id (which matches our stored reference field)
+            $payment = Payment::where('reference', $request->order_id)->first();
 
             if (!$payment) {
                 Log::warning('Selcom callback: Payment not found', [
+                    'order_id' => $request->order_id,
                     'reference' => $request->reference,
                     'payload' => $request->all()
                 ]);
