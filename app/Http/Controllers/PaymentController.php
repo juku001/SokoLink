@@ -1188,7 +1188,7 @@ class PaymentController extends Controller
                 $orderItem->product_id = $cartItem->product_id;
                 $orderItem->quantity = $cartItem->quantity;
                 $orderItem->price = $cartItem->price;
-                $orderItem->total = $cartItem->price * $cartItem->quantity;
+                $orderItem->seller_id = $cartItem->product->store->seller_id ?? null;
                 $orderItem->save();
             }
 
