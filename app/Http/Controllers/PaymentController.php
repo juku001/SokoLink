@@ -1160,11 +1160,13 @@ class PaymentController extends Controller
             // Create order from cart
             $order = new Order();
             $order->order_ref = 'ORD-' . now()->format('Ymd') . '-' . strtoupper(substr(uniqid(), -6));
+            $order->cart_id = $cart->id;
             $order->buyer_id = $cart->buyer_id;
             $order->total_amount = $payment->amount;
             $order->shipping_cost = $checkoutData['shipping_cost'] ?? 0;
             $order->status = 'paid';
-            $order->payment_id = $payment->id;
+            $order->payment_option_id = $checkoutData['payment_option_id'] ?? null;
+            $order->payment_method_id = $checkoutData['payment_method_id'] ?? null;
 
             // Shipping address
             $address = new Address();
@@ -1198,10 +1200,6 @@ class PaymentController extends Controller
                 'notes' => 'Order created and paid via Selcom callback',
                 'changed_by' => null
             ]);
-
-            // Update payment with order reference
-            $payment->order_id = $order->id;
-            $payment->save();
 
             // Clear cart
             $cart->items()->delete();
