@@ -659,6 +659,11 @@ class PaymentController extends Controller
             $payment->gateway_data = isset($response['gateway_data']) ? json_encode($response['gateway_data']) : null;
             $payment->notes = json_encode(['checkout_data' => $checkoutData]);
 
+            Log::info('Payment created with checkout data', [
+                'payment_reference' => $payment->reference,
+                'cart_id' => $cart->id,
+                'has_checkout_data' => !empty($checkoutData)
+            ]);
 
             if (($response['status'] ?? false) === true) {
 
@@ -767,6 +772,12 @@ class PaymentController extends Controller
             $payment->selcom_order_id = $response['selcom_order_id'] ?? null;
             $payment->gateway_data = isset($response['gateway_data']) ? json_encode($response['gateway_data']) : null;
             $payment->notes = json_encode(['checkout_data' => $checkoutData]);
+
+            Log::info('Payment link created with checkout data', [
+                'payment_reference' => $payment->reference,
+                'cart_id' => $cart->id,
+                'has_checkout_data' => !empty($checkoutData)
+            ]);
 
             if (($response['status'] ?? false) === true) {
                 $payment->status = 'pending';
@@ -995,7 +1006,14 @@ class PaymentController extends Controller
             try {
                 $payment->status = $newStatus;
                 $payment->transaction_id = $request->transid;
-                $payment->notes = "Selcom callback: {$request->result} - {$request->payment_status}";
+
+                // Preserve existing checkout data in notes when adding callback message
+                $notesData = json_decode($payment->notes, true);
+                if (!is_array($notesData)) {
+                    $notesData = [];
+                }
+                $notesData['callback_message'] = "Selcom callback: {$request->result} - {$request->payment_status}";
+                $payment->notes = json_encode($notesData);
 
                 // Add callback metadata
                 $callbackData = [
@@ -1116,14 +1134,25 @@ class PaymentController extends Controller
             $notesData = json_decode($payment->notes, true);
             if (is_array($notesData) && isset($notesData['checkout_data'])) {
                 $checkoutData = $notesData['checkout_data'];
+                Log::info('Retrieved checkout data from payment notes', [
+                    'payment_id' => $payment->id,
+                    'cart_id' => $cart->id
+                ]);
             } else {
                 $checkoutData = session('checkout_data_' . $cart->id);
+                if ($checkoutData) {
+                    Log::info('Retrieved checkout data from session', [
+                        'payment_id' => $payment->id,
+                        'cart_id' => $cart->id
+                    ]);
+                }
             }
 
             if (!$checkoutData) {
                 Log::warning('Checkout data not found for successful payment', [
                     'payment_id' => $payment->id,
-                    'cart_id' => $cart->id
+                    'cart_id' => $cart->id,
+                    'notes_data' => $notesData
                 ]);
                 return;
             }
