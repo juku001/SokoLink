@@ -264,9 +264,9 @@ class PaymentController extends Controller
             $payOption = PaymentOptions::find($request->payment_option_id);
             switch ($payOption->key) {
                 case 'pay-now':
-                    return $this->handlePayNowForCart($cart, $request, $total);
+                    return $this->handlePayNowForCart($cart, $request, $total, $checkoutData);
                 case 'request-payment':
-                    return $this->handleRequestPaymentForCart($cart, $request, $total);
+                    return $this->handleRequestPaymentForCart($cart, $request, $total, $checkoutData);
                 default:
                     return ResponseHelper::error([], "Invalid payment option selected.", 400);
             }
@@ -619,7 +619,7 @@ class PaymentController extends Controller
 
 
 
-    private function handlePayNowForCart(Cart $cart, Request $request, $amount)
+    private function handlePayNowForCart(Cart $cart, Request $request, $amount, array $checkoutData)
     {
         DB::beginTransaction();
 
@@ -657,19 +657,23 @@ class PaymentController extends Controller
             $payment->reference = $response['reference'] ?? null;
             $payment->selcom_order_id = $response['selcom_order_id'] ?? null;
             $payment->gateway_data = isset($response['gateway_data']) ? json_encode($response['gateway_data']) : null;
+            $payment->notes = json_encode(['checkout_data' => $checkoutData]);
 
 
             if (($response['status'] ?? false) === true) {
 
                 $payment->status = 'pending';
-                $payment->notes = $response['message'] ?? 'Payment initiated successfully.';
+                // Append gateway message to checkout data
+                $notesData = json_decode($payment->notes, true);
+                $notesData['gateway_message'] = $response['message'] ?? 'Payment initiated successfully.';
+                $payment->notes = json_encode($notesData);
                 $payment->save();
                 DB::commit();
 
                 $responseData = [
                     'payment_id' => $payment->id,
                     'reference' => $payment->reference,
-                    'message' => $payment->notes,
+                    'message' => $notesData['gateway_message'],
                     'websocket' => [
                         'channel' => 'private-payment.' . $payment->reference,
                         'event' => 'payment.status.updated',
@@ -687,7 +691,10 @@ class PaymentController extends Controller
 
 
                 $payment->status = 'failed';
-                $payment->notes = $response['message'] ?? 'Payment initiation failed';
+                // Store error message in notes
+                $notesData = json_decode($payment->notes, true);
+                $notesData['gateway_message'] = $response['message'] ?? 'Payment initiation failed';
+                $payment->notes = json_encode($notesData);
                 $payment->save();
 
                 DB::commit();
@@ -695,7 +702,7 @@ class PaymentController extends Controller
                 return ResponseHelper::error([
                     'payment_id' => $payment->id,
                     'reference' => $payment->reference,
-                    'message' => $payment->notes,
+                    'message' => $notesData['gateway_message'],
                 ], 'Payment initiation failed', 400);
             }
         } catch (Throwable $e) {
@@ -722,7 +729,7 @@ class PaymentController extends Controller
         return ResponseHelper::error([], 'Save pay later not implemented yet.', 501);
     }
 
-    private function handleRequestPaymentForCart(Cart $cart, Request $request, $amount)
+    private function handleRequestPaymentForCart(Cart $cart, Request $request, $amount, array $checkoutData)
     {
         DB::beginTransaction();
 
@@ -759,10 +766,14 @@ class PaymentController extends Controller
             $payment->reference = $response['reference'] ?? null;
             $payment->selcom_order_id = $response['selcom_order_id'] ?? null;
             $payment->gateway_data = isset($response['gateway_data']) ? json_encode($response['gateway_data']) : null;
+            $payment->notes = json_encode(['checkout_data' => $checkoutData]);
 
             if (($response['status'] ?? false) === true) {
                 $payment->status = 'pending';
-                $payment->notes = $response['message'] ?? 'Payment link generated successfully.';
+                // Append gateway message to checkout data
+                $notesData = json_decode($payment->notes, true);
+                $notesData['gateway_message'] = $response['message'] ?? 'Payment link generated successfully.';
+                $payment->notes = json_encode($notesData);
                 $payment->save();
                 DB::commit();
 
@@ -770,7 +781,7 @@ class PaymentController extends Controller
                     'payment_id' => $payment->id,
                     'reference' => $payment->reference,
                     'payment_link' => $response['payment_link'] ?? null,
-                    'message' => $payment->notes,
+                    'message' => $notesData['gateway_message'],
                     'websocket' => [
                         'channel' => 'private-payment.' . $payment->reference,
                         'event' => 'payment.status.updated',
@@ -779,7 +790,10 @@ class PaymentController extends Controller
                 ], 'Payment link generated successfully.');
             } else {
                 $payment->status = 'failed';
-                $payment->notes = $response['message'] ?? 'Payment link generation failed';
+                // Store error message in notes
+                $notesData = json_decode($payment->notes, true);
+                $notesData['gateway_message'] = $response['message'] ?? 'Payment link generation failed';
+                $payment->notes = json_encode($notesData);
                 $payment->save();
 
                 DB::commit();
@@ -787,7 +801,7 @@ class PaymentController extends Controller
                 return ResponseHelper::error([
                     'payment_id' => $payment->id,
                     'reference' => $payment->reference,
-                    'message' => $payment->notes,
+                    'message' => $notesData['gateway_message'],
                 ], 'Payment link generation failed', 400);
             }
         } catch (Throwable $e) {
@@ -1058,6 +1072,11 @@ class PaymentController extends Controller
             return 'successful';
         }
 
+        // If result is SUCCESS but status is empty/unknown, consider it successful
+        if ($result === 'SUCCESS' && (empty($paymentStatus) || $paymentStatus === 'UNKNOWN')) {
+            return 'successful';
+        }
+
         if ($result === 'FAILED' || $paymentStatus === 'FAILED') {
             return 'failed';
         }
@@ -1092,8 +1111,14 @@ class PaymentController extends Controller
                 return;
             }
 
-            // Get checkout data from session
-            $checkoutData = session('checkout_data_' . $cart->id);
+            // Get checkout data from payment notes first, fallback to session
+            $checkoutData = null;
+            $notesData = json_decode($payment->notes, true);
+            if (is_array($notesData) && isset($notesData['checkout_data'])) {
+                $checkoutData = $notesData['checkout_data'];
+            } else {
+                $checkoutData = session('checkout_data_' . $cart->id);
+            }
 
             if (!$checkoutData) {
                 Log::warning('Checkout data not found for successful payment', [
