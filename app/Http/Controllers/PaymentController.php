@@ -1167,9 +1167,11 @@ class PaymentController extends Controller
             $order->status = 'paid';
             $order->payment_option_id = $checkoutData['payment_option_id'] ?? null;
             $order->payment_method_id = $checkoutData['payment_method_id'] ?? null;
+            $order->save();
 
-            // Shipping address
+            // Shipping address linked to order
             $address = new Address();
+            $address->order_id = $order->id;
             $address->user_id = $cart->buyer_id;
             $address->type = 'shipping';
             $address->fullname = $checkoutData['fullname'];
@@ -1178,9 +1180,6 @@ class PaymentController extends Controller
             $address->region_id = $checkoutData['region_id'];
             $address->postal_code = $checkoutData['postal_code'] ?? null;
             $address->save();
-
-            $order->shipping_address_id = $address->id;
-            $order->save();
 
             // Create order items from cart items
             foreach ($cart->items as $cartItem) {
