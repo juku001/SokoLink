@@ -1168,11 +1168,13 @@ class PaymentController extends Controller
 
             // Shipping address
             $address = new Address();
+            $address->user_id = $cart->buyer_id;
+            $address->type = 'shipping';
             $address->fullname = $checkoutData['fullname'];
             $address->phone = $checkoutData['phone'];
-            $address->address_phone = $checkoutData['address_phone'] ?? null;
-            $address->address = $checkoutData['address'];
+            $address->street = $checkoutData['address'] ?? 'N/A';
             $address->region_id = $checkoutData['region_id'];
+            $address->postal_code = $checkoutData['postal_code'] ?? null;
             $address->save();
 
             $order->shipping_address_id = $address->id;

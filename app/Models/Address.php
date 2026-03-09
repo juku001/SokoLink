@@ -12,6 +12,7 @@ class Address extends Model
         'type',
         'fullname',
         'street',
+        'city',
         'region_id',
         'country_id',
         'postal_code',
