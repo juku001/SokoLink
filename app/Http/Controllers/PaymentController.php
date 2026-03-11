@@ -9,13 +9,17 @@ use App\Helpers\ResponseHelper;
 use App\Helpers\SMSHelper;
 use App\Models\Address;
 use App\Models\Cart;
+use App\Models\InventoryLedger;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\OrderStatusHistory;
 use App\Models\Payment;
 use App\Models\PaymentMethod;
 use App\Models\PaymentOptions;
+use App\Models\Product;
 use App\Models\Region;
+use App\Models\Sale;
+use App\Models\SaleProduct;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -1199,6 +1203,71 @@ class PaymentController extends Controller
                 'notes' => 'Order created and paid via Selcom callback',
                 'changed_by' => null
             ]);
+
+            // Record sales per seller/store and deduct inventory
+            $itemsByStore = collect($cart->items)->groupBy(function ($cartItem) {
+                return $cartItem->product->store_id;
+            });
+
+            foreach ($itemsByStore as $storeId => $storeItems) {
+                $firstItem = $storeItems->first();
+                $sellerId = $firstItem->product->store->seller_id ?? null;
+
+                $saleAmount = $storeItems->sum(function ($item) {
+                    return $item->price * $item->quantity;
+                });
+
+                $sale = Sale::create([
+                    'seller_id' => $sellerId,
+                    'store_id' => $storeId,
+                    'order_id' => $order->id,
+                    'payment_id' => $payment->id,
+                    'payment_method_id' => $checkoutData['payment_method_id'] ?? null,
+                    'payment_option_id' => $checkoutData['payment_option_id'] ?? null,
+                    'buyer_name' => $checkoutData['fullname'] ?? null,
+                    'amount' => $saleAmount,
+                    'sales_date' => now()->toDateString(),
+                    'sales_time' => now()->toTimeString(),
+                    'status' => 'completed',
+                ]);
+
+                foreach ($storeItems as $cartItem) {
+                    SaleProduct::create([
+                        'sale_id' => $sale->id,
+                        'product_id' => $cartItem->product_id,
+                        'quantity' => $cartItem->quantity,
+                        'price' => $cartItem->price,
+                    ]);
+
+                    // Deduct inventory
+                    $product = Product::where('id', $cartItem->product_id)->lockForUpdate()->first();
+                    if ($product) {
+                        $product->decrement('stock_qty', $cartItem->quantity);
+
+                        $latestLedger = InventoryLedger::where('store_id', $product->store_id)
+                            ->where('product_id', $product->id)
+                            ->latest('id')
+                            ->first();
+
+                        $previousBalance = $latestLedger ? $latestLedger->balance : $product->stock_qty + $cartItem->quantity;
+
+                        InventoryLedger::create([
+                            'store_id' => $product->store_id,
+                            'product_id' => $product->id,
+                            'change' => -1 * $cartItem->quantity,
+                            'balance' => $previousBalance - $cartItem->quantity,
+                            'reason' => 'sale',
+                        ]);
+                    }
+                }
+
+                Log::info('Sale recorded for store', [
+                    'sale_id' => $sale->id,
+                    'sale_ref' => $sale->sale_ref,
+                    'store_id' => $storeId,
+                    'order_id' => $order->id,
+                ]);
+            }
 
             // Clear cart
             $cart->items()->delete();
