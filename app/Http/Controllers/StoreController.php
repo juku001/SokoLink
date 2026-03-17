@@ -88,7 +88,7 @@ class StoreController extends Controller implements HasMiddleware
 
         // Base query with relations
         $query = Store::with('category', 'region.country', 'reviews');
-        
+
         // Apply filtering based on user type
         if ($user) {
             switch ($user->role) {
@@ -961,6 +961,11 @@ class StoreController extends Controller implements HasMiddleware
 
         $authId = auth()->user()->id;
         $seller = Seller::where('user_id', $authId)->first();
+
+        if (!isset($seller->active_store)) {
+            return ResponseHelper::error([], 'No active store for this store.', 400);
+        }
+
 
         if ($seller->active_store == $request->store_id) {
             return ResponseHelper::error([], "Can not set same store as active", 400);
