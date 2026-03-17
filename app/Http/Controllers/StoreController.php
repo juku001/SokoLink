@@ -946,7 +946,6 @@ class StoreController extends Controller implements HasMiddleware
 
     public function updateActive(Request $request)
     {
-
         $validator = Validator::make($request->all(), [
             'store_id' => 'required|numeric|exists:stores,id'
         ]);
@@ -962,22 +961,28 @@ class StoreController extends Controller implements HasMiddleware
         $authId = auth()->user()->id;
         $seller = Seller::where('user_id', $authId)->first();
 
-        if (!isset($seller->active_store)) {
-            return ResponseHelper::error([], 'No active store for this store.', 400);
+        if (!$seller) {
+            return ResponseHelper::error([], 'Seller not found.', 404);
         }
 
+        // 1. If no active store → set it
+        if (empty($seller->active_store)) {
+            $seller->active_store = $request->store_id;
+            $seller->save();
 
+            return ResponseHelper::success([], 'Active store set successfully.', 200);
+        }
+
+        // 2. If same store → reject
         if ($seller->active_store == $request->store_id) {
-            return ResponseHelper::error([], "Can not set same store as active", 400);
+            return ResponseHelper::error([], 'Store is already active.', 400);
         }
 
-
+        // 3. If different store → update it
         $seller->active_store = $request->store_id;
-
         $seller->save();
 
-        return ResponseHelper::success([], 'Active Store Changed successfull.', 200);
-
+        return ResponseHelper::success([], 'Active store changed successfully.', 200);
     }
 
 

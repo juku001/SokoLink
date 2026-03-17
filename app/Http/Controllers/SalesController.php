@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Auth;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
 use Illuminate\Support\Facades\Validator;
+use Response;
 
 class SalesController extends Controller
 {
@@ -182,8 +183,13 @@ class SalesController extends Controller
     public function index(Request $request)
     {
         $auth = auth()->id();
+        $seller = Seller::where('user_id')->first();
 
-        $query = Sale::where('seller_id', $auth);
+        if (!$seller) {
+            return ResponseHelper::error([], 'Seller account not found.', 404);
+        }
+        $active_store = $seller->active_store;
+        $query = Sale::where('store_id', $active_store)->where('seller_id', $auth);
 
         if ($request->filled('search')) {
             $search = $request->search;
