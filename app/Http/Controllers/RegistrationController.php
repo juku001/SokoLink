@@ -4,7 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Helpers\AuthProviderType;
 use App\Helpers\CustomFunctions;
+use App\Helpers\MobileNetworkHelper;
 use App\Helpers\ResponseHelper;
+use App\Models\PaymentMethod;
+use App\Models\Seller;
 use App\Models\User;
 use DB;
 use Exception;
@@ -154,6 +157,18 @@ class RegistrationController extends Controller
                     break;
             }
 
+
+            if ($role == 'seller') {
+                $payMethod = MobileNetworkHelper::getNetworkByPrefix($request->phone);
+
+                $payMethodId = PaymentMethod::where('code', $payMethod)->first()->id;
+                Seller::create([
+                    'user_id' => $user->id,
+                    'payout_account' => $request->phone,
+                    'payout_method' => $payMethodId,
+                    'settlement' => 'manual'
+                ]);
+            }
 
             DB::commit();
             return ResponseHelper::success([], ucfirst($role) . " registered successful.");

@@ -259,7 +259,9 @@ class StoreController extends Controller implements HasMiddleware
                 $data['thumbnail'] = $path;
             }
 
+            $data['status'] = 'active';
             $store = Store::create($data);
+
 
             $seller = Seller::where('user_id', $sellerId)->first();
             if ($seller && $seller->active_store === null) {
