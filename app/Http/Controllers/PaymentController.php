@@ -1011,11 +1011,6 @@ class PaymentController extends Controller
                     $callbackData
                 ));
 
-                // If payment is successful, process order creation or update
-                if ($newStatus === 'successful' && $payment->cart_id) {
-                    $this->processSuccessfulCartPayment($payment);
-                }
-
                 DB::commit();
 
                 Log::info('Selcom callback processed successfully', [
@@ -1025,6 +1020,13 @@ class PaymentController extends Controller
                     'new_status' => $newStatus,
                     'transid' => $request->transid
                 ]);
+
+                // Process order fulfillment AFTER committing payment status,
+                // so Order/Escrow/Sale FKs can see committed rows (avoids MySQL
+                // REPEATABLE READ FK check seeing empty snapshot inside outer txn)
+                if ($newStatus === 'successful' && $payment->cart_id) {
+                    $this->processSuccessfulCartPayment($payment);
+                }
 
                 return ResponseHelper::success([
                     'payment_id' => $payment->id,
@@ -1092,6 +1094,8 @@ class PaymentController extends Controller
     private function processSuccessfulCartPayment(Payment $payment)
     {
         try {
+            DB::beginTransaction();
+
             $cart = Cart::with('items.product.store')->find($payment->cart_id);
 
             if (!$cart) {
@@ -1315,7 +1319,10 @@ class PaymentController extends Controller
                 'order_id' => $order->id,
                 'order_ref' => $order->order_ref
             ]);
+
+            DB::commit();
         } catch (Exception $e) {
+            DB::rollBack();
             Log::error('Failed to create order from successful Selcom payment', [
                 'payment_id' => $payment->id,
                 'error' => $e->getMessage(),
