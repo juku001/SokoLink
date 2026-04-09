@@ -1179,6 +1179,12 @@ class PaymentController extends Controller
                 ]);
             }
 
+            // Detach order from cart BEFORE deleting the cart.
+            // orders.cart_id has ON DELETE CASCADE → carts, so without this
+            // nullification the cascade would delete the just-created order.
+            $order->cart_id = null;
+            $order->save();
+
             // Clear cart
             $cart->items()->delete();
             $cart->delete();
