@@ -17,6 +17,7 @@ use App\Models\Payment;
 use App\Models\PaymentMethod;
 use App\Models\PaymentOptions;
 use App\Models\Region;
+use App\Models\InventoryLedger;
 use App\Models\Sale;
 use App\Models\SaleProduct;
 use App\Models\Shipment;
@@ -1109,6 +1110,25 @@ class PaymentController extends Controller
                 return;
             }
 
+            // Build itemsBySeller from in-memory cart data BEFORE deleting the cart.
+            // This avoids reloading via $order->load() inside the outer uncommitted
+            // DB transaction, which would return empty results under MySQL REPEATABLE READ.
+            $itemsBySeller = [];
+            foreach ($cart->items as $cartItem) {
+                $store = $cartItem->product->store;
+                $sellerId = $store->seller_id;
+                if (!isset($itemsBySeller[$sellerId])) {
+                    $itemsBySeller[$sellerId] = [
+                        'total' => 0,
+                        'store_id' => $store->id,
+                        'items' => [],
+                    ];
+                }
+                $lineTotal = $cartItem->quantity * $cartItem->price;
+                $itemsBySeller[$sellerId]['total'] += $lineTotal;
+                $itemsBySeller[$sellerId]['items'][] = $cartItem;
+            }
+
             // Create order from cart
             $order = Order::create([
                 'cart_id' => $cart->id,
@@ -1120,9 +1140,9 @@ class PaymentController extends Controller
                 'payment_method_id' => $checkoutData['payment_method_id'],
             ]);
 
-            // Shipping address
+            // Shipping address — keep the $address reference for use in fulfillment
             $region = Region::findOrFail($checkoutData['region_id']);
-            Address::create([
+            $address = Address::create([
                 'user_id' => $payment->user_id,
                 'order_id' => $order->id,
                 'type' => 'shipping',
@@ -1133,7 +1153,7 @@ class PaymentController extends Controller
                 'phone' => $checkoutData['address_phone'] ?? $checkoutData['phone'],
             ]);
 
-            // Create order items from cart items
+            // Create order items
             Log::info('Creating order items', [
                 'order_id' => $order->id,
                 'cart_items_count' => $cart->items->count(),
@@ -1142,6 +1162,7 @@ class PaymentController extends Controller
                 $orderItem = OrderItem::create([
                     'order_id' => $order->id,
                     'product_id' => $cartItem->product_id,
+                    'seller_id' => $cartItem->product->store->seller_id,
                     'quantity' => $cartItem->quantity,
                     'price' => $cartItem->price,
                 ]);
@@ -1158,34 +1179,10 @@ class PaymentController extends Controller
             $cart->items()->delete();
             $cart->delete();
 
-            // Clear checkout cache data
-            Cache::forget('checkout_data_' . $cart->id);
+            // Clear checkout cache
+            Cache::forget('checkout_data_' . $payment->cart_id);
 
-            // Reload order with relationships needed for fulfillment
-            $order->load('items.product.store', 'address');
-
-            Log::info('Order reloaded for fulfillment', [
-                'order_id' => $order->id,
-                'items_count' => $order->items->count(),
-                'address_loaded' => $order->address ? true : false,
-            ]);
-
-            // Group items by seller
-            $itemsBySeller = [];
-            foreach ($order->items as $item) {
-                $sellerId = $item->product->store->seller_id;
-                if (!isset($itemsBySeller[$sellerId])) {
-                    $itemsBySeller[$sellerId] = [
-                        'total' => 0,
-                        'store_id' => $item->product->store->id,
-                        'items' => [],
-                    ];
-                }
-                $lineTotal = $item->quantity * $item->price;
-                $itemsBySeller[$sellerId]['total'] += $lineTotal;
-                $itemsBySeller[$sellerId]['items'][] = $item;
-            }
-
+            // Per-seller fulfillment using pre-built in-memory data (no DB reload needed)
             foreach ($itemsBySeller as $sellerId => $sellerData) {
                 $total = $sellerData['total'];
                 $platformFee = round($total * 0.10, 2);
@@ -1231,7 +1228,7 @@ class PaymentController extends Controller
                     'payment_id' => $payment->id,
                     'payment_method_id' => $payment->payment_method_id,
                     'payment_type' => 'mno',
-                    'buyer_name' => $order->address->fullname,
+                    'buyer_name' => $checkoutData['fullname'],
                     'amount' => $total,
                     'sales_date' => now()->toDateString(),
                     'sales_time' => now()->toTimeString(),
@@ -1246,20 +1243,36 @@ class PaymentController extends Controller
                     'status' => $sale->status,
                 ]);
 
-                // Sale products
-                foreach ($sellerData['items'] as $item) {
+                // Sale products + inventory decrement
+                foreach ($sellerData['items'] as $cartItem) {
                     $saleProduct = SaleProduct::create([
                         'sale_id' => $sale->id,
-                        'product_id' => $item->product_id,
-                        'quantity' => $item->quantity,
-                        'price' => $item->price,
+                        'product_id' => $cartItem->product_id,
+                        'quantity' => $cartItem->quantity,
+                        'price' => $cartItem->price,
                     ]);
                     Log::info('SaleProduct created', [
                         'sale_product_id' => $saleProduct->id,
                         'sale_id' => $sale->id,
-                        'product_id' => $item->product_id,
-                        'quantity' => $item->quantity,
-                        'price' => $item->price,
+                        'product_id' => $cartItem->product_id,
+                        'quantity' => $cartItem->quantity,
+                        'price' => $cartItem->price,
+                    ]);
+
+                    // Decrement product stock
+                    $product = $cartItem->product;
+                    $product->decrement('stock_qty', $cartItem->quantity);
+                    InventoryLedger::create([
+                        'store_id' => $product->store_id,
+                        'product_id' => $product->id,
+                        'change' => -1 * $cartItem->quantity,
+                        'balance' => $product->stock_qty,
+                        'reason' => 'sale',
+                    ]);
+                    Log::info('Inventory decremented', [
+                        'product_id' => $product->id,
+                        'quantity_decremented' => $cartItem->quantity,
+                        'new_stock_qty' => $product->stock_qty,
                     ]);
                 }
 
@@ -1268,15 +1281,15 @@ class PaymentController extends Controller
                     $shipment = Shipment::create([
                         'order_id' => $order->id,
                         'seller_id' => $sellerId,
-                        'address_id' => $order->address->id,
+                        'address_id' => $address->id,
                         'status' => 'pending',
                     ]);
                     Log::info('Shipment created', [
                         'shipment_id' => $shipment->id,
-                        'tracking_number' => $shipment->tracking_number,
+                        'tracking_number' => $shipment->tracking_number ?? null,
                         'order_id' => $order->id,
                         'seller_id' => $sellerId,
-                        'address_id' => $order->address->id,
+                        'address_id' => $address->id,
                         'status' => $shipment->status,
                     ]);
                 } else {
