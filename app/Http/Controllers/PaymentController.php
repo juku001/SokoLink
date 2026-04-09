@@ -21,6 +21,7 @@ use App\Models\Sale;
 use App\Models\SaleProduct;
 use App\Models\Shipment;
 use App\Models\User;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -263,8 +264,8 @@ class PaymentController extends Controller
                 'shipping_cost' => $shipping,
             ];
 
-            // Store checkout data in session or cache
-            session(['checkout_data_' . $cart->id => $checkoutData]);
+            // Store checkout data in cache (session won't work for external callbacks)
+            Cache::put('checkout_data_' . $cart->id, $checkoutData, now()->addHours(24));
 
             $payOption = PaymentOptions::find($request->payment_option_id);
             switch ($payOption->key) {
@@ -1097,8 +1098,8 @@ class PaymentController extends Controller
                 return;
             }
 
-            // Get checkout data from session
-            $checkoutData = session('checkout_data_' . $cart->id);
+            // Get checkout data from cache
+            $checkoutData = Cache::get('checkout_data_' . $cart->id);
 
             if (!$checkoutData) {
                 Log::warning('Checkout data not found for successful payment', [
@@ -1150,8 +1151,8 @@ class PaymentController extends Controller
             $cart->items()->delete();
             $cart->delete();
 
-            // Clear checkout session data
-            session()->forget('checkout_data_' . $cart->id);
+            // Clear checkout cache data
+            Cache::forget('checkout_data_' . $cart->id);
 
             // Reload order with relationships needed for fulfillment
             $order->load('items.product.store', 'address');
