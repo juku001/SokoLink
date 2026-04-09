@@ -1176,10 +1176,18 @@ class PaymentController extends Controller
 
                 $seller = User::find($sellerId);
 
+                // SMS to seller
                 $sellerMessage = "Hello SokoLink Merchant, you have a new payment of " . $total . " with an order " . $order->order_ref;
-                SMSHelper::send($seller->phone, $sellerMessage);
+                $smsSent = SMSHelper::send($seller->phone, $sellerMessage);
+                Log::info('Seller SMS sent', [
+                    'seller_id' => $sellerId,
+                    'phone' => $seller->phone,
+                    'order_ref' => $order->order_ref,
+                    'result' => $smsSent,
+                ]);
 
-                Escrow::create([
+                // Escrow
+                $escrow = Escrow::create([
                     'order_id' => $order->id,
                     'buyer_id' => $order->buyer_id,
                     'seller_id' => $sellerId,
@@ -1189,7 +1197,16 @@ class PaymentController extends Controller
                     'payment_id' => $payment->id,
                     'status' => 'holding',
                 ]);
+                Log::info('Escrow created', [
+                    'escrow_id' => $escrow->id,
+                    'seller_id' => $sellerId,
+                    'total_amount' => $total,
+                    'seller_amount' => $sellerAmount,
+                    'platform_fee' => $platformFee,
+                    'status' => $escrow->status,
+                ]);
 
+                // Sale
                 $sale = Sale::create([
                     'seller_id' => $sellerId,
                     'order_id' => $order->id,
@@ -1203,9 +1220,25 @@ class PaymentController extends Controller
                     'sales_time' => now()->toTimeString(),
                     'status' => 'completed',
                 ]);
+                Log::info('Sale created', [
+                    'sale_id' => $sale->id,
+                    'sale_ref' => $sale->sale_ref,
+                    'seller_id' => $sellerId,
+                    'order_id' => $order->id,
+                    'amount' => $total,
+                    'status' => $sale->status,
+                ]);
 
+                // Sale products
                 foreach ($sellerData['items'] as $item) {
-                    SaleProduct::create([
+                    $saleProduct = SaleProduct::create([
+                        'sale_id' => $sale->id,
+                        'product_id' => $item->product_id,
+                        'quantity' => $item->quantity,
+                        'price' => $item->price,
+                    ]);
+                    Log::info('SaleProduct created', [
+                        'sale_product_id' => $saleProduct->id,
                         'sale_id' => $sale->id,
                         'product_id' => $item->product_id,
                         'quantity' => $item->quantity,
@@ -1213,19 +1246,39 @@ class PaymentController extends Controller
                     ]);
                 }
 
+                // Shipment
                 if ($order->shipping_cost > 0) {
-                    Shipment::create([
+                    $shipment = Shipment::create([
                         'order_id' => $order->id,
                         'seller_id' => $sellerId,
                         'address_id' => $order->address->id,
                         'status' => 'pending',
+                    ]);
+                    Log::info('Shipment created', [
+                        'shipment_id' => $shipment->id,
+                        'tracking_number' => $shipment->tracking_number,
+                        'order_id' => $order->id,
+                        'seller_id' => $sellerId,
+                        'address_id' => $order->address->id,
+                        'status' => $shipment->status,
+                    ]);
+                } else {
+                    Log::info('Shipment skipped (no shipping cost)', [
+                        'order_id' => $order->id,
+                        'seller_id' => $sellerId,
                     ]);
                 }
             }
 
             $buyer = $payment->user;
             $buyerMessage = "Hello Dear Customer, your payment with order " . $order->order_ref . " was successful.";
-            SMSHelper::send($buyer->phone, $buyerMessage);
+            $buyerSmsSent = SMSHelper::send($buyer->phone, $buyerMessage);
+            Log::info('Buyer SMS sent', [
+                'buyer_id' => $buyer->id,
+                'phone' => $buyer->phone,
+                'order_ref' => $order->order_ref,
+                'result' => $buyerSmsSent,
+            ]);
 
             Log::info('Order created successfully from Selcom payment', [
                 'payment_id' => $payment->id,
