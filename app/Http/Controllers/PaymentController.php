@@ -1143,10 +1143,6 @@ class PaymentController extends Controller
                 ]);
             }
 
-            // Link payment to order
-            $payment->order_id = $order->id;
-            $payment->save();
-
             // Clear cart
             $cart->items()->delete();
             $cart->delete();
