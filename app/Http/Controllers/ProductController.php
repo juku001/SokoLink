@@ -545,6 +545,10 @@ class ProductController extends Controller implements HasMiddleware
                 $updateData['sku'] = $data['sku'];
             }
 
+if($request->has('stock_qty')){
+$updateData['stock_qty'] = $data['stock_qty'];
+}
+
             // Barcode
             if ($request->has('barcode')) {
                 $updateData['barcode'] = $data['barcode'];
