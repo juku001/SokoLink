@@ -9,6 +9,7 @@ use App\Helpers\ResponseHelper;
 use App\Helpers\SMSHelper;
 use App\Models\Address;
 use App\Models\Cart;
+use App\Models\Escrow;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\OrderStatusHistory;
@@ -16,6 +17,10 @@ use App\Models\Payment;
 use App\Models\PaymentMethod;
 use App\Models\PaymentOptions;
 use App\Models\Region;
+use App\Models\Sale;
+use App\Models\SaleProduct;
+use App\Models\Shipment;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -1104,46 +1109,40 @@ class PaymentController extends Controller
             }
 
             // Create order from cart
-            $order = new Order();
-            $order->order_ref = 'ORD-' . now()->format('Ymd') . '-' . strtoupper(substr(uniqid(), -6));
-            $order->buyer_id = $cart->buyer_id;
-            $order->total_amount = $payment->amount;
-            $order->shipping_cost = $checkoutData['shipping_cost'] ?? 0;
-            $order->status = 'paid';
-            $order->payment_id = $payment->id;
+            $order = Order::create([
+                'cart_id' => $cart->id,
+                'buyer_id' => $cart->buyer_id,
+                'total_amount' => $payment->amount,
+                'shipping_cost' => $checkoutData['shipping_cost'] ?? 0,
+                'status' => 'paid',
+                'payment_option_id' => $checkoutData['payment_option_id'],
+                'payment_method_id' => $checkoutData['payment_method_id'],
+            ]);
 
             // Shipping address
-            $address = new Address();
-            $address->fullname = $checkoutData['fullname'];
-            $address->phone = $checkoutData['phone'];
-            $address->address_phone = $checkoutData['address_phone'] ?? null;
-            $address->address = $checkoutData['address'];
-            $address->region_id = $checkoutData['region_id'];
-            $address->save();
-
-            $order->shipping_address_id = $address->id;
-            $order->save();
+            $region = Region::findOrFail($checkoutData['region_id']);
+            Address::create([
+                'user_id' => $payment->user_id,
+                'order_id' => $order->id,
+                'type' => 'shipping',
+                'fullname' => $checkoutData['fullname'],
+                'street' => $checkoutData['address'],
+                'region_id' => $region->id,
+                'country_id' => $region->country_id,
+                'phone' => $checkoutData['address_phone'] ?? $checkoutData['phone'],
+            ]);
 
             // Create order items from cart items
             foreach ($cart->items as $cartItem) {
-                $orderItem = new OrderItem();
-                $orderItem->order_id = $order->id;
-                $orderItem->product_id = $cartItem->product_id;
-                $orderItem->quantity = $cartItem->quantity;
-                $orderItem->price = $cartItem->price;
-                $orderItem->total = $cartItem->price * $cartItem->quantity;
-                $orderItem->save();
+                OrderItem::create([
+                    'order_id' => $order->id,
+                    'product_id' => $cartItem->product_id,
+                    'quantity' => $cartItem->quantity,
+                    'price' => $cartItem->price,
+                ]);
             }
 
-            // Create order status history
-            OrderStatusHistory::create([
-                'order_id' => $order->id,
-                'status' => 'paid',
-                'notes' => 'Order created and paid via Selcom callback',
-                'changed_by' => null
-            ]);
-
-            // Update payment with order reference
+            // Link payment to order
             $payment->order_id = $order->id;
             $payment->save();
 
@@ -1153,6 +1152,83 @@ class PaymentController extends Controller
 
             // Clear checkout session data
             session()->forget('checkout_data_' . $cart->id);
+
+            // Reload order with relationships needed for fulfillment
+            $order->load('items.product.store', 'address');
+
+            // Group items by seller
+            $itemsBySeller = [];
+            foreach ($order->items as $item) {
+                $sellerId = $item->product->store->seller_id;
+                if (!isset($itemsBySeller[$sellerId])) {
+                    $itemsBySeller[$sellerId] = [
+                        'total' => 0,
+                        'store_id' => $item->product->store->id,
+                        'items' => [],
+                    ];
+                }
+                $lineTotal = $item->quantity * $item->price;
+                $itemsBySeller[$sellerId]['total'] += $lineTotal;
+                $itemsBySeller[$sellerId]['items'][] = $item;
+            }
+
+            foreach ($itemsBySeller as $sellerId => $sellerData) {
+                $total = $sellerData['total'];
+                $platformFee = round($total * 0.10, 2);
+                $sellerAmount = $total - $platformFee;
+
+                $seller = User::find($sellerId);
+
+                $sellerMessage = "Hello SokoLink Merchant, you have a new payment of " . $total . " with an order " . $order->order_ref;
+                SMSHelper::send($seller->phone, $sellerMessage);
+
+                Escrow::create([
+                    'order_id' => $order->id,
+                    'buyer_id' => $order->buyer_id,
+                    'seller_id' => $sellerId,
+                    'total_amount' => $total,
+                    'seller_amount' => $sellerAmount,
+                    'platform_fee' => $platformFee,
+                    'payment_id' => $payment->id,
+                    'status' => 'holding',
+                ]);
+
+                $sale = Sale::create([
+                    'seller_id' => $sellerId,
+                    'order_id' => $order->id,
+                    'store_id' => $sellerData['store_id'],
+                    'payment_id' => $payment->id,
+                    'payment_method_id' => $payment->payment_method_id,
+                    'payment_type' => 'mno',
+                    'buyer_name' => $order->address->fullname,
+                    'amount' => $total,
+                    'sales_date' => now()->toDateString(),
+                    'sales_time' => now()->toTimeString(),
+                    'status' => 'completed',
+                ]);
+
+                foreach ($sellerData['items'] as $item) {
+                    SaleProduct::create([
+                        'sale_id' => $sale->id,
+                        'product_id' => $item->product_id,
+                        'quantity' => $item->quantity,
+                        'price' => $item->price,
+                    ]);
+                }
+
+                if ($order->shipping_cost > 0) {
+                    Shipment::create([
+                        'order_id' => $order->id,
+                        'seller_id' => $sellerId,
+                        'address_id' => $order->address->id,
+                        'status' => 'pending',
+                    ]);
+                }
+            }
+
+            $buyer = $payment->user;
+            $buyerMessage = "Hello Dear Customer, your payment with order " . $order->order_ref . " was successful.";
+            SMSHelper::send($buyer->phone, $buyerMessage);
 
             Log::info('Order created successfully from Selcom payment', [
                 'payment_id' => $payment->id,
