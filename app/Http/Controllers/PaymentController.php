@@ -1134,8 +1134,19 @@ class PaymentController extends Controller
             ]);
 
             // Create order items from cart items
+            Log::info('Creating order items', [
+                'order_id' => $order->id,
+                'cart_items_count' => $cart->items->count(),
+            ]);
             foreach ($cart->items as $cartItem) {
-                OrderItem::create([
+                $orderItem = OrderItem::create([
+                    'order_id' => $order->id,
+                    'product_id' => $cartItem->product_id,
+                    'quantity' => $cartItem->quantity,
+                    'price' => $cartItem->price,
+                ]);
+                Log::info('OrderItem created', [
+                    'order_item_id' => $orderItem->id,
                     'order_id' => $order->id,
                     'product_id' => $cartItem->product_id,
                     'quantity' => $cartItem->quantity,
@@ -1152,6 +1163,12 @@ class PaymentController extends Controller
 
             // Reload order with relationships needed for fulfillment
             $order->load('items.product.store', 'address');
+
+            Log::info('Order reloaded for fulfillment', [
+                'order_id' => $order->id,
+                'items_count' => $order->items->count(),
+                'address_loaded' => $order->address ? true : false,
+            ]);
 
             // Group items by seller
             $itemsBySeller = [];
